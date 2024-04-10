@@ -5,7 +5,9 @@ provider "aws" {
   region = var.aws_region
 }
 
-provider "cloudflare" {}
+provider "cloudflare" {
+  api_token = var.cloudflare_api_key
+}
 
 resource "aws_s3_bucket" "site" {
   bucket = var.site_domain
@@ -97,4 +99,12 @@ resource "cloudflare_record" "www" {
 
   ttl     = 1
   proxied = true
+}
+
+resource "cloudflare_page_rule" "https" {
+  zone_id = data.cloudflare_zones.domain.zones[0].id
+  target  = "*.${var.site_domain}/*"
+  actions {
+    always_use_https = true
+  }
 }

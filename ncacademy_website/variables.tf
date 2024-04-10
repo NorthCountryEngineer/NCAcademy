@@ -11,3 +11,8 @@ variable "site_domain" {
   type        = string
   description = "The domain name to use for the static site"
 }
+
+variable "cloudflare_api_key" {
+  type        = string
+  description = "The API key to access Cloudflare"
+}
