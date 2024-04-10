@@ -14,8 +14,6 @@ jobs:
     - name: Build Docker Image
       run: docker build -t ncacademy_website ./ncacademy_website
     
-    # Add additional steps for Docker login if you're pushing the image to a registry
-    
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
