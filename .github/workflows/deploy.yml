@@ -31,6 +31,6 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        TF_VAR_aws_region: ${{ secrets.TF_VAR_aws_region }}
-        TF_VAR_cloudflare_api_key: ${{ secrets.TF_VAR_cloudflare_api_key }}
-        TF_VAR_site_domain: ${{ secrets.TF_VAR_site_doman }}
+        TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
+        TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
+        TF_VAR_SITE_DOMAIN: ${{ secrets.TF_VAR_SITE_DOMAIN }}
