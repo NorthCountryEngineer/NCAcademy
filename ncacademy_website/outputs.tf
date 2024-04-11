@@ -13,5 +13,5 @@ output "bucket_endpoint" {
 
 output "domain_name" {
   description = "Website endpoint"
-  value       = var.site_domain
+  value       = var.SITE_DOMAIN
 }

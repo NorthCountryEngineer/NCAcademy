@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
-  region = var.aws_region
+  region = var.AWS_REGION
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_key
+  api_token = var.CLOUDFLARE_API_KEY
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = var.site_domain
+  bucket = var.SITE_DOMAIN
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -77,7 +77,7 @@ resource "aws_s3_bucket_policy" "site" {
 
 data "cloudflare_zones" "domain" {
   filter {
-    name = var.site_domain
+    name = var.SITE_DOMAIN
   }
 }
 
@@ -88,7 +88,7 @@ output "s3_bucket_website_endpoint" {
 
 resource "cloudflare_record" "site_cname" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = var.site_domain
+  name    = var.SITE_DOMAIN
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
   type    = "CNAME"
   ttl     = 1
@@ -98,7 +98,7 @@ resource "cloudflare_record" "site_cname" {
 resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
-  value   = var.site_domain
+  value   = var.SITE_DOMAIN
   type    = "CNAME"
 
   ttl     = 1
@@ -107,7 +107,7 @@ resource "cloudflare_record" "www" {
 
 resource "cloudflare_page_rule" "https" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  target  = "*.${var.site_domain}/*"
+  target  = "*.${var.SITE_DOMAIN}/*"
   actions {
     always_use_https = true
   }
