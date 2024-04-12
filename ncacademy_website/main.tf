@@ -93,16 +93,17 @@ resource "cloudflare_record" "site_cname" {
 }
 
 resource "cloudflare_record" "www" {
+  count   = length(data.cloudflare_zones.domain.zones) > 0 ? 1 : 0
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
   value   = var.TF_VAR_SITE_DOMAIN
   type    = "CNAME"
-
   ttl     = 1
   proxied = true
 }
 
 resource "cloudflare_page_rule" "https" {
+  count   = length(data.cloudflare_zones.domain.zones) > 0 ? 1 : 0
   zone_id = data.cloudflare_zones.domain.zones[0].id
   target  = "*.${var.TF_VAR_SITE_DOMAIN}/*"
   actions {
