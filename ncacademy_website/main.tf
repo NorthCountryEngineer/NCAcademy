@@ -83,6 +83,7 @@ data "cloudflare_zones" "domain" {
 }
 
 resource "cloudflare_record" "site_cname" {
+  count   = length(data.cloudflare_zones.domain.zones) > 0 ? 1 : 0
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = var.TF_VAR_SITE_DOMAIN
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
