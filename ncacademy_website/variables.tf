@@ -13,7 +13,7 @@ variable "AWS_REGION" {
   default     = "us-east-1"
 }
 
-variable "SITE_DOMAIN" {
+variable "TF_VAR_SITE_DOMAIN" {
   type        = string
   description = "The domain name to use for the static site"
 }
