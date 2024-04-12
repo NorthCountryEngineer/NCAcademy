@@ -30,12 +30,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Production Deployment
-        uses: peter-evans/repository-dispatch@v1
+      - uses: actions/checkout@v2
         with:
+          ref: 'main'
+          fetch-depth: 0 
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          repository: ${{ github.repository }}
-          event-type: deploy-production
 
   deploy:
     if: github.ref == 'refs/heads/production' || github.event_name == 'repository_dispatch' && github.event.action == 'deploy-production'
