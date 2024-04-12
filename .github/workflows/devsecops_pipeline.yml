@@ -25,10 +25,21 @@ jobs:
     - name: Run Tests
       run: echo "Running tests"
 
-  deploy:
+  promote_to_production:
     if: github.ref == 'refs/heads/development' && success()
     needs: test
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: 'development'
+        fetch-depth: 0 
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+  deploy:
+    needs: [test, promote_to_production]
+    runs-on: ubuntu-latest
+    environment: production
     steps:
     - uses: actions/checkout@v2
     - name: Configure AWS Credentials
