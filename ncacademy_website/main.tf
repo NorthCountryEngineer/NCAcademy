@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
-  region = var.AWS_REGION
+  region = "us-east-1"
 }
 
 provider "cloudflare" {

@@ -4,6 +4,7 @@
 variable "ENVIRONMENT" {
   description = "Deployment environment"
   type        = string
+  default     = "development"
 }
 
 variable "AWS_REGION" {
