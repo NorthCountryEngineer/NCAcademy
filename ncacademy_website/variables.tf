@@ -1,6 +1,16 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+variable "ENVIRONMENT" {
+  description = "Deployment environment"
+  type        = string
+}
+
+resource "aws_s3_bucket" "site" {
+  bucket = "${var.ENVIRONMENT}-${var.SITE_DOMAIN}"
+  # rest of the configuration remains the same
+}
+
 variable "AWS_REGION" {
   type        = string
   description = "The AWS region to put the bucket into"
