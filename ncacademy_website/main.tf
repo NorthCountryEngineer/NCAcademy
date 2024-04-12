@@ -10,7 +10,7 @@ provider "cloudflare" {
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = "${var.ENVIRONMENT}-${var.SITE_DOMAIN}"
+  bucket = "${var.ENVIRONMENT}-${var.TF_VAR_SITE_DOMAIN}"
 }
 
 
@@ -78,13 +78,13 @@ resource "aws_s3_bucket_policy" "site" {
 
 data "cloudflare_zones" "domain" {
   filter {
-    name = var.SITE_DOMAIN
+    name = var.TF_VAR_SITE_DOMAIN
   }
 }
 
 resource "cloudflare_record" "site_cname" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = var.SITE_DOMAIN
+  name    = var.TF_VAR_SITE_DOMAIN
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
   type    = "CNAME"
   ttl     = 1
@@ -94,7 +94,7 @@ resource "cloudflare_record" "site_cname" {
 resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
-  value   = var.SITE_DOMAIN
+  value   = var.TF_VAR_SITE_DOMAIN
   type    = "CNAME"
 
   ttl     = 1
@@ -103,7 +103,7 @@ resource "cloudflare_record" "www" {
 
 resource "cloudflare_page_rule" "https" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  target  = "*.${var.SITE_DOMAIN}/*"
+  target  = "*.${var.TF_VAR_SITE_DOMAIN}/*"
   actions {
     always_use_https = true
   }
