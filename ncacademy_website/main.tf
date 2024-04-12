@@ -10,8 +10,9 @@ provider "cloudflare" {
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = var.SITE_DOMAIN
+  bucket = "${var.ENVIRONMENT}-${var.SITE_DOMAIN}"
 }
+
 
 resource "aws_s3_bucket_public_access_block" "site" {
   bucket = aws_s3_bucket.site.id
