@@ -11,6 +11,7 @@ provider "cloudflare" {
 
 resource "aws_s3_bucket" "site" {
   bucket = var.TF_VAR_SITE_DOMAIN
+  force_destroy = true
 }
 
 

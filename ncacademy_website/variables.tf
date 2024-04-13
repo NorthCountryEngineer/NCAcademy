@@ -16,7 +16,7 @@ variable "AWS_REGION" {
 variable "TF_VAR_SITE_DOMAIN" {
   type        = string
   description = "The domain name to use for the static site"
-  default     = "dev.ncacademy.app"
+  default     = "ncacademy.dev"
 }
 
 variable "CLOUDFLARE_API_KEY" {
