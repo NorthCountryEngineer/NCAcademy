@@ -28,7 +28,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
     - name: Configure AWS Credentials
@@ -39,7 +39,7 @@ jobs:
         aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
 
     - name: Set Environment Variable
-      run: echo "TF_ENV=${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}" >> $GITHUB_ENV
+      run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
 
     - name: Initialize Terraform
       run: terraform init -var="environment=${{ env.TF_ENV }}"
@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: 'main'
+          ref: 'development'
           fetch-depth: 0 
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
