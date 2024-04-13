@@ -25,19 +25,8 @@ jobs:
     - name: Run Tests
       run: echo "Running tests"
 
-  promote_to_production:
-    if: github.ref == 'refs/heads/development' && success()
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: 'development'
-        fetch-depth: 0 
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
   deploy:
-    needs: [test, promote_to_production]
+    needs: test
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     steps:
@@ -64,3 +53,23 @@ jobs:
         TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
         TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
         TF_VAR_SITE_DOMAIN: ${{ secrets.TF_VAR_SITE_DOMAIN }}
+
+  promote:
+    if: github.ref == 'refs/heads/development' && success()
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: 'development'
+        fetch-depth: 0 
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      - name: Merge main into production
+        run: |
+          git checkout production
+          git merge main --no-edit
+          git push origin production
