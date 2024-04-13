@@ -37,6 +37,7 @@ jobs:
       working-directory: ./ncacademy_website
 
   build:
+    needs: prepare
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
@@ -58,7 +59,7 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
