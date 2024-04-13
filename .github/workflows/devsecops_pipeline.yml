@@ -9,6 +9,33 @@ on:
     types: [deploy-production]
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production' || github.ref == 'refs/heads/development'
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Initialize Terraform
+      run: terraform init
+      working-directory: ./ncacademy_website
+
+    - name: Import Cloudflare CNAME Record for Site Domain
+      run: terraform import cloudflare_record.site_cname ZONE_ID/RECORD_ID
+      working-directory: ./ncacademy_website
+      env:
+        TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
+
+    - name: Import Cloudflare CNAME Record for www
+      run: terraform import cloudflare_record.www ZONE_ID/RECORD_ID
+      working-directory: ./ncacademy_website
+
+    - name: Import Cloudflare HTTPS Page Rule
+      run: terraform import cloudflare_page_rule.https ZONE_ID/RULE_ID
+      working-directory: ./ncacademy_website
+
   build:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
@@ -31,6 +58,7 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
+    
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -48,7 +76,7 @@ jobs:
     - name: Select Terraform Workspace
       run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
       working-directory: ./ncacademy_website
-      
+
     - name: Apply Terraform for Website
       run: terraform apply -auto-approve
       working-directory: ./ncacademy_website
