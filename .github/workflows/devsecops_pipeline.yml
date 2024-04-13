@@ -18,8 +18,15 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
 
+    - name: Set Environment Variable
+      run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
+    
     - name: Initialize Terraform
       run: terraform init
+      working-directory: ./ncacademy_website
+
+    - name: Select Terraform Workspace
+      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
       working-directory: ./ncacademy_website
 
     - name: Import Cloudflare CNAME Record for Site Domain
@@ -66,17 +73,6 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
-
-    - name: Set Environment Variable
-      run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
-    
-    - name: Initialize Terraform
-      run: terraform init
-      working-directory: ./ncacademy_website
-
-    - name: Select Terraform Workspace
-      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
-      working-directory: ./ncacademy_website
 
     - name: Apply Terraform for Website
       run: terraform apply -auto-approve
