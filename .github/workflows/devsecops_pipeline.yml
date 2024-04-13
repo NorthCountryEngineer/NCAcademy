@@ -54,24 +54,23 @@ jobs:
         TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
         TF_VAR_SITE_DOMAIN: ${{ secrets.TF_VAR_SITE_DOMAIN }}
 
-  promote:
-    if: github.ref == 'refs/heads/development' && success()
+  promote-to-production:
     needs: deploy
     runs-on: ubuntu-latest
+    if: success()
     steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: 'development'
-        fetch-depth: 0 
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: actions/checkout@v2
+        with:
+          ref: 'main'
+          fetch-depth: 0 
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-    - name: Configure Git
+      - name: Configure Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          
-    - name: Merge main into production
-      run: |
-        git checkout production
-        git merge main --no-edit
-        git push origin production
+      - name: Merge development into production
+        run: |
+          git checkout production
+          git merge development --no-edit
+          git push origin production
