@@ -5,5 +5,5 @@ variable "region" {
 
 variable "TF_VAR_SITE_DOMAIN" {
     description = "The domain for the site, used in various configurations"
-    default     = "ncacademy.app"
+    default     = "ncacademy.dev"
 }

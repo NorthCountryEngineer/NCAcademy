@@ -10,7 +10,7 @@ provider "cloudflare" {
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = "ncacademy.app"
+  bucket = var.TF_VAR_SITE_DOMAIN
 }
 
 
@@ -78,7 +78,7 @@ resource "aws_s3_bucket_policy" "site" {
 
 data "cloudflare_zones" "domain" {
   filter {
-    name = "ncacademy.app"
+    name = var.TF_VAR_SITE_DOMAIN
   }
 }
 
@@ -89,7 +89,7 @@ output "cloudflare_zones_output" {
 
 resource "cloudflare_record" "site_cname" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = "ncacademy.app"
+  name    = var.TF_VAR_SITE_DOMAIN
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
   type    = "CNAME"
   ttl     = 1
@@ -99,7 +99,7 @@ resource "cloudflare_record" "site_cname" {
 resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
-  value   = "ncacademy.app"
+  value   = var.TF_VAR_SITE_DOMAIN
   type    = "CNAME"
   ttl     = 1
   proxied = true
@@ -107,7 +107,7 @@ resource "cloudflare_record" "www" {
 
 resource "cloudflare_page_rule" "https" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  target  = "*.${"ncacademy.app"}/*"
+  target  = "*.${var.TF_VAR_SITE_DOMAIN}/*"
   actions {
     always_use_https = true
   }
