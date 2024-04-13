@@ -10,7 +10,7 @@ provider "cloudflare" {
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = var.TF_VAR_SITE_DOMAIN
+  bucket = terraform.workspace == "production" ? "ncacademy.app" : "ncacademy.dev"
   force_destroy = true
 }
 
