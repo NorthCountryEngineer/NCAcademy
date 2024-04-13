@@ -53,13 +53,11 @@ jobs:
         TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
         TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
         TF_VAR_SITE_DOMAIN: ${{ secrets.TF_VAR_SITE_DOMAIN }}
-    - name: Output TF_VAR_SITE_DOMAIN
-      run: echo "TF_VAR_SITE_DOMAIN=${{ secrets.TF_VAR_SITE_DOMAIN }}"
 
   promote-to-production:
     needs: deploy
     runs-on: ubuntu-latest
-    if: success()
+    if: success() && github.ref == 'refs/heads/development'
     steps:
       - uses: actions/checkout@v2
         with:
