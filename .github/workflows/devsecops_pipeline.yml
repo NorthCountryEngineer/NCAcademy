@@ -12,8 +12,17 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/production' || github.ref == 'refs/heads/development'
+
+    environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
@@ -67,12 +76,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
+    # - name: Configure AWS Credentials
+    #   uses: aws-actions/configure-aws-credentials@v1
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
 
     - name: Apply Terraform for Website
       run: terraform apply -auto-approve
