@@ -14,7 +14,6 @@ resource "aws_s3_bucket" "site" {
   force_destroy = true
 }
 
-
 resource "aws_s3_bucket_public_access_block" "site" {
   bucket = aws_s3_bucket.site.id
 
