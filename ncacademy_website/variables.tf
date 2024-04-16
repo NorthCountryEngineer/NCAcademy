@@ -23,3 +23,8 @@ variable "CLOUDFLARE_API_KEY" {
   type        = string
   description = "The API key to access Cloudflare"
 }
+
+variable "CLOUDFLARE_EMAIL" {
+  type        = string
+  description = "Emal used to access Cloudflare"
+}

@@ -13,5 +13,5 @@ output "bucket_endpoint" {
 
 output "domain_name" {
   description = "Website endpoint"
-  value       = var.TF_VAR_SITE_DOMAIN
+  value       = local.domain_name
 }

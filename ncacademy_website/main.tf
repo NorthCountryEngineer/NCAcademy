@@ -6,17 +6,21 @@ provider "aws" {
 }
 
 provider "cloudflare" {
-  api_token = var.CLOUDFLARE_API_KEY
+  email = var.CLOUDFLARE_EMAIL
+  api_key = var.CLOUDFLARE_API_KEY
+}
+
+locals {
+  domain_name = terraform.workspace == "production" ? "ncacademy.app" : "ncacademy.dev"
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = terraform.workspace == "production" ? "ncacademy.app" : "ncacademy.dev"
+  bucket = local.domain_name
   force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
   bucket = aws_s3_bucket.site.id
-
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false
@@ -78,7 +82,7 @@ resource "aws_s3_bucket_policy" "site" {
 
 data "cloudflare_zones" "domain" {
   filter {
-    name = var.TF_VAR_SITE_DOMAIN
+    name = local.domain_name
   }
 }
 
@@ -87,9 +91,14 @@ output "cloudflare_zones_output" {
   description = "Outputs the entire list of zones returned from Cloudflare data source"
 }
 
+output "bucket_name_output" {
+  value = aws_s3_bucket.site
+  description = "s3 bucket naming convention"
+}
+
 resource "cloudflare_record" "site_cname" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = var.TF_VAR_SITE_DOMAIN
+  name    = local.domain_name
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
   type    = "CNAME"
   ttl     = 1
@@ -99,18 +108,10 @@ resource "cloudflare_record" "site_cname" {
 resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
-  value   = var.TF_VAR_SITE_DOMAIN
+  value   = local.domain_name
   type    = "CNAME"
   ttl     = 1
   proxied = true
-}
-
-resource "cloudflare_page_rule" "https" {
-  zone_id = data.cloudflare_zones.domain.zones[0].id
-  target  = "*.${var.TF_VAR_SITE_DOMAIN}/*"
-  actions {
-    always_use_https = true
-  }
 }
 
 terraform {
