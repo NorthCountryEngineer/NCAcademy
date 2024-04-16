@@ -59,6 +59,10 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}"
+        fetch-depth: 0 
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -69,13 +73,13 @@ jobs:
 
     - name: Set Environment Variable
       run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
-    
-    - name: Initialize Terraform
-      run: terraform init
-      working-directory: ./ncacademy_website
 
     - name: Select Terraform Workspace
       run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
+      working-directory: ./ncacademy_website
+
+    - name: Initialize Terraform
+      run: terraform init
       working-directory: ./ncacademy_website
 
     - name: Apply Terraform for Website
