@@ -56,6 +56,37 @@ resource "aws_s3_bucket_acl" "site" {
   ]
 }
 
+
+
+resource "aws_s3_object" "index_html" {
+  bucket       = aws_s3_bucket.site.id
+  key          = "index.html"
+  source       = "${path.module}/next/index.html"
+  acl          = "public-read"
+  content_type = "text/html"
+}
+
+resource "aws_s3_object" "background_png" {
+  bucket       = aws_s3_bucket.site.id
+  key          = "background.png"
+  source       = "${path.module}/next/background.png"
+  acl          = "public-read"
+  content_type = "image/png"
+}
+
+resource "aws_s3_object" "site_content" {
+  for_each = fileset("${path.module}/next", "**/*")
+  bucket   = aws_s3_bucket.site.id
+  key      = each.value
+  source   = "${path.module}/next/${each.value}"
+  acl      = "public-read"
+  content_type = lookup({
+    "html" = "text/html",
+    "png"  = "image/png",
+    // Add more MIME types as necessary
+  }, split(".", each.value)[length(split(".", each.value)) - 1], "text/plain")
+}
+
 resource "aws_s3_bucket_policy" "site" {
   bucket = aws_s3_bucket.site.id
 
@@ -102,20 +133,28 @@ resource "cloudflare_record" "site_cname" {
   count = length(data.cloudflare_record.existing) > 0 ? 0 : 1
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = local.domain_name
-  value   = aws_s3_bucket_website_configuration.site.website_endpoint
+  value   = "http://${aws_s3_bucket.site.id}.s3-website-us-east-1.amazonaws.com"
   type    = "CNAME"
   ttl     = 1
-  proxied = false
+  proxied = true
 }
 
 resource "cloudflare_record" "www" {
   count = length(data.cloudflare_record.www_cname) > 0 ? 0 : 1
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
-  value   = local.domain_name
+  value   = "http://${aws_s3_bucket.site.id}.s3-website-us-east-1.amazonaws.com"
   type    = "CNAME"
   ttl     = 1
   proxied = true
+}
+
+output "index_page" {
+  value = "http://${aws_s3_bucket.site.id}.s3-website-us-east-1.amazonaws.com"
+}
+
+output "background_image" {
+  value = "http://${aws_s3_bucket.site.bucket_regional_domain_name}/background.png"
 }
 
 terraform {
