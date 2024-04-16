@@ -86,17 +86,20 @@ data "cloudflare_zones" "domain" {
   }
 }
 
-output "cloudflare_zones_output" {
-  value = data.cloudflare_zones.domain.zones
-  description = "Outputs the entire list of zones returned from Cloudflare data source"
+data "cloudflare_record" "existing" {
+  zone_id = data.cloudflare_zones.domain.zones[0].id
+  hostname    = local.domain_name
+  type    = "CNAME"
 }
 
-output "bucket_name_output" {
-  value = aws_s3_bucket.site
-  description = "s3 bucket naming convention"
+data "cloudflare_record" "www_cname" {
+  zone_id = data.cloudflare_zones.domain.zones[0].id
+  hostname    = "www.${local.domain_name}"
+  type    = "CNAME"
 }
 
 resource "cloudflare_record" "site_cname" {
+  count = length(data.cloudflare_record.existing) > 0 ? 0 : 1
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = local.domain_name
   value   = aws_s3_bucket_website_configuration.site.website_endpoint
@@ -106,6 +109,7 @@ resource "cloudflare_record" "site_cname" {
 }
 
 resource "cloudflare_record" "www" {
+  count = length(data.cloudflare_record.www_cname) > 0 ? 0 : 1
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = "www"
   value   = local.domain_name
