@@ -9,35 +9,7 @@ on:
     types: [deploy-production]
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/production' || github.ref == 'refs/heads/development'
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-
-    - name: Initialize Terraform
-      run: terraform init
-      working-directory: ./ncacademy_website
-
-    - name: Import Cloudflare CNAME Record for Site Domain
-      run: terraform import cloudflare_record.site_cname ZONE_ID/RECORD_ID
-      working-directory: ./ncacademy_website
-      env:
-        TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
-
-    - name: Import Cloudflare CNAME Record for www
-      run: terraform import cloudflare_record.www ZONE_ID/RECORD_ID
-      working-directory: ./ncacademy_website
-
-    - name: Import Cloudflare HTTPS Page Rule
-      run: terraform import cloudflare_page_rule.https ZONE_ID/RULE_ID
-      working-directory: ./ncacademy_website
-
   build:
-    needs: prepare
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
@@ -59,10 +31,6 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}"
-        fetch-depth: 0 
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -79,7 +47,7 @@ jobs:
       working-directory: ./ncacademy_website
 
     - name: Initialize Terraform
-      run: terraform init
+      run: terraform init -var="environment=${{ env.TF_ENV }}"
       working-directory: ./ncacademy_website
 
     - name: Apply Terraform for Website
@@ -90,6 +58,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
         TF_VAR_CLOUDFLARE_API_KEY: ${{ secrets.TF_VAR_CLOUDFLARE_API_KEY }}
+        TF_VAR_CLOUDFLARE_EMAIL: ${{ secrets.TF_VAR_CLOUDFLARE_EMAIL }}
         TF_VAR_SITE_DOMAIN: ${{ secrets.TF_VAR_SITE_DOMAIN }}
 
   promote-to-production:
