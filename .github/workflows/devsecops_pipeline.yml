@@ -42,12 +42,12 @@ jobs:
     - name: Set Environment Variable
       run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
 
-    - name: Select Terraform Workspace
-      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
-      working-directory: ./ncacademy_website
-
     - name: Initialize Terraform
       run: terraform init -var="environment=${{ env.TF_ENV }}"
+      working-directory: ./ncacademy_website
+      
+    - name: Select Terraform Workspace
+      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
       working-directory: ./ncacademy_website
 
     - name: Apply Terraform for Website
