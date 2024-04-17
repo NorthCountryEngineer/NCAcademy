@@ -1,4 +1,4 @@
-name: NC ACADEMY DevSecOps PIPELINE
+name: NC ACADEMY DEVSECOPS PIPELINE
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
     steps:
     - uses: actions/checkout@v2
-
     - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
