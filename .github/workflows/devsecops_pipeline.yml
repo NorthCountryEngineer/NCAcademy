@@ -22,11 +22,11 @@ jobs:
 
     - name: Install Dependencies
       run: npm install
-      working-directory: ./app
+      working-directory: ncacademy_website/app
 
     - name: Build Next.js Application
       run: npm run build
-      working-directory: ./app
+      working-directory: ncacademy_website/app
 
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
