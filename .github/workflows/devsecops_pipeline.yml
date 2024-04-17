@@ -28,7 +28,7 @@ jobs:
       run: npm run build
       working-directory: ./app
 
-   - name: Login to Amazon ECR
+    - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build Docker Image
