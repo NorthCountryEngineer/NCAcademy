@@ -45,8 +45,9 @@ jobs:
         REPOSITORY: ncacademy_website
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f ./ncacademy_website/Dockerfile ./ncacademy_website
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
 
   test:
     needs: build
