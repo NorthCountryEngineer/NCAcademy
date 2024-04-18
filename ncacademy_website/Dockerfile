@@ -1,9 +1,9 @@
 FROM node:18-alpine
-WORKDIR /
-COPY ncacademy_website/package*.json ./
+WORKDIR usr/src/app
+COPY package*.json ./
 RUN npm install
 
-COPY ncacademy_website/ ./
+COPY . .
 
 RUN npm run build
 
