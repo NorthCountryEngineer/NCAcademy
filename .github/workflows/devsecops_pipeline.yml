@@ -73,7 +73,7 @@ jobs:
       working-directory: ./ncacademy_website
       
     - name: Select Terraform Workspace
-      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
+      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }} -or-create
       working-directory: ./ncacademy_website
 
     - name: Apply Terraform for Website
