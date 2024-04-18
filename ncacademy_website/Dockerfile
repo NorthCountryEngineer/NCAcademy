@@ -1,6 +1,6 @@
 FROM node:18-alpine
-WORKDIR /usr/src
-COPY ncacademy_website/app/package*.json ./
+WORKDIR /
+COPY ncacademy_website/package*.json ./
 RUN npm install
 
 COPY ncacademy_website/app/ ./
