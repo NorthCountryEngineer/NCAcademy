@@ -39,8 +39,9 @@ jobs:
         REPOSITORY: ncacademy_website
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t ${{ steps.login-ecr.outputs.registry }}/ncacademy_website:${{ github.sha }} -f ./ncacademy_website/Dockerfile ./ncacademy_website
-        docker push ${{ steps.login-ecr.outputs.registry }}/ncacademy_website:${{ github.sha }}
+        docker build -t ncacademy_website
+        docker tag ncacademy_website:latest 179682925980.dkr.ecr.us-east-1.amazonaws.com/ncacademy_website
+        docker push 179682925980.dkr.ecr.us-east-1.amazonaws.com/ncacademy_website
 
 
 
