@@ -3,7 +3,7 @@ WORKDIR /
 COPY ncacademy_website/package*.json ./
 RUN npm install
 
-COPY ncacademy_website/app/ ./
+COPY ncacademy_website/ ./
 
 RUN npm run build
 
