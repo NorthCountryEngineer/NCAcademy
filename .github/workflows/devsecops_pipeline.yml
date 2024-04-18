@@ -69,16 +69,16 @@ jobs:
       run: echo "TF_ENV=${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}" >> $GITHUB_ENV
 
     - name: Initialize Terraform
-      run: terraform -chdir=ncacademy_website/terraform init -var="environment=${{ env.TF_ENV }}"
-      working-directory: ./ncacademy_website
+      run: terraform init -var="environment=${{ env.TF_ENV }}"
+      working-directory: ./ncacademy_website/terraform
       
     - name: Select Terraform Workspace
-      run: terraform -chdir=ncacademy_website/terraform workspace select -or-create ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }} 
-      working-directory: ./ncacademy_website
+      run: terraform workspace select -or-create ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }} 
+      working-directory: ./ncacademy_website/terraform
 
     - name: Apply Terraform for Website
-      run: terraform -chdir=ncacademy_website/terraform apply -auto-approve
-      working-directory: ./ncacademy_website
+      run: terraform apply -auto-approve
+      working-directory: ./ncacademy_website/terraform
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
