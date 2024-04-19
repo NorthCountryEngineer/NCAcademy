@@ -68,7 +68,7 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
 
     steps:
-    -name: Checkout Repository
+    - name: Checkout Repository
       uses: actions/checkout@v2
 
     - name: Setup Node.js
@@ -84,15 +84,15 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.1.8
-          terraform_wrapper: false
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.1.8
+        terraform_wrapper: false
 
     - name: Terraform Init
-        id: init
-        run: terraform init
-        working-directory: ./ncacademy_website/terraform
+      id: init
+      run: terraform init
+      working-directory: ./ncacademy_website/terraform
       
     - name: Select Terraform Workspace
       run: terraform workspace select -or-create ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }} 
@@ -105,27 +105,27 @@ jobs:
         terraform output -json > ../../terraform-outputs.json
     
     - name: Set variables from Terraform Outputs
-        run: |
-          outputs=$(cat terraform-outputs.json)
+      run: |
+        outputs=$(cat terraform-outputs.json)
 
-          ecr_repo_name=$(echo $outputs | jq -r .ecr_repo_name.value)
-          echo "ECR_REPO_NAME=$ecr_repo_name" >> $GITHUB_ENV
+        ecr_repo_name=$(echo $outputs | jq -r .ecr_repo_name.value)
+        echo "ECR_REPO_NAME=$ecr_repo_name" >> $GITHUB_ENV
 
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
 
-      - name: Build, tag, and push image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.ECR_REPO_NAME }}
-          IMAGE_TAG: ${{ env.TF_VAR_docker_image_tag }}
-        run: |
-          docker build \
-          --build-arg NODE_ENV=${{ env.DOCKER_ENV }} \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.ECR_REPO_NAME }}
+        IMAGE_TAG: ${{ env.TF_VAR_docker_image_tag }}
+      run: |
+        docker build \
+        --build-arg NODE_ENV=${{ env.DOCKER_ENV }} \
+        -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
   test:
     needs: build
