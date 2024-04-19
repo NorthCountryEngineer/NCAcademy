@@ -1,4 +1,11 @@
 terraform {
+
+  backend "s3" {
+    bucket  = "ncacademy-global-tf-state"
+    key     = "global_state/terraform.tfstate"
+    region  = "us-east-1"
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,5 +20,6 @@ terraform {
       version = "3.1.0"
     }
   }
+  
 }
 

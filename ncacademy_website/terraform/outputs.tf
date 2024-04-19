@@ -1,7 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-output "domain_name" {
-  description = "Website endpoint"
-  value       = local.domain_name
-}
+# output "cdn_url" {
+#   description   = "Cloudfront distribution domain name"
+#   value         = aws_cloudfront_distribution.ncacademy_cdn.domain_name
+# }

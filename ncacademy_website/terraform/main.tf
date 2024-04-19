@@ -5,15 +5,26 @@ provider "aws" {
   region = "us-east-1"
 }
 
+module "ncacademy_infrastructure" {
+  source                      = "./module"
+  project_name                = "ncacademy"
+  env                         = terraform.workspace
+  desired_count               = var.desired_count #desired number of ecs instances of the task definition to place and keep running. 0 is default, but keeping it here for the future.
+  docker_image_tag            = var.docker_image_tag
+  region                      = var.AWS_REGION
+  public_subnet_cidrs         = var.public_subnet_cidrs
+  target_availability_zones   = var.target_availability_zones
+  public_subnets              = var.public_subnet_cidrs
+}
+
+
 provider "cloudflare" {
   email = var.CLOUDFLARE_EMAIL
   api_key = var.CLOUDFLARE_API_KEY
 }
 
-locals {
-  domain_name = terraform.workspace == "production" ? "ncacademy.app" : "ncacademy.dev"
-}
 
+/*
 ## roles
 resource "aws_iam_role" "ecs_execution_role" {
   name = "ecs_execution_role"
@@ -37,26 +48,46 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-## vpc and internet gateway
+## vpc
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16" 
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  cidr_block           = "10.0.0.0/16"
+  tags = { Name = "ncacademy-vpc" }
+}
+
+## Subnet
+resource "aws_subnet" "public_subnets" {
+  count      = length(var.public_subnet_cidrs)
+  vpc_id     = aws_vpc.main.id 
+  cidr_block = element(var.public_subnet_cidrs, count.index)
+  availability_zone = element(var.target_availability_zones, count.index)
 
   tags = {
-    Name = "ncacademy-vpc"
+    Name = "Public Subnet ${count.index +1}"
   }
 }
 
+locals {
+  domain_name = terraform.workspace == "production" ? "ncacademy.app" : "ncacademy.dev"
+  public_subnet_ids = [for s in aws_subnet.public_subnets : s.id]
+  private_subnet_ids = [for s in aws_subnet.private_subnets : s.id]
+}
+
+#internet gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "Main Internet Gateway"
-  }
 }
 
+resource "aws_route_table" "routes" {
+  vpc_id = aws_vpc.main.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.main.id
+}
 
+resource "aws_route_table_association" "public_subnet_asso" {
+  count = length(var.public_subnet_cidrs)
+  subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
+  route_table_id = aws_route_table.routes.id
+}
 
 ## security grouping
 resource "aws_security_group" "alb_sg" {
@@ -84,29 +115,6 @@ resource "aws_security_group" "alb_sg" {
     Name = "ncacademy-alb-sg"
   }
 }
-## Subnets
-
-# Main Subnet
-resource "aws_subnet" "main" {
-  vpc_id     = aws_vpc.main.id 
-  cidr_block = "10.0.2.0/25" 
-
-  tags = {
-    Name = "Main"
-  }
-}
-
-# Secondary Subnet
-resource "aws_subnet" "secondary" {
-  vpc_id     = aws_vpc.main.id 
-  cidr_block = "10.0.2.128/25"  
-
-  tags = {
-    Name = "Secondary"
-  }
-}
-
-
 
 ## load balancing
 
@@ -115,8 +123,7 @@ resource "aws_lb" "ncacademy_alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = [aws_subnet.main.id, aws_subnet.secondary.id]
-
+  subnets            = local.public_subnet_ids
   enable_deletion_protection = false
 }
 
@@ -245,7 +252,7 @@ resource "aws_ecs_service" "ncacademy_service" {
   launch_type = "FARGATE"
   
   network_configuration {
-    subnets  = [aws_subnet.main.id, aws_subnet.secondary.id]
+    subnets  = local.private_subnet_ids
     security_groups = [aws_security_group.alb_sg.id]
     assign_public_ip = true
   }
@@ -281,14 +288,4 @@ resource "cloudflare_record" "site_cname" {
   proxied = true
 }
 
-output "cdn_url" {
-  value = aws_cloudfront_distribution.ncacademy_cdn.domain_name
-}
-
-terraform {
-  backend "s3" {
-    bucket  = "ncacademy-global-tf-state"
-    key     = "global_state/terraform.tfstate"
-    region  = "us-east-1"
-  }
-}
+*/
