@@ -17,14 +17,14 @@ module "ncacademy_infrastructure" {
   public_subnets              = var.public_subnet_cidrs
 }
 
-
+/*
 provider "cloudflare" {
   email = var.CLOUDFLARE_EMAIL
   api_key = var.CLOUDFLARE_API_KEY
 }
 
 
-/*
+
 ## roles
 resource "aws_iam_role" "ecs_execution_role" {
   name = "ecs_execution_role"
