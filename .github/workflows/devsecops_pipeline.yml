@@ -62,7 +62,7 @@ jobs:
 
   build:
     name: Build Next Application
-    needs: pre-deployment
+    needs: pre-build
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
 
