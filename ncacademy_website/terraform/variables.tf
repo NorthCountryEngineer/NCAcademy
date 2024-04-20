@@ -47,5 +47,5 @@ variable "docker_image_tag" {
 
 variable "desired_count" {
     type        = number
-    default     = 0
+    default     = 1
 }
