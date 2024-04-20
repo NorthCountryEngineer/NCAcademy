@@ -179,8 +179,7 @@ jobs:
       id: plan
       working-directory: ${{env.TERRAFORM_ROOT}}
       run: |
-        terraform plan \
-        -out ./app.out
+        terraform plan -out ./app.out
     
     - name: Apply Terraform for Website
       run: terraform apply -auto-approve ./app.out
