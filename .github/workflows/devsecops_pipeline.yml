@@ -173,6 +173,10 @@ jobs:
       id: init
       run: terraform init
       working-directory: ./ncacademy_website/terraform
+      
+    - name: Select Terraform Workspace
+      run: terraform workspace select ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }} # -or-create
+      working-directory: ./ncacademy_website/terraform
 
     - name: Terraform Validate
       id: validate
