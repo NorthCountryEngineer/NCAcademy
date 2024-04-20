@@ -14,7 +14,6 @@ env:
   TERRAFORM_ROOT: ./terraform
   NODE_VERSION: 18
   DOCKER_ENV: ${{ github.ref == 'refs/heads/production' && 'production' || 'development' }}
-
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
@@ -130,9 +129,10 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ env.ECR_REPO_NAME }}
+        ECR_REPOSITORY: ${{ github.ref == 'refs/heads/production' && 'ncacademy-repo-production' || 'ncacademy-repo-development' }}
         IMAGE_TAG: ${{ env.TF_VAR_docker_image_tag }}
       run: |
+        echo "Docker build command: docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ."
         docker buildx build --build-arg NODE_ENV=development -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ./ncacademy_website/Dockerfile ./ncacademy_website
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
