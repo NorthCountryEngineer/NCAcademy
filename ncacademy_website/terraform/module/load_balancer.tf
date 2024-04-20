@@ -1,3 +1,4 @@
+## Local variable definition
 locals {
     public_subnet_ids = [for s in aws_default_subnet.public_subnets : s.id]
 }
@@ -63,7 +64,7 @@ resource "aws_lb_target_group" "application_target_group" {
     protocol    = "HTTP"
     target_type = "ip"
     vpc_id      = aws_default_vpc.default.id
-    
+
     health_check {
         matcher             = "200,301,302"
         path                = "/"
