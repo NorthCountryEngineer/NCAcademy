@@ -1,40 +1,36 @@
-# NCE Pipelines Infrastructure
+# NCAcademy Platform
 
-This repository contains the Terraform code to provision the infrastructure for NCE Pipelines on AWS.
+NCAcademy is an experimental platform for AI‑supported education. The project aims to provide an environment for building machine learning models and agentic workflows that can help educators and students.
 
-## Prerequisites
+## Project Goals
 
-- Terraform (version X.X.X)
-- AWS CLI (configured with appropriate credentials)
+* **Teacher Assistance** – tools that help generate lesson plans, build homework sets from textbooks and assignments, and assist with grading.
+* **Student Tutoring** – interactive agents that guide students through homework with access to specialised models.
 
-## Usage
+The long‑term vision is a containerised service that can be deployed on‑premises or to the cloud. This repository contains the starting point for that effort.
 
-1. Clone the repository:
-2. Navigate to the repository directory:
-3. Initialize the Terraform working directory:
-4. Review and modify the variables in `variables.tf` as needed.
-5. Preview the changes <terraform plan>
-6. Apply the changes <terraform apply>
-7. Confirm the changes by typing `yes` when prompted.
+## Directory Structure
 
-## Resources
+```text
+src/              Application source code (empty for now)
+docker/           Docker build context
+  Dockerfile      Base image used by `docker-compose`
+docker-compose.yml  Compose file for local development
+requirements.txt    Python dependencies
+```
 
-The following resources will be provisioned:
+## Tooling
 
-- S3 bucket for storing artifacts
-- ECR repository for storing Docker images
-- ECS cluster
-- ECS task definition
-- ECS service
-- VPC
-- Subnets
-- Security group
-- Network ACL
+* **Docker / Docker‑Compose** – containerisation for the application.
+* **Python 3.11** – initial runtime for agentic workflows; can be extended with TypeScript or other languages.
 
-## Configuration
+## Getting Started
 
-The `variables.tf` file contains the configurable variables for the infrastructure. Modify the default values as needed.
+1. Build and start the development container:
 
-## Cleanup
+   ```bash
+   docker-compose up --build
+   ```
 
-To destroy the provisioned resources, run:<terraform destroy>
+2. Modify source code in `src/` to implement features.
+
