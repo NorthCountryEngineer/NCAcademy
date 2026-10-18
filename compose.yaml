@@ -1,0 +1,76 @@
+name: ncacademy-local
+x-api: &api
+  image: ncacademy-api:local
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+  environment: &api-environment
+    DATABASE_URL: postgresql+psycopg://academy:${POSTGRES_PASSWORD:?Run python3 scripts/setup_local.py}@postgres:5432/academy
+    APP_URL: ${APP_URL:-http://localhost:8090}
+    SESSION_SECRET: ${SESSION_SECRET:?Run python3 scripts/setup_local.py}
+    AUTH_MODE: ${AUTH_MODE:-local}
+    DEMO_SEED: ${DEMO_SEED:-true}
+    ALLOW_LIVE_MODELS: "false"
+    CORE_ISSUER: ${CORE_ISSUER:-}
+    CORE_BROWSER_CLIENT_ID: ${CORE_BROWSER_CLIENT_ID:-}
+    CORE_RESOURCE_CREDENTIALS_JSON: ${CORE_RESOURCE_CREDENTIALS_JSON:-}
+    CORE_ORGANIZATION_ID: ${CORE_ORGANIZATION_ID:-}
+    CORE_SERVICE_ID: ${CORE_SERVICE_ID:-}
+    CORE_DEPLOYMENT_ID: ${CORE_DEPLOYMENT_ID:-}
+    CORE_ENVIRONMENT: ${CORE_ENVIRONMENT:-production}
+  read_only: true
+  tmpfs: ["/tmp:size=64m,mode=1777", "/app/.local:size=16m,uid=10001,gid=10001,mode=0700"]
+  cap_drop: ["ALL"]
+  security_opt: ["no-new-privileges:true"]
+  init: true
+  stop_grace_period: 90s
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: academy
+      POSTGRES_DB: academy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python3 scripts/setup_local.py}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academy -d academy"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  migrate:
+    <<: *api
+    command: ["python", "-m", "academy.migrate"]
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+  api:
+    <<: *api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready',timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports: ["127.0.0.1:${APP_PORT:-8090}:8080"]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres-data:

@@ -1,0 +1,28 @@
+# Local configuration and student/organization data
+.env
+.env.*
+!.env.example
+!.env.production.example
+var/
+.local/
+instance/
+*.db
+*.db-*
+*.sqlite*
+*.pem
+*.key
+*.p12
+*.tfstate*
+# Dependencies and generated artifacts
+.venv/
+venv/
+node_modules/
+dist/
+build/
+coverage/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.DS_Store
+artifacts/

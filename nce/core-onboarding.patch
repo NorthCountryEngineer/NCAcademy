@@ -1,0 +1,739 @@
+diff --git a/ci/tests/test_github_gate.py b/ci/tests/test_github_gate.py
+index df9530b..12e081e 100644
+--- a/ci/tests/test_github_gate.py
++++ b/ci/tests/test_github_gate.py
+@@ -33,6 +33,19 @@ def documents():
+ 
+ 
+ class GitHubGateTests(unittest.TestCase):
++    def test_academy_requires_its_own_exact_repository_and_job(self):
++        values = documents()
++        for listing in (values[1], values[3]):
++            for item in listing['workflow_runs']:
++                item['repository']['full_name'] = 'NorthCountryEngineer/NCAcademy'
++                item['head_repository']['full_name'] = 'NorthCountryEngineer/NCAcademy'
++        values[2]['jobs'][0]['name'] = 'NCAcademy required checks'
++        receipt = gate.verify_repository('NorthCountryEngineer/NCAcademy', SHA, read_json=Mock(side_effect=values))
++        self.assertEqual(receipt['repository'], 'NorthCountryEngineer/NCAcademy')
++        values[2]['jobs'][0]['name'] = 'Proposal Studio required checks'
++        with self.assertRaises(gate.CIGateError):
++            gate.verify_repository('NorthCountryEngineer/NCAcademy', SHA, read_json=Mock(side_effect=values))
++
+     def verify(self, values=None):
+         get = Mock(side_effect=values or documents())
+         result = gate.verify_repository(REPOSITORY, SHA, read_json=get)
+diff --git a/deployment/aws-apps/README.md b/deployment/aws-apps/README.md
+index 537c7ec..6c955f2 100644
+--- a/deployment/aws-apps/README.md
++++ b/deployment/aws-apps/README.md
+@@ -31,8 +31,10 @@ Python dependencies must already be vendored inside the source directory; native
+ binaries and arbitrary build/deploy commands are not supported by this recipe.
+ The starter normalizes the documented HTTP API Lambda proxy event formats 1.0
+ and 2.0; custom handlers must support the QuickCreate integration's event shape.
+-There is no Fargate recipe yet. A future recipe needs an isolated image builder
+-and an explicit migration-before-traffic procedure before it can be enabled.
++The fixed `amplify-fargate` recipe serves Proposal Studio. The separate
++`amplify-academy-fargate` recipe serves NCAcademy with one API and PostgreSQL;
++see `docs/cloud-deployments.md` for its bounded contract. Both consume audited
++immutable ECR digests and perform explicit migration before traffic.
+ 
+ The privileged runner rejects extra manifest fields, path escapes, symbolic
+ links in Lambda code, and infrastructure changes that remove or replace any
+diff --git a/deployment/aws-apps/academy-fargate.template.json b/deployment/aws-apps/academy-fargate.template.json
+new file mode 100644
+index 0000000..a413ab4
+--- /dev/null
++++ b/deployment/aws-apps/academy-fargate.template.json
+@@ -0,0 +1 @@
++{"AWSTemplateFormatVersion":"2010-09-09","Description":"Core-managed Academy frontend and API with retained private PostgreSQL; migrations alone receive database owner credentials.","Metadata":{"NCERecipe":"amplify-academy-fargate","RuntimeContract":"academy.runtime api; academy.migrate; API /api/ready:8000; no browser or worker","AWSToolsMetrics":{"AWSAgentToolkit":"aws-cloudformation@3"},"com.aws.cloudformation.Context":{"arch":"Amplify static frontend -> API ALB -> one private API task -> retained PostgreSQL. Separate migration execution role and database login.","must":["API receives only runtime database credentials; owner credentials remain exclusive to controlled migration.","API desired count stays zero until Core registration and successful migration.","No application AWS task role or model calls are required at deployment."],"ref":[{"at":"docs/cloud-deployments.md","has":"Academy fixed recipe and production admission requirements","scope":"academy"}]}},"Parameters":{"ResourceName":{"Type":"String","AllowedPattern":"[a-z][a-z0-9-]{2,62}"},"PlatformPrefix":{"Type":"String","AllowedPattern":"[a-z][a-z0-9-]{2,62}"},"ApplicationIdentifier":{"Type":"String","AllowedPattern":"[A-Za-z0-9-]{1,64}"},"Environment":{"Type":"String","AllowedPattern":"[a-z][a-z0-9-]{0,62}"},"PermissionsBoundaryArn":{"Type":"String","AllowedPattern":"arn:aws:iam::[0-9]{12}:policy/.+"},"CoreCredentialsParameter":{"Type":"String","AllowedPattern":"/[A-Za-z0-9_./-]+"},"ApplicationOrigin":{"Type":"String","AllowedPattern":"https://[A-Za-z0-9.-]+"},"CoreIssuer":{"Type":"String","AllowedPattern":"https://[A-Za-z0-9.-]+"},"CoreOrganizationId":{"Type":"String","Default":"pending"},"CoreServiceId":{"Type":"String","Default":"pending"},"CoreDeploymentId":{"Type":"String","Default":"pending"},"CoreBrowserClientId":{"Type":"String","Default":"pending"},"CoreRedirectUri":{"Type":"String","Default":"https://example.invalid/api/auth/core/callback","AllowedPattern":"https://[A-Za-z0-9.-]+/api/auth/core/callback"},"ApiImageUri":{"Type":"String","AllowedPattern":"[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/[a-z0-9._/-]+@sha256:[a-f0-9]{64}"},"RuntimeSecretArn":{"Type":"String","AllowedPattern":"arn:aws:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+"},"CertificateArn":{"Type":"String","AllowedPattern":"arn:aws:acm:[a-z0-9-]+:[0-9]{12}:certificate/.+"},"ApiHost":{"Type":"String","AllowedPattern":"[a-z0-9.-]+"},"DesiredCount":{"Type":"Number","AllowedValues":[0,1],"Default":0},"DatabaseInstanceClass":{"Type":"String","AllowedValues":["db.t4g.micro","db.t4g.small","db.t4g.medium"],"Default":"db.t4g.micro"},"DatabaseVersion":{"Type":"String","Default":"16.15","AllowedPattern":"[0-9]+\\.[0-9]+"},"ApiRepositoryName":{"Type":"String","AllowedPattern":"[a-z0-9._/-]+"},"AllowLiveModels":{"Type":"String","Default":"false","AllowedValues":["false","true"]}},"Resources":{"Vpc":{"Type":"AWS::EC2::VPC","Properties":{"CidrBlock":"10.74.0.0/16","EnableDnsSupport":true,"EnableDnsHostnames":true,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"InternetGateway":{"Type":"AWS::EC2::InternetGateway","Properties":{"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"GatewayAttachment":{"Type":"AWS::EC2::VPCGatewayAttachment","Properties":{"VpcId":{"Ref":"Vpc"},"InternetGatewayId":{"Ref":"InternetGateway"}}},"PublicSubnet1":{"Type":"AWS::EC2::Subnet","Properties":{"VpcId":{"Ref":"Vpc"},"CidrBlock":"10.74.1.0/24","AvailabilityZone":{"Fn::Select":[0,{"Fn::GetAZs":""}]},"MapPublicIpOnLaunch":false,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"PrivateSubnet1":{"Type":"AWS::EC2::Subnet","Properties":{"VpcId":{"Ref":"Vpc"},"CidrBlock":"10.74.11.0/24","AvailabilityZone":{"Fn::Select":[0,{"Fn::GetAZs":""}]},"MapPublicIpOnLaunch":false,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"PublicSubnet2":{"Type":"AWS::EC2::Subnet","Properties":{"VpcId":{"Ref":"Vpc"},"CidrBlock":"10.74.2.0/24","AvailabilityZone":{"Fn::Select":[1,{"Fn::GetAZs":""}]},"MapPublicIpOnLaunch":false,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"PrivateSubnet2":{"Type":"AWS::EC2::Subnet","Properties":{"VpcId":{"Ref":"Vpc"},"CidrBlock":"10.74.12.0/24","AvailabilityZone":{"Fn::Select":[1,{"Fn::GetAZs":""}]},"MapPublicIpOnLaunch":false,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"PublicRoutes":{"Type":"AWS::EC2::RouteTable","Properties":{"VpcId":{"Ref":"Vpc"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"InternetRoute":{"Type":"AWS::EC2::Route","Properties":{"RouteTableId":{"Ref":"PublicRoutes"},"DestinationCidrBlock":"0.0.0.0/0","GatewayId":{"Ref":"InternetGateway"}},"DependsOn":"GatewayAttachment"},"NatAddress":{"Type":"AWS::EC2::EIP","Properties":{"Domain":"vpc","Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"NatGateway":{"Type":"AWS::EC2::NatGateway","Properties":{"AllocationId":{"Fn::GetAtt":["NatAddress","AllocationId"]},"SubnetId":{"Ref":"PublicSubnet1"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DependsOn":"GatewayAttachment"},"PrivateRoutes":{"Type":"AWS::EC2::RouteTable","Properties":{"VpcId":{"Ref":"Vpc"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"NatRoute":{"Type":"AWS::EC2::Route","Properties":{"RouteTableId":{"Ref":"PrivateRoutes"},"DestinationCidrBlock":"0.0.0.0/0","NatGatewayId":{"Ref":"NatGateway"}}},"PublicAssociation1":{"Type":"AWS::EC2::SubnetRouteTableAssociation","Properties":{"SubnetId":{"Ref":"PublicSubnet1"},"RouteTableId":{"Ref":"PublicRoutes"}}},"PrivateAssociation1":{"Type":"AWS::EC2::SubnetRouteTableAssociation","Properties":{"SubnetId":{"Ref":"PrivateSubnet1"},"RouteTableId":{"Ref":"PrivateRoutes"}}},"PublicAssociation2":{"Type":"AWS::EC2::SubnetRouteTableAssociation","Properties":{"SubnetId":{"Ref":"PublicSubnet2"},"RouteTableId":{"Ref":"PublicRoutes"}}},"PrivateAssociation2":{"Type":"AWS::EC2::SubnetRouteTableAssociation","Properties":{"SubnetId":{"Ref":"PrivateSubnet2"},"RouteTableId":{"Ref":"PrivateRoutes"}}},"LoadBalancerSecurityGroup":{"Type":"AWS::EC2::SecurityGroup","Properties":{"GroupDescription":"HTTPS public application edge","VpcId":{"Ref":"Vpc"},"SecurityGroupEgress":[{"IpProtocol":"tcp","FromPort":8000,"ToPort":8000,"DestinationSecurityGroupId":{"Ref":"TaskSecurityGroup"}}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"TaskSecurityGroup":{"Type":"AWS::EC2::SecurityGroup","Properties":{"GroupDescription":"API and trusted worker network","VpcId":{"Ref":"Vpc"},"SecurityGroupEgress":[{"IpProtocol":"tcp","FromPort":443,"ToPort":443,"CidrIp":"0.0.0.0/0"},{"IpProtocol":"tcp","FromPort":5432,"ToPort":5432,"DestinationSecurityGroupId":{"Ref":"DatabaseSecurityGroup"}}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"DatabaseSecurityGroup":{"Type":"AWS::EC2::SecurityGroup","Properties":{"GroupDescription":"Database isolated to trusted app tasks","VpcId":{"Ref":"Vpc"},"SecurityGroupEgress":[{"IpProtocol":"tcp","FromPort":1,"ToPort":1,"CidrIp":"127.0.0.1/32"}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"ApiIngress":{"Type":"AWS::EC2::SecurityGroupIngress","Properties":{"GroupId":{"Ref":"TaskSecurityGroup"},"IpProtocol":"tcp","FromPort":8000,"ToPort":8000,"SourceSecurityGroupId":{"Ref":"LoadBalancerSecurityGroup"}}},"DatabaseIngress":{"Type":"AWS::EC2::SecurityGroupIngress","Properties":{"GroupId":{"Ref":"DatabaseSecurityGroup"},"IpProtocol":"tcp","FromPort":5432,"ToPort":5432,"SourceSecurityGroupId":{"Ref":"TaskSecurityGroup"}}},"HttpsIngress":{"Type":"AWS::EC2::SecurityGroupIngress","Properties":{"GroupId":{"Ref":"LoadBalancerSecurityGroup"},"IpProtocol":"tcp","FromPort":443,"ToPort":443,"CidrIp":"0.0.0.0/0"}},"DatabaseSecret":{"Type":"AWS::SecretsManager::Secret","Properties":{"Name":{"Fn::Sub":"${ResourceName}-database"},"GenerateSecretString":{"SecretStringTemplate":"{\"username\":\"academy\"}","GenerateStringKey":"password","PasswordLength":40,"ExcludeCharacters":"\"@/\\'"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"DatabaseSubnetGroup":{"Type":"AWS::RDS::DBSubnetGroup","Properties":{"DBSubnetGroupDescription":"Private application database","SubnetIds":[{"Ref":"PrivateSubnet1"},{"Ref":"PrivateSubnet2"}],"DBSubnetGroupName":{"Fn::Sub":"${ResourceName}-database"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"DatabaseParameters":{"Type":"AWS::RDS::DBParameterGroup","Properties":{"Description":"Require PostgreSQL TLS","Family":"postgres16","Parameters":{"rds.force_ssl":"1"},"DBParameterGroupName":{"Fn::Sub":"${ResourceName}-database"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"Database":{"Type":"AWS::RDS::DBInstance","Properties":{"Engine":"postgres","EngineVersion":{"Ref":"DatabaseVersion"},"DBInstanceClass":{"Ref":"DatabaseInstanceClass"},"DBName":"academy","AllocatedStorage":"20","MaxAllocatedStorage":100,"StorageType":"gp3","StorageEncrypted":true,"MasterUsername":{"Fn::Sub":"{{resolve:secretsmanager:${DatabaseSecret}:SecretString:username}}"},"MasterUserPassword":{"Fn::Sub":"{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}"},"DBSubnetGroupName":{"Ref":"DatabaseSubnetGroup"},"DBParameterGroupName":{"Ref":"DatabaseParameters"},"VPCSecurityGroups":[{"Ref":"DatabaseSecurityGroup"}],"PubliclyAccessible":false,"BackupRetentionPeriod":14,"DeletionProtection":true,"MultiAZ":false,"AutoMinorVersionUpgrade":true,"CopyTagsToSnapshot":true,"EnableCloudwatchLogsExports":["postgresql","upgrade"],"DBInstanceIdentifier":{"Fn::Sub":"${ResourceName}-database"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"DatabaseSecretAttachment":{"Type":"AWS::SecretsManager::SecretTargetAttachment","Properties":{"SecretId":{"Ref":"DatabaseSecret"},"TargetId":{"Ref":"Database"},"TargetType":"AWS::RDS::DBInstance"}},"Logs":{"Type":"AWS::Logs::LogGroup","Properties":{"LogGroupName":{"Fn::Sub":"/nce/${ResourceName}"},"RetentionInDays":30,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain"},"ExecutionRole":{"Type":"AWS::IAM::Role","Properties":{"RoleName":{"Fn::Sub":"${ResourceName}-execution"},"PermissionsBoundary":{"Ref":"PermissionsBoundaryArn"},"AssumeRolePolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole","Condition":{"StringEquals":{"aws:SourceAccount":{"Ref":"AWS::AccountId"}},"ArnLike":{"aws:SourceArn":{"Fn::Sub":"arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*"}}}}]},"Policies":[{"PolicyName":"runtime","PolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecr:GetAuthorizationToken"],"Resource":"*"},{"Effect":"Allow","Action":["logs:CreateLogStream","logs:PutLogEvents"],"Resource":{"Fn::Sub":"${Logs.Arn}"}},{"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":[{"Ref":"RuntimeSecretArn"},{"Ref":"DatabaseRuntimeSecret"}]},{"Effect":"Allow","Action":["ssm:GetParameters"],"Resource":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}},{"Effect":"Allow","Action":["kms:Decrypt"],"Resource":{"Fn::Sub":"arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*"},"Condition":{"StringEquals":{"kms:ViaService":{"Fn::Sub":"ssm.${AWS::Region}.amazonaws.com"}},"StringLike":{"kms:EncryptionContext:PARAMETER_ARN":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}}}},{"Effect":"Allow","Action":["ecr:BatchGetImage","ecr:GetDownloadUrlForLayer","ecr:BatchCheckLayerAvailability"],"Resource":[{"Fn::Sub":"arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ApiRepositoryName}"}]}]}}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"Metadata":{"com.aws.cloudformation.Context":{"why":"API image, logs, Core binding and runtime database injection; no owner credential read.","must":["Do not grant DatabaseSecret read or any application AWS task role.","Keep the mandatory application permissions boundary."]}}},"Cluster":{"Type":"AWS::ECS::Cluster","Properties":{"ClusterSettings":[{"Name":"containerInsights","Value":"enabled"}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"TaskDefinition":{"Type":"AWS::ECS::TaskDefinition","Properties":{"Family":{"Fn::Sub":"${ResourceName}-api"},"Cpu":"256","Memory":"1024","NetworkMode":"awsvpc","RequiresCompatibilities":["FARGATE"],"RuntimePlatform":{"CpuArchitecture":"ARM64","OperatingSystemFamily":"LINUX"},"ExecutionRoleArn":{"Fn::GetAtt":["ExecutionRole","Arn"]},"ContainerDefinitions":[{"Name":"api","Image":{"Ref":"ApiImageUri"},"Essential":true,"ReadonlyRootFilesystem":true,"User":"10001:10001","StopTimeout":120,"LogConfiguration":{"LogDriver":"awslogs","Options":{"awslogs-group":{"Ref":"Logs"},"awslogs-region":{"Ref":"AWS::Region"},"awslogs-stream-prefix":"api"}},"MountPoints":[{"SourceVolume":"scratch","ContainerPath":"/tmp","ReadOnly":false},{"SourceVolume":"local","ContainerPath":"/app/.local","ReadOnly":false}],"Command":["python","-m","academy.runtime","api"],"Environment":[{"Name":"APP_URL","Value":{"Ref":"ApplicationOrigin"}},{"Name":"AUTH_MODE","Value":"core"},{"Name":"CORE_ISSUER","Value":{"Ref":"CoreIssuer"}},{"Name":"CORE_BROWSER_CLIENT_ID","Value":{"Ref":"CoreBrowserClientId"}},{"Name":"CORE_ORGANIZATION_ID","Value":{"Ref":"CoreOrganizationId"}},{"Name":"CORE_SERVICE_ID","Value":{"Ref":"CoreServiceId"}},{"Name":"CORE_ENVIRONMENT","Value":{"Ref":"Environment"}},{"Name":"CORE_DEPLOYMENT_ID","Value":{"Ref":"CoreDeploymentId"}},{"Name":"DB_HOST","Value":{"Fn::GetAtt":["Database","Endpoint.Address"]}},{"Name":"DB_PORT","Value":"5432"},{"Name":"DB_NAME","Value":"academy"},{"Name":"DB_SSLMODE","Value":"verify-full"},{"Name":"DB_SSLROOTCERT","Value":"/etc/ssl/certs/rds-global-bundle.pem"},{"Name":"DEMO_SEED","Value":"false"},{"Name":"ALLOW_LIVE_MODELS","Value":{"Ref":"AllowLiveModels"}}],"Secrets":[{"Name":"SESSION_SECRET","ValueFrom":{"Fn::Sub":"${RuntimeSecretArn}:session_secret::"}},{"Name":"DB_USERNAME","ValueFrom":{"Fn::Sub":"${DatabaseRuntimeSecret}:username::"}},{"Name":"DB_PASSWORD","ValueFrom":{"Fn::Sub":"${DatabaseRuntimeSecret}:password::"}},{"Name":"CORE_RESOURCE_CREDENTIALS_JSON","ValueFrom":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}}],"PortMappings":[{"ContainerPort":8000,"Protocol":"tcp"}],"HealthCheck":{"Command":["CMD-SHELL","python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=4)\""],"Interval":30,"Timeout":5,"Retries":3,"StartPeriod":60}}],"Volumes":[{"Name":"scratch"},{"Name":"local"}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"Metadata":{"com.aws.cloudformation.Context":{"why":"Always-on API receives a restricted PostgreSQL login and no schema-owner credential.","must":["DB_USERNAME and DB_PASSWORD must reference DatabaseRuntimeSecret only.","No TaskRoleArn, mutable image tag, demo seeding or live-model default."]}}},"MigrationTaskDefinition":{"Type":"AWS::ECS::TaskDefinition","Properties":{"Family":{"Fn::Sub":"${ResourceName}-migration"},"Cpu":"256","Memory":"1024","NetworkMode":"awsvpc","RequiresCompatibilities":["FARGATE"],"RuntimePlatform":{"CpuArchitecture":"ARM64","OperatingSystemFamily":"LINUX"},"ExecutionRoleArn":{"Fn::GetAtt":["MigrationExecutionRole","Arn"]},"ContainerDefinitions":[{"Name":"migrate","Image":{"Ref":"ApiImageUri"},"Essential":true,"ReadonlyRootFilesystem":true,"User":"10001:10001","StopTimeout":120,"LogConfiguration":{"LogDriver":"awslogs","Options":{"awslogs-group":{"Ref":"Logs"},"awslogs-region":{"Ref":"AWS::Region"},"awslogs-stream-prefix":"migrate"}},"MountPoints":[{"SourceVolume":"scratch","ContainerPath":"/tmp","ReadOnly":false},{"SourceVolume":"local","ContainerPath":"/app/.local","ReadOnly":false}],"Command":["python","-m","academy.migrate"],"Environment":[{"Name":"APP_URL","Value":{"Ref":"ApplicationOrigin"}},{"Name":"AUTH_MODE","Value":"core"},{"Name":"CORE_ISSUER","Value":{"Ref":"CoreIssuer"}},{"Name":"CORE_BROWSER_CLIENT_ID","Value":{"Ref":"CoreBrowserClientId"}},{"Name":"CORE_ORGANIZATION_ID","Value":{"Ref":"CoreOrganizationId"}},{"Name":"CORE_SERVICE_ID","Value":{"Ref":"CoreServiceId"}},{"Name":"CORE_ENVIRONMENT","Value":{"Ref":"Environment"}},{"Name":"CORE_DEPLOYMENT_ID","Value":{"Ref":"CoreDeploymentId"}},{"Name":"DB_HOST","Value":{"Fn::GetAtt":["Database","Endpoint.Address"]}},{"Name":"DB_PORT","Value":"5432"},{"Name":"DB_NAME","Value":"academy"},{"Name":"DB_SSLMODE","Value":"verify-full"},{"Name":"DB_SSLROOTCERT","Value":"/etc/ssl/certs/rds-global-bundle.pem"},{"Name":"DEMO_SEED","Value":"false"},{"Name":"ALLOW_LIVE_MODELS","Value":{"Ref":"AllowLiveModels"}}],"Secrets":[{"Name":"SESSION_SECRET","ValueFrom":{"Fn::Sub":"${RuntimeSecretArn}:session_secret::"}},{"Name":"DB_USERNAME","ValueFrom":{"Fn::Sub":"${DatabaseSecret}:username::"}},{"Name":"DB_PASSWORD","ValueFrom":{"Fn::Sub":"${DatabaseSecret}:password::"}},{"Name":"CORE_RESOURCE_CREDENTIALS_JSON","ValueFrom":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}},{"Name":"ACADEMY_RUNTIME_DB_USERNAME","ValueFrom":{"Fn::Sub":"${DatabaseRuntimeSecret}:username::"}},{"Name":"ACADEMY_RUNTIME_DB_PASSWORD","ValueFrom":{"Fn::Sub":"${DatabaseRuntimeSecret}:password::"}}]}],"Volumes":[{"Name":"scratch"},{"Name":"local"}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"Metadata":{"com.aws.cloudformation.Context":{"why":"Explicit one-shot schema migration then restricted runtime-login bootstrap using the same reviewed API image.","must":["Owner DB_USERNAME/password stay in this task only; runtime target credentials have separate variable names.","Runner must observe exit zero before activating the API."]}}},"LoadBalancer":{"Type":"AWS::ElasticLoadBalancingV2::LoadBalancer","Properties":{"Scheme":"internet-facing","Type":"application","Subnets":[{"Ref":"PublicSubnet1"},{"Ref":"PublicSubnet2"}],"SecurityGroups":[{"Ref":"LoadBalancerSecurityGroup"}],"LoadBalancerAttributes":[{"Key":"routing.http.drop_invalid_header_fields.enabled","Value":"true"},{"Key":"routing.http.desync_mitigation_mode","Value":"strictest"}],"Name":{"Ref":"ResourceName"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"TargetGroup":{"Type":"AWS::ElasticLoadBalancingV2::TargetGroup","Properties":{"VpcId":{"Ref":"Vpc"},"Port":8000,"Protocol":"HTTP","TargetType":"ip","HealthCheckPath":"/api/ready","HealthCheckIntervalSeconds":30,"HealthyThresholdCount":2,"UnhealthyThresholdCount":3,"Matcher":{"HttpCode":"200"},"Name":{"Ref":"ResourceName"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"Listener":{"Type":"AWS::ElasticLoadBalancingV2::Listener","Properties":{"LoadBalancerArn":{"Ref":"LoadBalancer"},"Port":443,"Protocol":"HTTPS","Certificates":[{"CertificateArn":{"Ref":"CertificateArn"}}],"SslPolicy":"ELBSecurityPolicy-TLS13-1-2-2021-06","DefaultActions":[{"Type":"forward","TargetGroupArn":{"Ref":"TargetGroup"}}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"Service":{"Type":"AWS::ECS::Service","Properties":{"Cluster":{"Ref":"Cluster"},"TaskDefinition":{"Ref":"TaskDefinition"},"DesiredCount":{"Ref":"DesiredCount"},"LaunchType":"FARGATE","PlatformVersion":"1.4.0","NetworkConfiguration":{"AwsvpcConfiguration":{"Subnets":[{"Ref":"PrivateSubnet1"},{"Ref":"PrivateSubnet2"}],"SecurityGroups":[{"Ref":"TaskSecurityGroup"}],"AssignPublicIp":"DISABLED"}},"DeploymentConfiguration":{"MinimumHealthyPercent":0,"MaximumPercent":100,"DeploymentCircuitBreaker":{"Enable":true,"Rollback":true}},"LoadBalancers":[{"TargetGroupArn":{"Ref":"TargetGroup"},"ContainerName":"api","ContainerPort":8000}],"HealthCheckGracePeriodSeconds":120,"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DependsOn":["NatRoute","Listener"]},"AmplifyApp":{"Type":"AWS::Amplify::App","Properties":{"Name":{"Ref":"ResourceName"},"Platform":"WEB","CustomRules":[{"Source":{"Fn::Join":["",["https://www.",{"Fn::Select":[1,{"Fn::Split":["://",{"Ref":"ApplicationOrigin"}]}]}]]},"Target":{"Ref":"ApplicationOrigin"},"Status":"301"},{"Source":"/api/<*>","Target":{"Fn::Sub":"https://${ApiHost}/api/<*>"},"Status":"200"},{"Source":"/integrations/<*>","Target":{"Fn::Sub":"https://${ApiHost}/integrations/<*>"},"Status":"200"},{"Source":"</^[^.]+$|\\.(?!(css|gif|ico|jpg|jpeg|js|png|txt|svg|woff|woff2|ttf|map|json|pdf|md|zip)$)([^.]+$)/>","Target":"/index.html","Status":"200"}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"AmplifyBranch":{"Type":"AWS::Amplify::Branch","Properties":{"AppId":{"Fn::GetAtt":["AmplifyApp","AppId"]},"BranchName":{"Ref":"Environment"},"Stage":"PRODUCTION","EnableAutoBuild":false,"Framework":"React","Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"Api5xxAlarm":{"Type":"AWS::CloudWatch::Alarm","Properties":{"AlarmDescription":"Academy application health/storage threshold","Namespace":"AWS/ApplicationELB","MetricName":"HTTPCode_Target_5XX_Count","Dimensions":[{"Name":"LoadBalancer","Value":{"Fn::GetAtt":["LoadBalancer","LoadBalancerFullName"]}}],"Statistic":"Sum","Period":300,"EvaluationPeriods":2,"Threshold":5,"ComparisonOperator":"GreaterThanThreshold","TreatMissingData":"notBreaching","Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"DatabaseStorageAlarm":{"Type":"AWS::CloudWatch::Alarm","Properties":{"AlarmDescription":"Academy application health/storage threshold","Namespace":"AWS/RDS","MetricName":"FreeStorageSpace","Dimensions":[{"Name":"DBInstanceIdentifier","Value":{"Ref":"Database"}}],"Statistic":"Minimum","Period":300,"EvaluationPeriods":2,"Threshold":2147483648,"ComparisonOperator":"LessThanThreshold","TreatMissingData":"notBreaching","Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]}},"DatabaseRuntimeSecret":{"Type":"AWS::SecretsManager::Secret","Properties":{"Name":{"Fn::Sub":"${ResourceName}-database-runtime"},"GenerateSecretString":{"SecretStringTemplate":"{\"username\":\"academy_runtime\"}","GenerateStringKey":"password","PasswordLength":40,"ExcludeCharacters":"\"@/\\'"},"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"DeletionPolicy":"Retain","UpdateReplacePolicy":"Retain","Metadata":{"com.aws.cloudformation.Context":{"why":"Separate API login; generated independently of retained database owner credential.","must":["Preserve this retained secret across releases; only the migration may create or rotate its PostgreSQL role.","Name remains inside platform database-secret authorization namespace."]}}},"MigrationExecutionRole":{"Type":"AWS::IAM::Role","Properties":{"RoleName":{"Fn::Sub":"${ResourceName}-migrate-execution"},"PermissionsBoundary":{"Ref":"PermissionsBoundaryArn"},"AssumeRolePolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole","Condition":{"StringEquals":{"aws:SourceAccount":{"Ref":"AWS::AccountId"}},"ArnLike":{"aws:SourceArn":{"Fn::Sub":"arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*"}}}}]},"Policies":[{"PolicyName":"runtime","PolicyDocument":{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["ecr:GetAuthorizationToken"],"Resource":"*"},{"Effect":"Allow","Action":["logs:CreateLogStream","logs:PutLogEvents"],"Resource":{"Fn::Sub":"${Logs.Arn}"}},{"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":[{"Ref":"RuntimeSecretArn"},{"Ref":"DatabaseSecret"},{"Ref":"DatabaseRuntimeSecret"}]},{"Effect":"Allow","Action":["ssm:GetParameters"],"Resource":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}},{"Effect":"Allow","Action":["kms:Decrypt"],"Resource":{"Fn::Sub":"arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*"},"Condition":{"StringEquals":{"kms:ViaService":{"Fn::Sub":"ssm.${AWS::Region}.amazonaws.com"}},"StringLike":{"kms:EncryptionContext:PARAMETER_ARN":{"Fn::Sub":"arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CoreCredentialsParameter}"}}}},{"Effect":"Allow","Action":["ecr:BatchGetImage","ecr:GetDownloadUrlForLayer","ecr:BatchCheckLayerAvailability"],"Resource":[{"Fn::Sub":"arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ApiRepositoryName}"}]}]}}],"Tags":[{"Key":"nce:platform-prefix","Value":{"Ref":"PlatformPrefix"}},{"Key":"nce:application","Value":{"Ref":"ApplicationIdentifier"}}]},"Metadata":{"com.aws.cloudformation.Context":{"why":"ECS injects owner and runtime secrets only into the controlled one-shot migration.","must":["Keep the application permissions boundary and ECS confused-deputy trust conditions.","Never attach this execution role to the API task."]}}}},"Outputs":{"AmplifyAppId":{"Value":{"Fn::GetAtt":["AmplifyApp","AppId"]}},"Origin":{"Value":{"Fn::Sub":"https://${Environment}.${AmplifyApp.DefaultDomain}"}},"ApiUrl":{"Value":{"Fn::Sub":"https://${ApiHost}"}},"LoadBalancerDnsName":{"Value":{"Fn::GetAtt":["LoadBalancer","DNSName"]}},"Cluster":{"Value":{"Ref":"Cluster"}},"TaskDefinition":{"Value":{"Ref":"TaskDefinition"}},"Service":{"Value":{"Fn::GetAtt":["Service","Name"]}},"MigrationTaskDefinition":{"Value":{"Ref":"MigrationTaskDefinition"}},"PublicSubnet1":{"Value":{"Ref":"PublicSubnet1"}},"PublicSubnet2":{"Value":{"Ref":"PublicSubnet2"}},"PrivateSubnet1":{"Value":{"Ref":"PrivateSubnet1"}},"PrivateSubnet2":{"Value":{"Ref":"PrivateSubnet2"}},"TaskSecurityGroup":{"Value":{"Ref":"TaskSecurityGroup"}},"DatabaseSecretArn":{"Value":{"Ref":"DatabaseSecret"}},"DatabaseIdentifier":{"Value":{"Ref":"Database"}},"LogGroup":{"Value":{"Ref":"Logs"}},"CoreRedirectUri":{"Value":{"Ref":"CoreRedirectUri"}},"DatabaseRuntimeSecretArn":{"Description":"Retained restricted API database login; value is a secret ARN only.","Value":{"Ref":"DatabaseRuntimeSecret"}},"MigrationExecutionRoleArn":{"Description":"Execution role for the controlled owner-credential migration task only.","Value":{"Fn::GetAtt":["MigrationExecutionRole","Arn"]}}}}
+diff --git a/deployment/aws-apps/runner.py b/deployment/aws-apps/runner.py
+index d28814f..eca44f4 100644
+--- a/deployment/aws-apps/runner.py
++++ b/deployment/aws-apps/runner.py
+@@ -72,15 +72,15 @@ def read_manifest(root, archetype):
+         child_directory(root, backend["directory"])
+         if not isinstance(backend["handler"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]{0,100}\.[A-Za-z_][A-Za-z0-9_]*", backend["handler"]):
+             raise RunnerError("Invalid Python Lambda handler.")
+-    elif archetype == 'amplify-fargate':
++    elif archetype in ('amplify-fargate', 'amplify-academy-fargate'):
+         try:
+-            _contract.fargate_backend(manifest.get('backend'))
++            (_contract.academy_fargate_backend if archetype == 'amplify-academy-fargate' else _contract.fargate_backend)(manifest.get('backend'))
+             _contract.identity_contract(manifest.get('identity'))
+         except _contract.ContractError as error:
+             raise RunnerError(str(error)) from None
+     elif "backend" in manifest:
+         raise RunnerError("Static applications cannot supply a backend recipe.")
+-    if archetype != 'amplify-fargate' and 'identity' in manifest:
++    if archetype not in ('amplify-fargate', 'amplify-academy-fargate') and 'identity' in manifest:
+         raise RunnerError('Only the Fargate recipe accepts an explicit identity contract.')
+     return manifest
+ 
+@@ -145,21 +145,28 @@ def stack_parameters(platform, snapshot, manifest, code_key, existing=False, act
+         "CoreServiceId": public.get("VITE_CORE_SERVICE_ID", ""),
+     }
+     identity_keys = {"ApplicationOrigin", "CoreIssuer", "CoreOrganizationId", "CoreServiceId"}
+-    if snapshot['archetype'] == 'amplify-fargate':
+-        approved = platform['config']['fargate_apps'][snapshot['repository']]
++    if snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate'):
++        academy = snapshot['archetype'] == 'amplify-academy-fargate'
++        approved = platform['config']['academy_fargate_apps' if academy else 'fargate_apps'][snapshot['repository']]
+         try:
+-            _contract.fargate_applications(platform['config'], platform['account_id'], platform['region'], platform['allowed_repositories'], platform['prefix'])
+-            _contract.fargate_backend(manifest['backend'], approved)
++            (_contract.academy_fargate_applications if academy else _contract.fargate_applications)(platform['config'], platform['account_id'], platform['region'], platform['allowed_repositories'], platform['prefix'])
++            (_contract.academy_fargate_backend if academy else _contract.fargate_backend)(manifest['backend'], approved)
+         except _contract.ContractError as error:
+             raise RunnerError(str(error)) from None
+         for key in ['Archetype', 'LambdaCodeBucket', 'LambdaCodeKey', 'LambdaHandler']:
+             values.pop(key)
+-        values.update(ApiImageUri=manifest['backend']['image'], BrowserImageUri=manifest['backend']['browser_image'],
+-            ApiRepositoryName=approved['image_repository'].split('/', 1)[1], BrowserRepositoryName=approved['browser_image_repository'].split('/', 1)[1],
++        values.update(ApiImageUri=manifest['backend']['image'],
++            ApiRepositoryName=approved['image_repository'].split('/', 1)[1],
+             RuntimeSecretArn=approved['runtime_secret_arn'], CertificateArn=approved['certificate_arn'], ApiHost=approved['api_host'],
+             CoreBrowserClientId=public.get('VITE_CORE_BROWSER_CLIENT_ID', ''),
+             CoreRedirectUri=public.get('VITE_CORE_REDIRECT_URI', ''), CoreDeploymentId=public.get('VITE_CORE_DEPLOYMENT_ID', ''),
+             DesiredCount='1' if activate else '0')
++        if academy:
++            values.pop('StorageName')
++            values['AllowLiveModels'] = 'true' if approved.get('allow_live_models', False) else 'false'
++        if not academy:
++            values.update(BrowserImageUri=manifest['backend']['browser_image'],
++                          BrowserRepositoryName=approved['browser_image_repository'].split('/', 1)[1])
+         values['ApplicationOrigin'] = public.get('VITE_APPLICATION_ORIGIN', snapshot.get('public_origin') or 'https://pending.invalid')
+         # The first stack exists with count=0 before Core registration. Valid
+         # placeholders satisfy template URL constraints without starting tasks
+@@ -232,16 +239,16 @@ class Runner:
+                 raise
+             existing = False
+         operation_token = (hashlib.sha256((self.token + ('-activate' if activate else '-configure')).encode()).hexdigest()
+-                           if self.snapshot['archetype'] == 'amplify-fargate' else self.token)
++                           if self.snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate') else self.token)
+         change_set = f"nce-{operation_token[:32]}"
+-        template = ROOT / ('fargate.template.json' if self.snapshot['archetype'] == 'amplify-fargate' else 'application.template.json')
++        template = ROOT / ('academy-fargate.template.json' if self.snapshot['archetype'] == 'amplify-academy-fargate' else ('fargate.template.json' if self.snapshot['archetype'] == 'amplify-fargate' else 'application.template.json'))
+         if not template.is_file() or template.stat().st_size > 51200:
+             raise RunnerError('The pinned Core recipe template is missing or exceeds the inline limit.')
+         arguments = {
+             "StackName": name, "ChangeSetName": change_set, "ChangeSetType": "UPDATE" if existing else "CREATE",
+             "TemplateBody": template.read_text(),
+             "Parameters": stack_parameters(self.platform, self.snapshot, manifest, code_key, existing, activate),
+-            "Capabilities": ["CAPABILITY_NAMED_IAM"], "RoleARN": self.config['fargate_cloudformation_role_arn'] if self.snapshot['archetype'] == 'amplify-fargate' else self.config["cloudformation_role_arn"],
++            "Capabilities": ["CAPABILITY_NAMED_IAM"], "RoleARN": self.config['fargate_cloudformation_role_arn'] if self.snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate') else self.config["cloudformation_role_arn"],
+             "ClientToken": operation_token, "Tags": [{"Key": "nce:platform-prefix", "Value": self.platform["prefix"]},
+                 {"Key": "nce:application", "Value": self.snapshot["app_identifier"]}],
+         }
+@@ -272,14 +279,17 @@ class Runner:
+                         "commit": self.snapshot["commit"], "archetype": self.snapshot["archetype"]}
+         if raw.get("ApiUrl"):
+             self.outputs["api_url"] = raw["ApiUrl"]
+-        if self.snapshot['archetype'] == 'amplify-fargate':
++        if self.snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate'):
+             self.outputs['identity'] = json.dumps(manifest['identity'], sort_keys=True, separators=(',', ':'))
+             self.runtime_outputs = raw
+         self.steps.append("backend-configured" if self.snapshot["action"] == "release" else "backend-provisioned")
+ 
+     def migrate_and_activate(self, manifest, root):
+         raw = self.runtime_outputs
+-        required = {'Cluster', 'MigrationTaskDefinition', 'PrivateSubnet1', 'PrivateSubnet2', 'TaskSecurityGroup', 'Service', 'WorkerService', 'BrowserService'}
++        academy = self.snapshot['archetype'] == 'amplify-academy-fargate'
++        required = {'Cluster', 'MigrationTaskDefinition', 'PrivateSubnet1', 'PrivateSubnet2', 'TaskSecurityGroup', 'Service'}
++        if not academy:
++            required.update({'WorkerService', 'BrowserService'})
+         if not required <= raw.keys():
+             raise RunnerError('Fargate recipe did not return its required runtime resources.')
+         ecs = self.client('ecs')
+@@ -299,10 +309,10 @@ class Runner:
+         self.steps.append('database-migrated')
+         self.provision(manifest, root, activate=True)
+         raw = self.runtime_outputs
+-        services = [raw['Service'], raw['WorkerService'], raw['BrowserService']]
++        services = [raw['Service']] if academy else [raw['Service'], raw['WorkerService'], raw['BrowserService']]
+         ecs.get_waiter('services_stable').wait(cluster=raw['Cluster'], services=services, WaiterConfig={'Delay': 15, 'MaxAttempts': 80})
+         current = ecs.describe_services(cluster=raw['Cluster'], services=services)
+-        if current.get('failures') or len(current.get('services', [])) != 3 or any(
++        if current.get('failures') or len(current.get('services', [])) != len(services) or any(
+                 service.get('runningCount') != 1 or service.get('desiredCount') != 1 for service in current['services']):
+             raise RunnerError('Fargate services are not healthy after migration.')
+         self.steps.append('services-healthy')
+@@ -403,7 +413,7 @@ class Runner:
+         manifest = read_manifest(root, self.snapshot["archetype"])
+         self.provision(manifest, root)
+         if self.snapshot["action"] == "release":
+-            if self.snapshot['archetype'] == 'amplify-fargate':
++            if self.snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate'):
+                 self.migrate_and_activate(manifest, root)
+             self.publish_frontend(self.build_frontend(manifest))
+         self.write_result("succeeded")
+@@ -425,7 +435,7 @@ def main():
+             "NCE_BUILD_PROJECT": platform["config"]["build_project"]}
+         if any(os.environ.get(key) != value for key, value in expected_environment.items()):
+             raise RunnerError("Deployment snapshot does not match the onboarded runner settings.")
+-        if snapshot['archetype'] == 'amplify-fargate' and os.environ.get('NCE_FARGATE_CFN_ROLE_ARN') != platform['config'].get('fargate_cloudformation_role_arn'):
++        if snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate') and os.environ.get('NCE_FARGATE_CFN_ROLE_ARN') != platform['config'].get('fargate_cloudformation_role_arn'):
+             raise RunnerError('Fargate recipe role does not match the onboarded runner.')
+         runner = Runner(snapshot, token, os.environ["NCE_RESULT_KEY"])
+         root = Path(os.environ["CODEBUILD_SRC_DIR_APPLICATION"]).resolve()
+diff --git a/docs/cloud-deployments.md b/docs/cloud-deployments.md
+index 87b67ce..1ba69fd 100644
+--- a/docs/cloud-deployments.md
++++ b/docs/cloud-deployments.md
+@@ -585,3 +585,56 @@ Other deployment providers can use the same settings and reviewed release
+ lifecycle after their adapter and security onboarding are implemented. This
+ version offers only AWS static and serverless recipes, not an arbitrary hosting
+ or container deployment claim.
++
++
++## Academy container recipe
++
++The `amplify-academy-fargate` recipe is a separate fixed trusted recipe for
++NCAcademy. It uses the reviewed container network, HTTPS edge and retained private
++PostgreSQL structure with one API and a migration task. It provisions no browser,
++worker, object bucket or application task role. Application source cannot select
++commands, ports, roles, templates or secret values. Its root manifest declares
++`backend.image` as an immutable approved private ECR digest, frontend directory
++and output, and the `/api/auth/core/callback` identity contract.
++
++Operator-owned platform `academy_fargate_apps` maps each approved repository to
++`image_repository`, `runtime_secret_arn`, `certificate_arn` and `api_host`.
++Optional boolean `allow_live_models` defaults to false and controls the runtime
++provider gate. Application manifests cannot enable live model processing. The
++existing Fargate CloudFormation role/permission boundary is reused by this recipe;
++separate application and migration execution roles can pull only the approved API
++repository, inject their assigned deployment secrets and Core parameter, and write
++application logs. Their names remain inside the existing pass-role and secret
++namespaces; no platform policy expansion is required.
++
++The retained `DatabaseSecret` owns PostgreSQL and is injected only into the
++one-shot migration. The separate retained `DatabaseRuntimeSecret` holds the
++`academy_runtime` login injected into the API. Migration receives that target
++login as `ACADEMY_RUNTIME_DB_USERNAME` and `ACADEMY_RUNTIME_DB_PASSWORD`, creates
++or rotates it after schema preparation, and grants only the application's table
++operations. API access to audit events is SELECT/INSERT only; schema ownership
++and audit UPDATE/DELETE remain unavailable. The API execution role cannot read
++the database owner secret. The migration task definition selects its dedicated
++execution role; neither task receives an application AWS task role.
++
++The ARM64 API command is `python -m academy.runtime api`, migration is
++`python -m academy.migrate`, and readiness is `/api/ready` on port 8000. Core first
++provisions zero desired tasks, registers the public PKCE client and confidential
++resource client, injects secrets, drains the API, runs migration and only starts
++the API after exit code zero. A failed migration leaves the API stopped. Runtime
++root filesystems are read-only with nonroot UID 10001 and temporary scratch
++volumes. Database connections require verify-full TLS and the RDS trust bundle.
++
++Application permissions are `academy-use`, `academy-teach` and `academy-audit`;
++Core's reserved `admin` remains separate. The exact source repository is planned
++as `NorthCountryEngineer/NCAcademy`; CI admission requires its exact SHA's successful
++push run of `.github/workflows/ci.yml` with `NCAcademy required checks`. A different
++repository requires a separate reviewed Core CI policy change.
++
++Operators must review/migrate/test this change, pin a new trusted Core runner
++commit and enable the recipe in platform settings before preparing deployment.
++Retained database backups, a stable external vault bootstrap, matching API/frontend
++images and an independently tested restore are required before production.
++An independent retained audit checkpoint destination remains required before
++admitting real student records; database append-only grants alone cannot protect
++against database administrators.
+diff --git a/platform_services/cloud_aws.py b/platform_services/cloud_aws.py
+index 4e17b71..0f76b96 100644
+--- a/platform_services/cloud_aws.py
++++ b/platform_services/cloud_aws.py
+@@ -11,7 +11,7 @@ import hashlib
+ import json
+ import re
+ from typing import Callable
+-from .cloud_contract import ContractError, fargate_applications, identity_contract
++from .cloud_contract import ContractError, fargate_applications, academy_fargate_applications, identity_contract
+ from platform_services.github_ci import CIGateError, POLICIES, verify_deployment
+ 
+ 
+@@ -23,7 +23,7 @@ REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z")
+ COMMIT = re.compile(r"[a-f0-9]{40}\Z")
+ SLUG = re.compile(r"[a-z][a-z0-9-]{0,31}\Z")
+ IDENTIFIER = re.compile(r"[a-zA-Z0-9-]{1,64}\Z")
+-ARCHETYPES = ("amplify-static", "amplify-serverless", "amplify-fargate")
++ARCHETYPES = ("amplify-static", "amplify-serverless", "amplify-fargate", "amplify-academy-fargate")
+ APP_PERMISSIONS = [
+     {"codename": "app-read", "name": "Read application data"},
+     {"codename": "app-write", "name": "Write application data"},
+@@ -47,7 +47,7 @@ def configuration(platform, snapshot=None):
+     config = dict(_value(platform, "config", {}) or {})
+     approved_keys = {"runner_repository", "runner_commit", "build_project", "artifact_bucket",
+                      "cloudformation_role_arn", "permissions_boundary_arn", "archetypes", "environment_ids",
+-                     "credentials_kms_key_arn", "fargate_apps", "fargate_cloudformation_role_arn"}
++                     "credentials_kms_key_arn", "fargate_apps", "fargate_cloudformation_role_arn", "academy_fargate_apps"}
+     if set(config) - approved_keys:
+         raise AWSAdapterError("Platform configuration contains unsupported fields.")
+     if snapshot and snapshot.get("platform_config") != config:
+@@ -80,11 +80,12 @@ def configuration(platform, snapshot=None):
+         raise AWSAdapterError("Only the static, serverless and Fargate AWS archetypes are supported.")
+     try:
+         fargate_applications(config, account, region, repositories, prefix)
++        academy_fargate_applications(config, account, region, repositories, prefix)
+     except ContractError as error:
+         raise AWSAdapterError(str(error)) from None
+-    if config.get('fargate_cloudformation_role_arn') or config.get('fargate_apps'):
++    if config.get('fargate_cloudformation_role_arn') or (config.get('fargate_apps') or config.get('academy_fargate_apps')):
+         _required(config.get('fargate_cloudformation_role_arn'), rf'arn:aws:iam::{account}:role/[A-Za-z0-9+=,.@_/-]+', 'Fargate CloudFormation execution role')
+-    if config.get('fargate_apps') and len(prefix) > 10:
++    if (config.get('fargate_apps') or config.get('academy_fargate_apps')) and len(prefix) > 10:
+         raise AWSAdapterError('Fargate platform prefixes use at most 10 characters to fit load-balancer names.')
+     return {"account_id": account, "region": region, "prefix": prefix, "role_arn": role,
+             "connection_arn": connection, "runner_project": runner, "allowed_repositories": repositories,
+@@ -104,7 +105,7 @@ def _snapshot(platform, snapshot):
+         raise AWSAdapterError("Invalid application branch.")
+     if snapshot.get("archetype") not in settings["config"].get("archetypes", ARCHETYPES):
+         raise AWSAdapterError("Application archetype is not approved for this platform.")
+-    if snapshot.get('archetype') == 'amplify-fargate' and snapshot['repository'] not in settings['config'].get('fargate_apps', {}):
++    if snapshot.get('archetype') in ('amplify-fargate', 'amplify-academy-fargate') and snapshot['repository'] not in settings['config'].get('academy_fargate_apps' if snapshot['archetype'] == 'amplify-academy-fargate' else 'fargate_apps', {}):
+         raise AWSAdapterError('Approve this repository’s Fargate resource references in platform settings first.')
+     if snapshot.get("action", "provision") not in {"provision", "release"}:
+         raise AWSAdapterError("Invalid deployment phase.")
+@@ -313,8 +314,8 @@ def poll_run(platform, snapshot, provider_state, *, client_factory=None):
+         # links, or arbitrary runner messages to the browser.
+         outputs = {key: value for key, value in result.get("outputs", {}).items()
+                    if key in PUBLIC_OUTPUTS and isinstance(value, str) and len(value) <= (8192 if key == 'identity' else 2048)}
+-        if snapshot['archetype'] == 'amplify-fargate':
+-            approved = settings['config']['fargate_apps'][snapshot['repository']]
++        if snapshot['archetype'] in ('amplify-fargate', 'amplify-academy-fargate'):
++            approved = settings['config']['academy_fargate_apps' if snapshot['archetype'] == 'amplify-academy-fargate' else 'fargate_apps'][snapshot['repository']]
+             if outputs.get('api_url') != 'https://' + approved['api_host']:
+                 raise AWSAdapterError('Fargate API output does not match the approved host.')
+             try:
+@@ -326,7 +327,7 @@ def poll_run(platform, snapshot, provider_state, *, client_factory=None):
+         if (not re.fullmatch(r"https://[a-z0-9-]+\.d[a-z0-9]+\.amplifyapp\.com", outputs.get("origin", ""))
+                 or not re.fullmatch(r"d[a-z0-9]{3,30}", outputs.get("amplify_app_id", ""))
+                 or not re.fullmatch(re.escape(settings["prefix"]) + r"-[a-f0-9]{12}-[a-f0-9]{8}", outputs.get("stack_name", ""))
+-                or (snapshot['archetype'] != 'amplify-fargate' and outputs.get("api_url") and not re.fullmatch(r"https://[a-z0-9]+\.execute-api\." + re.escape(settings["region"]) + r"\.amazonaws\.com", outputs["api_url"]))):
++                or (snapshot['archetype'] not in ('amplify-fargate', 'amplify-academy-fargate') and outputs.get("api_url") and not re.fullmatch(r"https://[a-z0-9]+\.execute-api\." + re.escape(settings["region"]) + r"\.amazonaws\.com", outputs["api_url"]))):
+             raise AWSAdapterError("AWS returned an invalid public deployment output.")
+         for name in result.get("completed_steps", []):
+             if name in {"source-verified", "backend-provisioned", "backend-configured", "frontend-built", "frontend-published", 'database-migrated', 'services-healthy'}:
+diff --git a/platform_services/cloud_contract.py b/platform_services/cloud_contract.py
+index 1dd1c2d..04933f5 100644
+--- a/platform_services/cloud_contract.py
++++ b/platform_services/cloud_contract.py
+@@ -76,3 +76,29 @@ def fargate_backend(backend, approved=None):
+         if approved and image.rsplit('@', 1)[0] != approved[repository_key]:
+             raise ContractError('Fargate image is outside the approved application repository.')
+     return backend
++
++
++def academy_fargate_applications(config, account, region, repositories, prefix=None):
++    """Academy has one API image and no browser execution authority."""
++    apps = config.get('academy_fargate_apps', {})
++    if not isinstance(apps, dict) or len(apps) > 20:
++        raise ContractError('Academy resources must be a bounded repository map.')
++    keys = {'image_repository', 'runtime_secret_arn', 'certificate_arn', 'api_host'}
++    for values in apps.values():
++        if (not isinstance(values, dict) or set(values) - {'allow_live_models'} != keys
++                or not isinstance(values.get('allow_live_models', False), bool)):
++            raise ContractError('Academy resources require one ECR repository and approved runtime references.')
++    normalized = {repository: {**{key: item for key, item in values.items() if key != 'allow_live_models'},
++                              'browser_image_repository': values['image_repository']}
++                  for repository, values in apps.items()}
++    fargate_applications({'fargate_apps': normalized}, account, region, repositories, prefix)
++    return apps
++
++
++def academy_fargate_backend(backend, approved=None):
++    if not isinstance(backend, dict) or set(backend) != {'image'}:
++        raise ContractError('Academy backend requires one immutable API image only.')
++    normalized = {'image': backend['image'], 'browser_image': backend['image']}
++    approval = ({**approved, 'browser_image_repository': approved['image_repository']} if approved else None)
++    fargate_backend(normalized, approval)
++    return backend
+diff --git a/platform_services/cloud_deployments.py b/platform_services/cloud_deployments.py
+index c345b41..369a7f4 100644
+--- a/platform_services/cloud_deployments.py
++++ b/platform_services/cloud_deployments.py
+@@ -163,7 +163,7 @@ def prepare_release(app, principal):
+         purpose=principal.purpose, snapshot=snapshot, digest=digest(snapshot), steps=[
+             {'label': 'Create or update AWS hosting', 'status': 'pending', 'description':
+                 'Manual Amplify app and branch.' + (' Python Lambda, HTTP API, two on-demand DynamoDB tables, and a private media bucket.' if app.archetype == 'amplify-serverless' else
+-                ' Fargate API, database-backed worker, isolated browser service, private PostgreSQL and document storage; use approved immutable images and stop services for controlled migration.' if app.archetype == 'amplify-fargate' else '')},
++                ' Academy API and private PostgreSQL; use an approved immutable image and stop services for controlled migration.' if app.archetype == 'amplify-academy-fargate' else (' Fargate API, database-backed worker, isolated browser service, private PostgreSQL and document storage; use approved immutable images and stop services for controlled migration.' if app.archetype == 'amplify-fargate' else ''))},
+             {'label': 'Register the application with Core', 'status': 'pending', 'description': 'Central user identity, app-branded sign-in, and explicit app roles. API credentials go to SSM SecureString.'},
+             {'label': 'Build the reviewed commit', 'status': 'pending', 'description': 'Run the frontend build in a separate project with no deployment permissions.'},
+             {'label': 'Publish and confirm hosting', 'status': 'pending', 'description': 'Deploy the compiled ZIP and wait for Amplify publication. Retain application data.'}])
+@@ -229,7 +229,7 @@ def _register(release, outputs):
+     app = CloudApplication.objects.select_for_update().get(pk=release.application_id)
+     identity = {'callback_path': '/oauth/callback', 'permissions': [
+         {'codename': 'app-read', 'name': 'Read application'}, {'codename': 'app-write', 'name': 'Write application'}]}
+-    if app.archetype == 'amplify-fargate':
++    if app.archetype in ('amplify-fargate', 'amplify-academy-fargate'):
+         from .cloud_contract import ContractError, identity_contract
+         try:
+             identity = identity_contract(json.loads(outputs.get('identity', 'null')))
+@@ -245,7 +245,7 @@ def _register(release, outputs):
+         service = app.installation.service
+         service.auth_name = app.name
+         service.save(update_fields=['auth_name'])
+-    elif app.archetype == 'amplify-fargate' and any(app.installation.manifest.get(key) != value for key, value in identity.items()):
++    elif app.archetype in ('amplify-fargate', 'amplify-academy-fargate') and any(app.installation.manifest.get(key) != value for key, value in identity.items()):
+         raise ValidationError('The reviewed identity contract differs from the installed application. Review an explicit package upgrade first.')
+     origin = app.public_origin or outputs.get('origin')
+     if not origin:
+@@ -255,7 +255,7 @@ def _register(release, outputs):
+     variables = {'VITE_CORE_ISSUER': public['issuer'], 'VITE_CORE_ORGANIZATION_ID': public['organization_id'],
+         'VITE_CORE_SERVICE_ID': public['service_id'], 'VITE_CORE_BROWSER_CLIENT_ID': public['browser_client_id'],
+         'VITE_APPLICATION_ORIGIN': origin, 'VITE_API_URL': outputs.get('api_url', '')}
+-    if app.archetype == 'amplify-fargate':
++    if app.archetype in ('amplify-fargate', 'amplify-academy-fargate'):
+         variables.update(VITE_CORE_REDIRECT_URI=public['redirect_uri'], VITE_CORE_DEPLOYMENT_ID=public['deployment_id'])
+     return variables, external_resource_credentials(deployment), deployment
+ 
+@@ -294,12 +294,17 @@ def process_one():
+             # Simulation never imports the provider SDK, executes repository code, or creates cloud resources.
+             if phase == 'provision':
+                 outputs.update(origin=f'https://{release.application.slug}.example.test', api_url='', commit=working['commit'])
+-                if working['archetype'] == 'amplify-fargate':
++                if working['archetype'] in ('amplify-fargate', 'amplify-academy-fargate'):
+                     # Simulation never downloads application source or images.
+                     outputs['identity'] = json.dumps({'callback_path': '/api/auth/core/callback', 'permissions': [
+                         {'codename': 'app-read', 'name': 'Read application'},
+                         {'codename': 'app-write', 'name': 'Write application'},
+                         {'codename': 'app-admin', 'name': 'Administer application'}]})
++                    if working['archetype'] == 'amplify-academy-fargate':
++                        outputs['identity'] = json.dumps({'callback_path': '/api/auth/core/callback', 'permissions': [
++                            {'codename': 'academy-use', 'name': 'Use NCAcademy'},
++                            {'codename': 'academy-teach', 'name': 'Teach and manage assigned courses'},
++                            {'codename': 'academy-audit', 'name': 'Review assigned student sessions'}]})
+                 variables, _, _ = _register(release, outputs)
+                 state = {'phase': 'release', 'public_config': variables}
+                 release.steps[0]['status'] = release.steps[1]['status'] = 'succeeded'
+@@ -333,7 +338,7 @@ def process_one():
+                 if result['status'] == 'succeeded':
+                     if phase == 'provision':
+                         variables, credentials, _ = _register(release, outputs)
+-                        if working['archetype'] in {'amplify-serverless', 'amplify-fargate'}:
++                        if working['archetype'] in {'amplify-serverless', 'amplify-fargate', 'amplify-academy-fargate'}:
+                             if not CloudRelease.objects.filter(pk=release.pk, lease_owner=owner, status='running', lease_until__gt=timezone.now()).exists():
+                                 return True
+                             store_credentials(platform, working['secret_parameter'], credentials)
+diff --git a/platform_services/cloud_models.py b/platform_services/cloud_models.py
+index b6e9699..347f83b 100644
+--- a/platform_services/cloud_models.py
++++ b/platform_services/cloud_models.py
+@@ -11,7 +11,8 @@ from identity.models import TaggedResource
+ from .secrets import decrypt_bundle, encrypt_bundle
+ 
+ ARCHETYPES = [('amplify-static', 'Amplify website'), ('amplify-serverless', 'Amplify website and Lambda API'),
+-              ('amplify-fargate', 'Amplify website and Fargate application')]
++              ('amplify-fargate', 'Amplify website and Fargate application'),
++              ('amplify-academy-fargate', 'Academy website and Fargate API')]
+ 
+ 
+ def digest(value):
+@@ -139,7 +140,7 @@ class CloudApplication(TaggedResource):
+         if (str(self.environment_id) not in self.platform.config.get('environment_ids', []) or
+                 self.archetype not in self.platform.config.get('archetypes', [])):
+             raise ValidationError('This environment or template is not configured for the platform.')
+-        if self.archetype == 'amplify-fargate' and self.platform.mode == 'aws' and self.repository not in self.platform.config.get('fargate_apps', {}):
++        if self.archetype in ('amplify-fargate', 'amplify-academy-fargate') and self.platform.mode == 'aws' and self.repository not in self.platform.config.get('academy_fargate_apps' if self.archetype == 'amplify-academy-fargate' else 'fargate_apps', {}):
+             raise ValidationError('Approve this repository’s container resource references in the deployment platform first.')
+         if self.public_origin:
+             value = urlsplit(self.public_origin)
+diff --git a/platform_services/cloud_portal.py b/platform_services/cloud_portal.py
+index 74071d6..4e0053d 100644
+--- a/platform_services/cloud_portal.py
++++ b/platform_services/cloud_portal.py
+@@ -20,6 +20,7 @@ ARCHETYPES = [
+     ('amplify-static', 'Website · Amplify Hosting'),
+     ('amplify-serverless', 'Website and serverless API · Amplify + Lambda'),
+     ('amplify-fargate', 'Website, API and workers · Amplify + Fargate'),
++    ('amplify-academy-fargate', 'Academy website and API · Amplify + Fargate'),
+ ]
+ 
+ 
+@@ -49,6 +50,7 @@ class PlatformForm(forms.Form):
+     permissions_boundary_arn = forms.CharField(max_length=255, required=False, label='Application role permissions boundary ARN')
+     runner_repository = forms.CharField(max_length=160, required=False, label='Approved deployment runner repository', help_text='Owner/repository containing the reviewed Core deployment runner.')
+     runner_commit = forms.RegexField(r'^[0-9a-fA-F]{40}$', required=False, label='Approved runner commit', help_text='Pin the exact 40-character revision of the deployment runner.')
++    academy_fargate_apps = forms.JSONField(required=False, widget=forms.Textarea(attrs={'rows': 6}), label='Approved Academy container resources', help_text='Repository map: image_repository, runtime_secret_arn, certificate_arn, api_host; optional allow_live_models boolean (default false).')
+     fargate_apps = forms.JSONField(required=False, widget=forms.Textarea(attrs={'rows': 8}), label='Approved container resources', help_text='Operator-reviewed repository map with ECR repository URLs, runtime secret ARN, certificate ARN and API hostname. Enter resource references only.')
+     prefix = forms.RegexField(r'^[a-z][a-z0-9-]{2,15}$', initial='nce', label='AWS resource prefix', help_text='Used to restrict which resources this platform can manage.')
+     allowed_repositories = forms.CharField(widget=forms.Textarea(attrs={'rows': 4}), label='Approved GitHub repositories', help_text='One Owner/repository per line. Only these repositories appear when creating an app.')
+@@ -67,6 +69,7 @@ class PlatformForm(forms.Form):
+             initial['environments'] = instance.config.get('environment_ids', [])
+             initial['archetypes'] = instance.config.get('archetypes', [value for value, _ in ARCHETYPES])
+             initial['fargate_apps'] = instance.config.get('fargate_apps', {})
++            initial['academy_fargate_apps'] = instance.config.get('academy_fargate_apps', {})
+         else:
+             initial.setdefault('archetypes', [value for value, _ in ARCHETYPES])
+         super().__init__(*args, initial=initial, **kwargs)
+@@ -118,6 +121,11 @@ class PlatformForm(forms.Form):
+             platform.config.pop('fargate_cloudformation_role_arn', None)
+         platform.config['environment_ids'] = [str(value.pk) for value in self.cleaned_data['environments']]
+         platform.config['archetypes'] = list(self.cleaned_data['archetypes'])
++        academy = self.cleaned_data.get('academy_fargate_apps') or {}
++        if academy:
++            platform.config['academy_fargate_apps'] = academy
++        else:
++            platform.config.pop('academy_fargate_apps', None)
+         approved = self.cleaned_data.get('fargate_apps') or {}
+         if approved:
+             platform.config['fargate_apps'] = approved
+diff --git a/platform_services/github_ci.py b/platform_services/github_ci.py
+index bf8f9bf..2806677 100644
+--- a/platform_services/github_ci.py
++++ b/platform_services/github_ci.py
+@@ -29,6 +29,7 @@ class Policy:
+ 
+ 
+ POLICIES = (
++    Policy('NorthCountryEngineer/NCAcademy', '.github/workflows/ci.yml', 'NCAcademy required checks'),
+     Policy('NorthCountryEngineer/Proposal_Studio', '.github/workflows/ci.yml', 'Proposal Studio required checks'),
+     Policy('NorthCountryEngineer/NCE_Core', '.github/workflows/verify.yml', 'Core required checks'),
+ )
+diff --git a/platform_services/migrations/0039_academy_fargate_archetype.py b/platform_services/migrations/0039_academy_fargate_archetype.py
+new file mode 100644
+index 0000000..fd1d4c2
+--- /dev/null
++++ b/platform_services/migrations/0039_academy_fargate_archetype.py
+@@ -0,0 +1,11 @@
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    dependencies = [('platform_services', '0038_cloudplatform_encrypted_ci_github_token')]
++    operations = [migrations.AlterField(
++        model_name='cloudapplication', name='archetype',
++        field=models.CharField(max_length=30, choices=[('amplify-static', 'Amplify website'),
++            ('amplify-serverless', 'Amplify website and Lambda API'),
++            ('amplify-fargate', 'Amplify website and Fargate application'),
++            ('amplify-academy-fargate', 'Academy website and Fargate API')]))]
+diff --git a/platform_services/tests/test_academy_fargate.py b/platform_services/tests/test_academy_fargate.py
+new file mode 100644
+index 0000000..2430946
+--- /dev/null
++++ b/platform_services/tests/test_academy_fargate.py
+@@ -0,0 +1,226 @@
++"""Offline Academy recipe admission, isolation and controlled migration tests."""
++import copy
++import json
++from pathlib import Path
++import re
++import tempfile
++from unittest.mock import Mock
++
++from django.test import SimpleTestCase, TestCase
++from platform_services import cloud_aws
++from platform_services.cloud_contract import ContractError, academy_fargate_backend
++from platform_services.github_ci import POLICIES
++from .test_cloud_aws import platform, snapshot, runner
++
++
++def configuration():
++    value = platform()
++    value.allowed_repositories = ['NorthCountryEngineer/NCAcademy']
++    value.config['archetypes'].append('amplify-academy-fargate')
++    value.config['fargate_cloudformation_role_arn'] = 'arn:aws:iam::123456789012:role/nce-fargate-cfn'
++    value.config['academy_fargate_apps'] = {value.allowed_repositories[0]: {
++        'image_repository': '123456789012.dkr.ecr.us-east-1.amazonaws.com/nce-tests-academy-api',
++        'runtime_secret_arn': 'arn:aws:secretsmanager:us-east-1:123456789012:secret:nce-tests-academy-runtime-abcdef',  # pragma: allowlist secret -- synthetic resource ARN, never a credential
++        'certificate_arn': 'arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012',
++        'api_host': 'api.academy.example.test'}}
++    return value
++
++
++def manifest(value):
++    approved = value.config['academy_fargate_apps'][value.allowed_repositories[0]]
++    return {'schema': 1, 'archetype': 'amplify-academy-fargate',
++        'frontend': {'directory': '.', 'output': 'dist'},
++        'backend': {'image': approved['image_repository'] + '@sha256:' + 'a' * 64},
++        'identity': {'callback_path': '/api/auth/core/callback', 'permissions': [
++            {'codename': 'academy-use', 'name': 'Use Academy'}]}}
++
++
++class AcademyFargateTests(SimpleTestCase):
++    def test_configuration_requires_exact_approved_runtime_references(self):
++        value = configuration()
++        cloud_aws.configuration(value)
++        for name, item in [('browser_image_repository', 'bad'), ('command', ['sh']), ('session_secret', 'bad'), ('allow_live_models', 'true')]:
++            altered = copy.deepcopy(value)
++            altered.config['academy_fargate_apps'][altered.allowed_repositories[0]][name] = item
++            with self.assertRaises(cloud_aws.AWSAdapterError):
++                cloud_aws.configuration(altered)
++        altered = copy.deepcopy(value)
++        altered.config['academy_fargate_apps']['Unapproved/repository'] = altered.config['academy_fargate_apps'].pop(value.allowed_repositories[0])
++        with self.assertRaises(cloud_aws.AWSAdapterError):
++            cloud_aws.configuration(altered)
++
++    def test_backend_refuses_tags_extra_images_and_other_repositories(self):
++        value = configuration()
++        good = manifest(value)['backend']
++        approval = value.config['academy_fargate_apps'][value.allowed_repositories[0]]
++        academy_fargate_backend(good, approval)
++        for bad in ({'image': good['image'].split('@')[0] + ':latest'},
++                    {**good, 'browser_image': good['image']}, {**good, 'command': 'anything'},
++                    {'image': good['image'].replace('academy-api', 'another-api')}):
++            with self.assertRaises(ContractError):
++                academy_fargate_backend(bad, approval)
++
++    def test_runner_admits_fixed_manifest_and_rejects_injected_command(self):
++        document = manifest(configuration())
++        with tempfile.TemporaryDirectory() as temporary:
++            root = Path(temporary)
++            (root / 'package.json').write_text(json.dumps({'scripts': {'build': 'vite build'}}))
++            (root / 'package-lock.json').write_text('{}')
++            (root / 'nce-deploy.json').write_text(json.dumps(document))
++            self.assertEqual(runner.read_manifest(root, 'amplify-academy-fargate'), document)
++            document['backend']['command'] = 'sh'
++            (root / 'nce-deploy.json').write_text(json.dumps(document))
++            with self.assertRaises(runner.RunnerError):
++                runner.read_manifest(root, 'amplify-academy-fargate')
++
++    def test_stack_parameters_match_dedicated_template_without_browser_values(self):
++        value = configuration()
++        settings = cloud_aws.configuration(value)
++        snap = snapshot(value)
++        snap.update(archetype='amplify-academy-fargate', secret_parameter='/nce-tests/apps/app/core-resource-client')
++        parameters = runner.stack_parameters(settings, snap, manifest(value), '', activate=False)
++        mapped = {item['ParameterKey']: item.get('ParameterValue') for item in parameters}
++        template = json.loads((runner.ROOT / 'academy-fargate.template.json').read_text())
++        self.assertLess((runner.ROOT / 'academy-fargate.template.json').stat().st_size, 51200)
++        self.assertTrue(set(mapped) <= set(template['Parameters']))
++        self.assertEqual(mapped['DesiredCount'], '0')
++        self.assertEqual(mapped['AllowLiveModels'], 'false')
++        self.assertNotIn('BrowserImageUri', mapped)
++        self.assertNotIn('StorageName', mapped)
++        self.assertEqual(mapped['CoreRedirectUri'], 'https://pending.invalid/api/auth/core/callback')
++
++    def test_template_isolated_api_and_database_with_no_object_or_browser_authority(self):
++        template = json.loads((runner.ROOT / 'academy-fargate.template.json').read_text())
++        resources = template['Resources']
++        self.assertEqual(sum(r['Type'] == 'AWS::ECS::Service' for r in resources.values()), 1)
++        self.assertNotIn('DocumentBucket', resources)
++        self.assertNotIn('BrowserTaskDefinition', resources)
++        self.assertNotIn('WorkerTaskDefinition', resources)
++        for name, command in [('TaskDefinition', ['python', '-m', 'academy.runtime', 'api']),
++                              ('MigrationTaskDefinition', ['python', '-m', 'academy.migrate'])]:
++            props = resources[name]['Properties']
++            self.assertNotIn('TaskRoleArn', props)
++            self.assertEqual(props['RuntimePlatform']['CpuArchitecture'], 'ARM64')
++            container = props['ContainerDefinitions'][0]
++            self.assertEqual(container['Command'], command)
++            self.assertEqual(container['User'], '10001:10001')
++            self.assertTrue(container['ReadonlyRootFilesystem'])
++            env = {item['Name']: item['Value'] for item in container['Environment']}
++            self.assertEqual(env['DEMO_SEED'], 'false')
++            self.assertEqual(env['ALLOW_LIVE_MODELS'], {'Ref': 'AllowLiveModels'})
++            self.assertEqual(env['DB_SSLMODE'], 'verify-full')
++            self.assertEqual(env['DB_NAME'], 'academy')
++        self.assertEqual(resources['TargetGroup']['Properties']['HealthCheckPath'], '/api/ready')
++        self.assertEqual(resources['Database']['DeletionPolicy'], 'Retain')
++        self.assertTrue(resources['Database']['Properties']['DeletionProtection'])
++        grants = resources['ExecutionRole']['Properties']['Policies'][0]['PolicyDocument']['Statement']
++        self.assertTrue(any('ecr:BatchGetImage' in grant['Action'] for grant in grants))
++        serialized = json.dumps(template)
++        self.assertNotIn('BrowserRepositoryName', serialized)
++        self.assertNotIn('studio.runtime', serialized)
++        known = set(resources) | set(template['Parameters']) | {'AWS::AccountId', 'AWS::Region', 'AWS::Partition'}
++        def check(node):
++            if isinstance(node, dict):
++                if 'Ref' in node: self.assertIn(node['Ref'], known)
++                if 'Fn::GetAtt' in node: self.assertIn(node['Fn::GetAtt'][0], known)
++                if isinstance(node.get('Fn::Sub'), str):
++                    for name in re.findall(r'\$\{([^}.]+)(?:\.[^}]+)?\}', node['Fn::Sub']): self.assertIn(name, known)
++                for child in node.values(): check(child)
++            elif isinstance(node, list):
++                for child in node: check(child)
++        check(template)
++
++    def test_api_cannot_read_owner_secret_and_migration_bootstraps_runtime_login(self):
++        template = json.loads((runner.ROOT / 'academy-fargate.template.json').read_text())
++        resources = template['Resources']
++        api = resources['TaskDefinition']['Properties']
++        migration = resources['MigrationTaskDefinition']['Properties']
++        self.assertEqual(api['ExecutionRoleArn'], {'Fn::GetAtt': ['ExecutionRole', 'Arn']})
++        self.assertEqual(migration['ExecutionRoleArn'], {'Fn::GetAtt': ['MigrationExecutionRole', 'Arn']})
++        api_secrets = {item['Name']: item['ValueFrom'] for item in api['ContainerDefinitions'][0]['Secrets']}
++        migration_secrets = {item['Name']: item['ValueFrom'] for item in migration['ContainerDefinitions'][0]['Secrets']}
++        for field, key in [('DB_USERNAME', 'username'), ('DB_PASSWORD', 'password')]:
++            self.assertEqual(api_secrets[field], {'Fn::Sub': '${DatabaseRuntimeSecret}:' + key + '::'})
++            self.assertEqual(migration_secrets[field], {'Fn::Sub': '${DatabaseSecret}:' + key + '::'})
++            self.assertEqual(migration_secrets['ACADEMY_RUNTIME_' + field], api_secrets[field])
++        grants = resources['ExecutionRole']['Properties']['Policies'][0]['PolicyDocument']['Statement']
++        readable = next(item['Resource'] for item in grants if item['Action'] == ['secretsmanager:GetSecretValue'])
++        self.assertIn({'Ref': 'DatabaseRuntimeSecret'}, readable)
++        self.assertNotIn({'Ref': 'DatabaseSecret'}, readable)
++        self.assertEqual(resources['DatabaseRuntimeSecret']['DeletionPolicy'], 'Retain')
++        self.assertEqual(resources['DatabaseRuntimeSecret']['UpdateReplacePolicy'], 'Retain')
++        migration_role = resources['MigrationExecutionRole']['Properties']
++        self.assertEqual(migration_role['PermissionsBoundary'], {'Ref': 'PermissionsBoundaryArn'})
++        self.assertEqual(migration_role['RoleName'], {'Fn::Sub': '${ResourceName}-migrate-execution'})
++        self.assertEqual(template['Outputs']['MigrationExecutionRoleArn']['Value'], migration['ExecutionRoleArn'])
++
++    def runtime(self, exit_code):
++        value = configuration()
++        snap = snapshot(value, 'release')
++        snap.update(archetype='amplify-academy-fargate', platform=cloud_aws.configuration(value))
++        ecs = Mock()
++        ecs.run_task.return_value = {'tasks': [{'taskArn': 'migration-task'}]}
++        ecs.describe_tasks.return_value = {'tasks': [{'containers': [{'exitCode': exit_code}]}]}
++        ecs.describe_services.return_value = {'services': [{'runningCount': 1, 'desiredCount': 1}]}
++        obj = runner.Runner(snap, 'a' * 64, 'results/test.json', client_factory=lambda _: ecs)
++        obj.runtime_outputs = {name: name for name in ['Cluster', 'MigrationTaskDefinition', 'PrivateSubnet1', 'PrivateSubnet2', 'TaskSecurityGroup', 'Service']}
++        obj.provision = Mock()
++        return obj, ecs
++
++    def test_migration_success_precedes_only_api_activation(self):
++        obj, ecs = self.runtime(0)
++        obj.migrate_and_activate(manifest(configuration()), Path('.'))
++        obj.provision.assert_called_once()
++        self.assertTrue(obj.provision.call_args.kwargs['activate'])
++        self.assertEqual(ecs.describe_services.call_args.kwargs['services'], ['Service'])
++        self.assertEqual(obj.steps, ['database-migrated', 'services-healthy'])
++
++    def test_migration_failure_keeps_api_stopped(self):
++        obj, _ = self.runtime(1)
++        with self.assertRaises(runner.RunnerError):
++            obj.migrate_and_activate(manifest(configuration()), Path('.'))
++        obj.provision.assert_not_called()
++
++    def test_exact_repository_ci_policy_is_owned_by_core(self):
++        matches = [p for p in POLICIES if p.repository == 'NorthCountryEngineer/NCAcademy']
++        self.assertEqual(len(matches), 1)
++        self.assertEqual(matches[0].workflow, '.github/workflows/ci.yml')
++        self.assertEqual(matches[0].required_job, 'NCAcademy required checks')
++
++
++class AcademyRegistrationTests(TestCase):
++    def test_simulated_registration_uses_academy_permissions_without_provider_calls(self):
++        from unittest.mock import patch
++        from identity.access import Principal
++        from identity.models import Organization, Membership, User
++        from platform_services.cloud_models import CloudPlatform, CloudRelease
++        from platform_services import cloud_deployments
++        from platform_services.environments import create_environment
++        organization = Organization.objects.create(name='Academy fixture', slug='academy-fixture')
++        actor = User.objects.create_user('academy-fixture@example.test', 'local-test-only')
++        Membership.objects.create(organization=organization, user=actor, kind='administrator')
++        environment = create_environment(organization, name='development', namespace='academy-dev', application_origin='https://academy.example.test')
++        platform = CloudPlatform.objects.create(organization=organization, name='Academy preview', mode='demo',
++            allowed_repositories=['NorthCountryEngineer/NCAcademy'],
++            config={'environment_ids': [str(environment.pk)], 'archetypes': ['amplify-academy-fargate']})
++        principal = Principal(user=actor)
++        platform = cloud_deployments.verify_platform(platform, principal)
++        app = cloud_deployments.create_application(organization, principal, platform=platform, environment=environment,
++            name='NCAcademy', slug='ncacademy', repository='NorthCountryEngineer/NCAcademy', branch='main',
++            commit='a' * 40, archetype='amplify-academy-fargate', public_origin='https://academy.example.test')
++        release = cloud_deployments.prepare_release(app, principal)
++        self.assertIn('Academy API and private PostgreSQL', json.dumps(release.steps))
++        cloud_deployments.approve_release(release, principal)
++        with patch('platform_services.cloud_aws.start_run', side_effect=AssertionError('No AWS calls')):
++            self.assertTrue(cloud_deployments.process_one())
++            CloudRelease.objects.filter(pk=release.pk).update(next_poll=None)
++            self.assertTrue(cloud_deployments.process_one())
++        release.refresh_from_db()
++        self.assertEqual(release.status, 'succeeded', release.error)
++        app.refresh_from_db()
++        self.assertEqual({p['codename'] for p in app.installation.manifest['permissions']},
++                         {'academy-use', 'academy-teach', 'academy-audit'})
++        deployment = app.installation.deployments.get(target='external')
++        self.assertEqual(deployment.application.redirect_uris, 'https://academy.example.test/api/auth/core/callback')
++        self.assertEqual(deployment.resource_application.client_type, 'confidential')
++        self.assertNotIn('client_secret', json.dumps(release.outputs) + json.dumps(release.provider_state))

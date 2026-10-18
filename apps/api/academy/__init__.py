@@ -1,0 +1,1 @@
+"""NCAcademy application package."""

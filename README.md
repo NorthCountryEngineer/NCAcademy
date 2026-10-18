@@ -1,36 +1,52 @@
-# NCAcademy Platform
+# NCAcademy
 
-NCAcademy is an experimental platform for AI‑supported education. The project aims to provide an environment for building machine learning models and agentic workflows that can help educators and students.
+An independent NCE Core education application with courses, assignments, student-authored work and instructor-controlled tutoring. Its administrative workspace follows Proposal Studio's layout and integration-management conventions. Models may select approved hints/questions; they cannot supply newly generated prose to students.
 
-## Project Goals
+The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
 
-* **Teacher Assistance** – tools that help generate lesson plans, build homework sets from textbooks and assignments, and assist with grading.
-* **Student Tutoring** – interactive agents that guide students through homework with access to specialised models.
+## Local preview
 
-The long‑term vision is a containerised service that can be deployed on‑premises or to the cloud. This repository contains the starting point for that effort.
+Docker Compose is the supported self-contained preview. Run from this directory:
 
-## Directory Structure
-
-```text
-src/              Application source code (empty for now)
-docker/           Docker build context
-  Dockerfile      Base image used by `docker-compose`
-docker-compose.yml  Compose file for local development
-requirements.txt    Python dependencies
+```sh
+python3 scripts/setup_local.py
+docker compose up --build -d
 ```
 
-## Tooling
+Open `http://localhost:8090`. Choose an explicitly labeled local demonstration identity to inspect instructor, student and administrator views. The demo records are synthetic and stored only in this project's dedicated PostgreSQL volume. Local mode rejects live model traffic. `docker compose down` stops the application and retains local records. Do not use the demo sign-in for an externally accessible service.
 
-* **Docker / Docker‑Compose** – containerisation for the application.
-* **Python 3.11** – initial runtime for agentic workflows; can be extended with TypeScript or other languages.
+## Review the design and package
 
-## Getting Started
+- [Requirements and deferred decisions](docs/requirements.md)
+- [Architecture](docs/architecture.md)
+- [API and data contracts](docs/api.md)
+- [Model interfaces and instructional controls](docs/model-controls.md)
+- [Session evidence and audit controls](docs/audit.md)
+- [Deployment requirements and release order](docs/deployment.md)
+- [NCE Core onboarding package and patch](nce/README.md)
+- [Operations and recovery](docs/operations.md)
+- [Source review and packaging](docs/source-review.md)
+- [Verification and production acceptance](docs/verification.md)
+- [Changelog](docs/CHANGELOG.md)
 
-1. Build and start the development container:
+The dedicated `amplify-academy-fargate` recipe deploys the Amplify frontend, Fargate API and private PostgreSQL database. The manifest pins the private ECR image by digest. Core identity remains at `https://main.dpn5tiolbymzn.amplifyapp.com`; the canonical callback is `https://ncacademy.app/api/auth/core/callback`. See [deployment](docs/deployment.md) for release inputs and verification.
 
-   ```bash
-   docker-compose up --build
-   ```
+Initial access is restricted to the owner with both Core `admin` and `academy-use` permissions. Live models remain disabled and no student grants are issued until audit retention and access controls are verified. The API uses a restricted database login and has no AWS task role. Independent retained exports and KMS-signed checkpoints are operator-run; this release has no automatic checkpoint worker.
 
-2. Modify source code in `src/` to implement features.
+## Verification
 
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r apps/api/requirements-test.lock.txt
+PYTHONPATH=apps/api .venv/bin/python -m pytest apps/api/tests scripts/tests -q
+cd apps/web
+npm ci --no-audit --no-fund
+npm test
+npm run build
+```
+
+Use Python 3.12+ and Node 22.12+ for release tooling. Container builds supply these runtimes. All tests use synthetic student records and mocked Core/model transports. See the verification record for the checks actually performed and remaining live acceptance steps.
+
+## Data and source
+
+Runtime data, `.env`, signing/vault secrets, dependencies, test reports and generated release archives stay outside Git. Keep the session encryption bootstrap unchanged across image updates and matching database restore. Source archives contain an explicit reviewed source inventory and checksums, never student records. Publication and deployment follow the owner's authorization and Core's exact-commit release checks.

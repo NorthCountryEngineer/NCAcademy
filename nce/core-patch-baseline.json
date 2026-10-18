@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "core_commit": "b2c4172fbe500a7d9744a8d6246b8a5bdf3026c9",
+  "prepared_date": "2026-10-17",
+  "patch_sha256": "18e9730f3c35e8eb71f0357f9a912ff1a6d5856997632b5d5278a04725354261",
+  "active_core_checkout_modified": false,
+  "archetype": "amplify-academy-fargate",
+  "planned_repository": "NorthCountryEngineer/NCAcademy",
+  "files": [
+    "ci/tests/test_github_gate.py",
+    "deployment/aws-apps/README.md",
+    "deployment/aws-apps/academy-fargate.template.json",
+    "deployment/aws-apps/runner.py",
+    "docs/cloud-deployments.md",
+    "platform_services/cloud_aws.py",
+    "platform_services/cloud_contract.py",
+    "platform_services/cloud_deployments.py",
+    "platform_services/cloud_models.py",
+    "platform_services/cloud_portal.py",
+    "platform_services/github_ci.py",
+    "platform_services/migrations/0039_academy_fargate_archetype.py",
+    "platform_services/tests/test_academy_fargate.py"
+  ],
+  "validation": {
+    "status": "passed",
+    "network": "disabled",
+    "core_cloud_tests": 113,
+    "github_gate_tests": 16,
+    "migration_check": "No changes detected",
+    "patch_reapplication": "git apply --check and apply succeeded in a new temporary clean HEAD export",
+    "command": "python3 scripts/test_core_patch.py",
+    "image": "nce-core-ci-tests:20261016",
+    "image_id": "sha256:629cb385150ec4ba6f92df4a6424b020de5ef9bf243af17aaeae15520a646b4c",
+    "cfn_lint": "cfn-lint 1.57.2; no warnings or errors",
+    "platform_invariants": "passed; no platform IAM expansion",
+    "runtime_database_isolation": "API runtime login and owner-only migration have distinct secret references and execution roles",
+    "tracked_secret_scan": "passed; reviewed synthetic secret ARN is explicitly annotated"
+  },
+  "core_tree": "b54fee0b851001245aea5306e28964546d95f0b2",
+  "file_hashes": [
+    {
+      "path": "ci/tests/test_github_gate.py",
+      "before_sha256": "9944affd0ef12390d4ac0cc26d952d24f18a77adba4fa2103e0b204f893405ac",
+      "after_sha256": "6c195ef839450521073dda2bd9f4bb4bb8a455866b9872808db78112fe23b547"
+    },
+    {
+      "path": "deployment/aws-apps/README.md",
+      "before_sha256": "1438f6f1cb9325dfdefc9c980653ecf6c7b4745d6f6ae5dce1cf7f1c3c382ca2",
+      "after_sha256": "6b786f460cda7c7e3747df667d3975048f4561dd6fa497b488b188fa455a308d"
+    },
+    {
+      "path": "deployment/aws-apps/academy-fargate.template.json",
+      "before_sha256": null,
+      "after_sha256": "ecaf374900ab348c53415d74e99f407191909054e9fb8f639019eecb56d881ab"
+    },
+    {
+      "path": "deployment/aws-apps/runner.py",
+      "before_sha256": "5bad0ea40b608c3486b7f16fe4ad28cd31839188c1efc7be7590e0eec47e01e7",
+      "after_sha256": "46d2b05cd48eaaac30b641b147c4d1f1bfa2b5a6f6efdb4f3985f5cd483fb2a2"
+    },
+    {
+      "path": "docs/cloud-deployments.md",
+      "before_sha256": "5b8e764e3eaa42850e44f6e0dc6ebf5e6df98e0d330e2e4902b3e99ed0678dd3",
+      "after_sha256": "831a154f13a56d04a3562f9b23eefe8cf565d293c29d29384c176598f1d9bd09"
+    },
+    {
+      "path": "platform_services/cloud_aws.py",
+      "before_sha256": "b303a99213eb7e95eaac11ac09225fcdc13c5b1f8ab2be63e686f2d793b45359",
+      "after_sha256": "652e914da622acc1bb1e9f81f9eb5cb676cc2623b1a2d2346599f30b51146eb8"
+    },
+    {
+      "path": "platform_services/cloud_contract.py",
+      "before_sha256": "643008c74bc294e3f0741f3ad43641b655f8eb7f7b216c11199729dde6cf0490",
+      "after_sha256": "c68e33e2b4d5af153ef45538895d9bc2fb9576a8ee3703510b12a548c0f6e910"
+    },
+    {
+      "path": "platform_services/cloud_deployments.py",
+      "before_sha256": "22689f631788cb07c95fb29178dbbb2a45f691145cb46de617f07ada9247c226",
+      "after_sha256": "c6b9e87f5b8209765c84ad82062ce1f5597e783eb4736bac158e09041dac4cd5"
+    },
+    {
+      "path": "platform_services/cloud_models.py",
+      "before_sha256": "c8a5bb16dba99342413ddc95d2ef6384f4848d708b9171b5e62aea1f3d91508f",
+      "after_sha256": "1fda946236704512b8732987e4d2e15ddc9b4de3e963bb9586f6437d915ee430"
+    },
+    {
+      "path": "platform_services/cloud_portal.py",
+      "before_sha256": "5ee096b9109f3e91c13311a3df315e580fab65d7dff2032e02a0b07a96dc6e7d",
+      "after_sha256": "ce160fc0818e7957e9fb3820a9dcee9cafd27ae70f9b6c29b49d3044ad018024"
+    },
+    {
+      "path": "platform_services/github_ci.py",
+      "before_sha256": "992996218e4ec2df328c9cbc2842c6db44606598860571322a1f8e084058c7a8",
+      "after_sha256": "475b038a42ff4ae76f918783d90d9ec1774595fcc3494a78d4963cbe376e2fdb"
+    },
+    {
+      "path": "platform_services/migrations/0039_academy_fargate_archetype.py",
+      "before_sha256": null,
+      "after_sha256": "edafe269ba4aab3c7afce1b1a58055cfa174343edcafc159ade17133507c0794"
+    },
+    {
+      "path": "platform_services/tests/test_academy_fargate.py",
+      "before_sha256": null,
+      "after_sha256": "8ae5698104fefed4352a98e5ad9e4c7eaa2db014ca6892816b2f6b86b95c9625"
+    }
+  ],
+  "core_release_commit": "79e9d5284c087fbcce67eb34b3efcfe46f6fbfa6",
+  "core_release_branch": "codex/ncacademy-core-onboarding"
+}

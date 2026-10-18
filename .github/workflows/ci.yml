@@ -1,0 +1,68 @@
+name: NCAcademy CI
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ncacademy-ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  required:
+    name: NCAcademy required checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      privilege-postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: academy_ci_owner
+          POSTGRES_PASSWORD: disposable-ci-only
+          POSTGRES_DB: academy_privilege_test
+        ports:
+          - 127.0.0.1:5432:5432
+        options: >-
+          --health-cmd "pg_isready -U academy_ci_owner -d academy_privilege_test"
+          --health-interval 5s --health-timeout 3s --health-retries 15
+    steps:
+      - name: Check out the exact source without retained credentials
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r apps/api/requirements.lock.txt
+          python -m pip install --disable-pip-version-check -r apps/api/requirements-test.lock.txt
+          npm ci --no-audit --no-fund --prefix apps/web
+      - name: Validate source packaging and application tests
+        env:
+          PYTHONPATH: apps/api
+          ALLOW_LIVE_MODELS: 'false'
+          ACADEMY_TEST_POSTGRES_URL: postgresql+psycopg://academy_ci_owner:disposable-ci-only@127.0.0.1:5432/academy_privilege_test
+        run: |
+          python scripts/check_package.py
+          python -m pytest apps/api/tests scripts/tests -q
+      - name: Test and build the frontend
+        run: |
+          npm test --prefix apps/web -- --run
+          npm run build --prefix apps/web
+      - name: Build the local container package
+        run: |
+          python scripts/setup_local.py
+          docker compose config --quiet
+          docker compose build
+          docker compose up -d --wait --wait-timeout 120
+          python scripts/smoke_local.py
+      - name: Stop the disposable local services
+        if: always()
+        run: docker compose down --volumes

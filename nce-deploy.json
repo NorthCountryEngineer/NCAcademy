@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "archetype": "amplify-academy-fargate",
+  "frontend": {
+    "directory": "apps/web",
+    "output": "dist"
+  },
+  "backend": {
+    "image": "015454941623.dkr.ecr.us-east-1.amazonaws.com/nce-family-academy-api@sha256:e9edababa575a6b4f35c2bd0c25167e94dd09b98f9bf4dd6a7d73114c737157e"
+  },
+  "identity": {
+    "callback_path": "/api/auth/core/callback",
+    "permissions": [
+      {
+        "codename": "academy-use",
+        "name": "Use NCAcademy"
+      },
+      {
+        "codename": "academy-teach",
+        "name": "Teach and manage assigned courses"
+      },
+      {
+        "codename": "academy-audit",
+        "name": "Review assigned student sessions"
+      }
+    ]
+  }
+}
