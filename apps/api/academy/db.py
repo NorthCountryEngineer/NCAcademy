@@ -6,13 +6,25 @@ import threading
 from pathlib import Path
 from uuid import uuid4
 
-from sqlalchemy import create_engine, event, select, text, UniqueConstraint
+from sqlalchemy import create_engine, event, inspect, select, text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from sqlalchemy.types import String, Text, Integer
 
 
 def uid():
     return uuid4().hex
+
+
+def teaching_schema_id(tenant_id):
+    return "teaching-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def external_review_schema_id(tenant_id):
+    return "external-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+IMMUTABLE_RECORD_KINDS = {"submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
+SEALED_JOB_KINDS = {"turn", "lesson_turn", "external_review_job"}
 
 
 def now():
@@ -99,6 +111,19 @@ class Audit(Base):
     previous_hash: Mapped[str] = mapped_column(String(64))
     hash: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[str] = mapped_column(String(40), default=now)
+
+
+@event.listens_for(Record, "before_update")
+@event.listens_for(Record, "before_delete")
+def immutable_record(mapper, connection, target):
+    old_kinds = inspect(target).attrs.kind.history.deleted
+    if target.kind in IMMUTABLE_RECORD_KINDS or any(kind in IMMUTABLE_RECORD_KINDS for kind in old_kinds):
+        raise ValueError("Submitted work and approved teaching snapshots are immutable")
+    if target.kind in SEALED_JOB_KINDS or any(kind in SEALED_JOB_KINDS for kind in old_kinds):
+        history = inspect(target).attrs.data.history.deleted
+        previous = json.loads(history[0]) if history else target.value
+        if old_kinds or previous.get("status") != "pending" or target in inspect(target).session.deleted:
+            raise ValueError("Completed tutoring turns are immutable")
 
 
 @event.listens_for(Audit, "before_update")

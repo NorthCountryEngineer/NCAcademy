@@ -1,5 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from .standards_schemas import CurriculumInput
 
 
 class Strict(BaseModel):
@@ -37,6 +38,7 @@ class CourseInput(Strict):
     description: str = Field(default="", max_length=10000)
     school_id: str | None = Field(default=None, min_length=1, max_length=64)
     teacher_id: str | None = Field(default=None, min_length=1, max_length=64)
+    curriculum: CurriculumInput | None = None
 
 
 class AssignmentInput(Strict):
@@ -62,6 +64,7 @@ class ReviewInput(Strict):
 class TutorInput(Strict):
     message: str = Field(min_length=1, max_length=10000)
     idempotency_key: str = Field(min_length=8, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    teacher_profile_id: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class ConnectionInput(Strict):

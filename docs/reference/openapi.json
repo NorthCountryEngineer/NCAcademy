@@ -799,7 +799,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReviewInput"
+                "$ref": "#/components/schemas/academy__schemas__ReviewInput"
               }
             }
           }
@@ -2041,10 +2041,1510 @@
           }
         }
       }
+    },
+    "/api/standards/catalog": {
+      "get": {
+        "summary": "Catalog",
+        "operationId": "catalog_api_standards_catalog_get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/corpus": {
+      "get": {
+        "summary": "Get Corpus",
+        "operationId": "get_corpus_api_courses__course_id__corpus_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/corpus/refresh": {
+      "post": {
+        "summary": "Refresh",
+        "operationId": "refresh_api_courses__course_id__corpus_refresh_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/corpus/approve": {
+      "post": {
+        "summary": "Approve",
+        "operationId": "approve_api_courses__course_id__corpus_approve_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpusApprovalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/corpus/retrieve": {
+      "post": {
+        "summary": "Retrieve",
+        "operationId": "retrieve_api_courses__course_id__corpus_retrieve_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpusRetrievalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers": {
+      "get": {
+        "summary": "Teachers",
+        "operationId": "teachers_api_schools__school_id__teachers_get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Teacher",
+        "operationId": "create_teacher_api_schools__school_id__teachers_post",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}": {
+      "get": {
+        "summary": "Teacher",
+        "operationId": "teacher_api_schools__school_id__teachers__profile_id__get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Teacher",
+        "operationId": "update_teacher_api_schools__school_id__teachers__profile_id__put",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Archive Teacher",
+        "operationId": "archive_teacher_api_schools__school_id__teachers__profile_id__delete",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/bind": {
+      "post": {
+        "summary": "Bind Teacher",
+        "operationId": "bind_teacher_api_schools__school_id__teachers__profile_id__bind_post",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherBinding"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/courses": {
+      "put": {
+        "summary": "Assign Courses",
+        "operationId": "assign_courses_api_schools__school_id__teachers__profile_id__courses_put",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherCourses"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/approve": {
+      "post": {
+        "summary": "Approve Teacher",
+        "operationId": "approve_teacher_api_schools__school_id__teachers__profile_id__approve_post",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherVersion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/context": {
+      "get": {
+        "summary": "Teaching Context",
+        "operationId": "teaching_context_api_schools__school_id__teachers__profile_id__context_get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          },
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/teacher-tutor": {
+      "get": {
+        "summary": "Get Lessons",
+        "operationId": "get_lessons_api_courses__course_id__teacher_tutor_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Lesson",
+        "operationId": "lesson_api_courses__course_id__teacher_tutor_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LessonInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/curated-lessons": {
+      "get": {
+        "summary": "Get Curated",
+        "operationId": "get_curated_api_courses__course_id__curated_lessons_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Curate",
+        "operationId": "curate_api_courses__course_id__curated_lessons_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CuratedLessonInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/curated-lessons/{lesson_id}/images/{image_id}": {
+      "get": {
+        "summary": "Image",
+        "operationId": "image_api_courses__course_id__curated_lessons__lesson_id__images__image_id__get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "lesson_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lesson Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/curated-lessons/{lesson_id}/progress": {
+      "post": {
+        "summary": "Progress",
+        "operationId": "progress_api_courses__course_id__curated_lessons__lesson_id__progress_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "lesson_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lesson Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CuratedProgress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/audit-agent": {
+      "get": {
+        "summary": "Get Agent",
+        "operationId": "get_agent_api_schools__school_id__audit_agent_get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Put Agent",
+        "operationId": "put_agent_api_schools__school_id__audit_agent_put",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditAgentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schools/{school_id}/external-review": {
+      "get": {
+        "summary": "Queue",
+        "operationId": "queue_api_schools__school_id__external_review_get",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/external-resources": {
+      "get": {
+        "summary": "List Resources",
+        "operationId": "list_resources_api_courses__course_id__external_resources_get",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Resource",
+        "operationId": "create_resource_api_courses__course_id__external_resources_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-resources/{resource_id}": {
+      "get": {
+        "summary": "Get Resource",
+        "operationId": "get_resource_api_external_resources__resource_id__get",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Resource",
+        "operationId": "update_resource_api_external_resources__resource_id__put",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{course_id}/external-resources/import-corpus": {
+      "post": {
+        "summary": "Import Corpus",
+        "operationId": "import_corpus_api_courses__course_id__external_resources_import_corpus_post",
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-resources/{resource_id}/revoke": {
+      "post": {
+        "summary": "Revoke Resource",
+        "operationId": "revoke_resource_api_external_resources__resource_id__revoke_post",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalRevokeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-resources/{resource_id}/review": {
+      "post": {
+        "summary": "Run Review",
+        "operationId": "run_review_api_external_resources__resource_id__review_post",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/academy__external_schemas__ReviewInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-resources/{resource_id}/approve": {
+      "post": {
+        "summary": "Approve Resource",
+        "operationId": "approve_resource_api_external_resources__resource_id__approve_post",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalApprovalInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-resources/{resource_id}/playback": {
+      "post": {
+        "summary": "Playback",
+        "operationId": "playback_api_external_resources__resource_id__playback_post",
+        "parameters": [
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AIBehavior": {
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "warm",
+              "neutral",
+              "formal"
+            ],
+            "title": "Tone",
+            "default": "warm"
+          },
+          "teaching_style": {
+            "type": "string",
+            "enum": [
+              "socratic",
+              "guided_practice",
+              "direct",
+              "adaptive"
+            ],
+            "title": "Teaching Style",
+            "default": "socratic"
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "concise",
+              "balanced",
+              "detailed"
+            ],
+            "title": "Detail",
+            "default": "balanced"
+          },
+          "question_frequency": {
+            "type": "string",
+            "enum": [
+              "low",
+              "balanced",
+              "high"
+            ],
+            "title": "Question Frequency",
+            "default": "balanced"
+          },
+          "encouragement": {
+            "type": "string",
+            "enum": [
+              "restrained",
+              "balanced",
+              "frequent"
+            ],
+            "title": "Encouragement",
+            "default": "balanced"
+          },
+          "boundaries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Boundaries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AIBehavior"
+      },
       "AgentPlacementInput": {
         "properties": {
           "name": {
@@ -2170,6 +3670,100 @@
         ],
         "title": "AssignmentInput"
       },
+      "AuditAgentInput": {
+        "properties": {
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "connection_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Connection Id"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$",
+            "title": "Model"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "max_input_chars": {
+            "type": "integer",
+            "maximum": 50000.0,
+            "minimum": 1000.0,
+            "title": "Max Input Chars",
+            "default": 30000
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 1200.0,
+            "minimum": 200.0,
+            "title": "Max Output Tokens",
+            "default": 700
+          },
+          "max_daily_reviews": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Daily Reviews",
+            "default": 30
+          },
+          "max_daily_tokens": {
+            "type": "integer",
+            "maximum": 5000000.0,
+            "minimum": 10000.0,
+            "title": "Max Daily Tokens",
+            "default": 1000000
+          },
+          "review_days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Review Days",
+            "default": 7
+          },
+          "require_human_approval": {
+            "type": "boolean",
+            "title": "Require Human Approval",
+            "default": true
+          },
+          "policy_notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Policy Notes",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "connection_id",
+          "model"
+        ],
+        "title": "AuditAgentInput"
+      },
       "ConnectionInput": {
         "properties": {
           "school_id": {
@@ -2271,6 +3865,51 @@
         ],
         "title": "ContentInput"
       },
+      "CorpusApprovalInput": {
+        "properties": {
+          "corpus_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Corpus Id"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Snapshot Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus_id",
+          "snapshot_sha256"
+        ],
+        "title": "CorpusApprovalInput"
+      },
+      "CorpusRetrievalInput": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "CorpusRetrievalInput"
+      },
       "CourseInput": {
         "properties": {
           "title": {
@@ -2310,6 +3949,16 @@
               }
             ],
             "title": "Teacher Id"
+          },
+          "curriculum": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurriculumInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -2318,6 +3967,199 @@
           "title"
         ],
         "title": "CourseInput"
+      },
+      "CuratedImage": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "data_url": {
+            "type": "string",
+            "maxLength": 175000,
+            "minLength": 1,
+            "title": "Data Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "data_url"
+        ],
+        "title": "CuratedImage"
+      },
+      "CuratedLessonInput": {
+        "properties": {
+          "teacher_profile_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Teacher Profile Id"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Message",
+            "default": ""
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/CuratedImage"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "title": "Images"
+          },
+          "image_use_confirmed": {
+            "type": "boolean",
+            "title": "Image Use Confirmed",
+            "default": false
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/CuratedPreferences"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Idempotency Key"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "teacher_profile_id",
+          "idempotency_key"
+        ],
+        "title": "CuratedLessonInput"
+      },
+      "CuratedPreferences": {
+        "properties": {
+          "pace": {
+            "type": "string",
+            "enum": [
+              "gentle",
+              "standard"
+            ],
+            "title": "Pace",
+            "default": "standard"
+          },
+          "formats": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "read",
+                "visual",
+                "listen"
+              ]
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Formats"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CuratedPreferences"
+      },
+      "CuratedProgress": {
+        "properties": {
+          "section_id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Section Id"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "viewed",
+              "read_aloud",
+              "reflection"
+            ],
+            "title": "Event"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "section_id",
+          "event"
+        ],
+        "title": "CuratedProgress"
+      },
+      "CurriculumInput": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "maxLength": 12,
+            "minLength": 5,
+            "pattern": "^US-[A-Z]{2}$",
+            "title": "State"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Subject"
+          },
+          "grades": {
+            "items": {
+              "type": "integer",
+              "maximum": 12.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 13,
+            "minItems": 1,
+            "title": "Grades"
+          },
+          "academic_year": {
+            "type": "string",
+            "pattern": "^20[0-9]{2}-20[0-9]{2}$",
+            "title": "Academic Year"
+          },
+          "standards_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standards Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "state",
+          "subject",
+          "grades",
+          "academic_year"
+        ],
+        "title": "CurriculumInput"
       },
       "EnrollmentInput": {
         "properties": {
@@ -2345,6 +4187,224 @@
         ],
         "title": "EnrollmentInput"
       },
+      "ExternalApprovalInput": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "review_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Review Id"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Snapshot Sha256"
+          },
+          "watched_video": {
+            "type": "boolean",
+            "title": "Watched Video",
+            "default": false
+          },
+          "transcript_complete": {
+            "type": "boolean",
+            "title": "Transcript Complete",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version",
+          "review_id",
+          "snapshot_sha256"
+        ],
+        "title": "ExternalApprovalInput"
+      },
+      "ExternalInput": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "youtube",
+              "external_text"
+            ],
+            "title": "Kind"
+          },
+          "source_url": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Source Url"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "teaching_notes": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Teaching Notes",
+            "default": ""
+          },
+          "transcript": {
+            "type": "string",
+            "maxLength": 50000,
+            "title": "Transcript",
+            "default": ""
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 50000,
+            "title": "Content",
+            "default": ""
+          },
+          "rights_confirmed": {
+            "type": "boolean",
+            "const": true,
+            "title": "Rights Confirmed"
+          },
+          "start_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Start Seconds",
+            "default": 0
+          },
+          "end_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 86400.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "source_url",
+          "title",
+          "rights_confirmed"
+        ],
+        "title": "ExternalInput"
+      },
+      "ExternalRevokeInput": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version",
+          "reason"
+        ],
+        "title": "ExternalRevokeInput"
+      },
+      "ExternalUpdate": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "youtube",
+              "external_text"
+            ],
+            "title": "Kind"
+          },
+          "source_url": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Source Url"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "teaching_notes": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Teaching Notes",
+            "default": ""
+          },
+          "transcript": {
+            "type": "string",
+            "maxLength": 50000,
+            "title": "Transcript",
+            "default": ""
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 50000,
+            "title": "Content",
+            "default": ""
+          },
+          "rights_confirmed": {
+            "type": "boolean",
+            "const": true,
+            "title": "Rights Confirmed"
+          },
+          "start_seconds": {
+            "type": "integer",
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "Start Seconds",
+            "default": 0
+          },
+          "end_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 86400.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Seconds"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "source_url",
+          "title",
+          "rights_confirmed",
+          "expected_version"
+        ],
+        "title": "ExternalUpdate"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2357,6 +4417,37 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LessonInput": {
+        "properties": {
+          "teacher_profile_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Teacher Profile Id"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Idempotency Key"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "teacher_profile_id",
+          "message",
+          "idempotency_key"
+        ],
+        "title": "LessonInput"
       },
       "MembershipInput": {
         "properties": {
@@ -2470,22 +4561,6 @@
         ],
         "title": "ResourceInput"
       },
-      "ReviewInput": {
-        "properties": {
-          "feedback": {
-            "type": "string",
-            "maxLength": 10000,
-            "minLength": 1,
-            "title": "Feedback"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "feedback"
-        ],
-        "title": "ReviewInput"
-      },
       "SchoolInput": {
         "properties": {
           "name": {
@@ -2521,6 +4596,450 @@
         ],
         "title": "SchoolInput"
       },
+      "TeacherBinding": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "principal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Principal Id"
+          },
+          "agent_placement_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Placement Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version"
+        ],
+        "title": "TeacherBinding"
+      },
+      "TeacherCourses": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "course_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Course Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version",
+          "course_ids"
+        ],
+        "title": "TeacherCourses"
+      },
+      "TeacherCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "biography": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Biography",
+            "default": ""
+          },
+          "pronouns": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Pronouns",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Title",
+            "default": ""
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
+          },
+          "expertise": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Expertise"
+          },
+          "picture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherPicture"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ai_behavior": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AIBehavior"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tutor_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherTutorModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai"
+            ],
+            "title": "Kind"
+          },
+          "principal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Principal Id"
+          },
+          "agent_placement_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Placement Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "draft",
+                  "ready"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "TeacherCreate"
+      },
+      "TeacherPicture": {
+        "properties": {
+          "media_type": {
+            "type": "string",
+            "const": "image/png",
+            "title": "Media Type",
+            "default": "image/png"
+          },
+          "data_base64": {
+            "type": "string",
+            "maxLength": 87384,
+            "minLength": 1,
+            "title": "Data Base64"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data_base64"
+        ],
+        "title": "TeacherPicture"
+      },
+      "TeacherTutorModel": {
+        "properties": {
+          "connection_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Connection Id"
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$",
+            "title": "Model"
+          },
+          "max_turns": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "default": 8
+          },
+          "max_input_chars": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 100.0,
+            "title": "Max Input Chars",
+            "default": 3000
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 30.0,
+            "title": "Max Output Tokens",
+            "default": 80
+          },
+          "max_total_tokens": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": 500.0,
+            "title": "Max Total Tokens",
+            "default": 20000
+          },
+          "allow_lesson_curation": {
+            "type": "boolean",
+            "title": "Allow Lesson Curation",
+            "default": false
+          },
+          "allow_assignment_images": {
+            "type": "boolean",
+            "title": "Allow Assignment Images",
+            "default": false
+          },
+          "curation_max_output_tokens": {
+            "type": "integer",
+            "maximum": 1200.0,
+            "minimum": 200.0,
+            "title": "Curation Max Output Tokens",
+            "default": 700
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "connection_id",
+          "model"
+        ],
+        "title": "TeacherTutorModel"
+      },
+      "TeacherUpdate": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "biography": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Biography"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pronouns"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
+          },
+          "expertise": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expertise"
+          },
+          "picture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherPicture"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ai_behavior": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AIBehavior"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tutor_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherTutorModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "draft",
+                  "ready",
+                  "archived"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version"
+        ],
+        "title": "TeacherUpdate"
+      },
+      "TeacherVersion": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version"
+        ],
+        "title": "TeacherVersion"
+      },
       "TutorInput": {
         "properties": {
           "message": {
@@ -2535,6 +5054,19 @@
             "minLength": 8,
             "pattern": "^[a-zA-Z0-9_-]+$",
             "title": "Idempotency Key"
+          },
+          "teacher_profile_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Profile Id"
           }
         },
         "additionalProperties": false,
@@ -2668,6 +5200,45 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "academy__external_schemas__ReviewInput": {
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Version"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 16,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Idempotency Key"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_version",
+          "idempotency_key"
+        ],
+        "title": "ReviewInput"
+      },
+      "academy__schemas__ReviewInput": {
+        "properties": {
+          "feedback": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Feedback"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "feedback"
+        ],
+        "title": "ReviewInput"
       }
     }
   }

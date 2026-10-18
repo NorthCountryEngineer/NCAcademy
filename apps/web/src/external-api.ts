@@ -1,0 +1,40 @@
+import { request, schoolPath, send } from './api';
+export type ExternalKind='youtube'|'external_text'|'corpus_document';
+export type ExternalReview={id:string;verdict:'approve'|'reject'|'needs_human';risk_codes:string[];findings:string[];coverage:string;usage?:{total_tokens?:number};created_at?:string;agent_revision_id?:string};
+export type ExternalReviewJob={id:string;status:'pending'|'completed'|'withheld';error?:string|null;uncertainty?:string|null;review_id?:string|null;usage?:{total_tokens?:number};created_at?:string};
+export type ExternalResource={id:string;resource_id:string;course_id:string;school_id?:string;kind:ExternalKind;title:string;source_url:string;version:number;snapshot_id?:string;snapshot_sha256:string;status:'pending'|'reviewed'|'rejected'|'needs_human'|'approved'|'stale'|'revoked';teaching_notes?:string;transcript?:string;content?:string;rights_confirmed?:boolean;start_seconds?:number;end_seconds?:number|null;metadata?:{title?:string;author_name?:string};review?:ExternalReview|null;latest_review_job?:ExternalReviewJob|null;approval?:{id:string;approved_by?:string;approved_at?:string;expires_at?:string}|null;can_review?:boolean;can_approve?:boolean;can_revoke?:boolean;can_edit?:boolean;review_only?:boolean;approved?:boolean};
+export type AuditAgentConfig={id:string;version:number;revision_id:string;name:string;connection_id:string;model:string;enabled:boolean;max_input_chars:number;max_output_tokens:number;max_daily_reviews:number;max_daily_tokens:number;review_days:number;require_human_approval:boolean;policy_notes:string};
+export type AuditAgentDraft=Omit<AuditAgentConfig,'id'|'version'|'revision_id'>;
+export type AuditAgentState={can_manage:boolean;external_audit_required:boolean;agent:AuditAgentConfig|null};
+export type ExternalList={resources:ExternalResource[];can_submit?:boolean;can_manage?:boolean;external_audit_required:boolean;audit_agent:{assigned:boolean;enabled:boolean;name?:string;require_human_approval?:boolean}};
+export type ExternalDraft={kind:'youtube'|'external_text';source_url:string;title:string;teaching_notes:string;transcript:string;content:string;rights_confirmed:boolean;start_seconds:number;end_seconds:number|null};
+export type Playback={embed_url:string;review_only:boolean;title?:string};
+export const blankExternal=():ExternalDraft=>({kind:'youtube',source_url:'',title:'',teaching_notes:'',transcript:'',content:'',rights_confirmed:false,start_seconds:0,end_seconds:null});
+export const blankAuditAgent=():AuditAgentDraft=>({name:'School content audit agent',connection_id:'',model:'',enabled:true,max_input_chars:30000,max_output_tokens:700,max_daily_reviews:30,max_daily_tokens:1000000,review_days:7,require_human_approval:true,policy_notes:''});
+export function externalPayload(value:ExternalDraft){return {kind:value.kind,source_url:value.source_url.trim(),title:value.title.trim(),teaching_notes:value.teaching_notes.trim(),...(value.kind==='youtube'?{transcript:value.transcript.trim(),start_seconds:value.start_seconds,end_seconds:value.end_seconds}:{content:value.content.trim()}),rights_confirmed:value.rights_confirmed===true};}
+export function auditAgentPayload(value:AuditAgentDraft,expectedVersion:number|null){return {expected_version:expectedVersion,name:value.name.trim(),connection_id:value.connection_id,model:value.model,enabled:value.enabled,max_input_chars:value.max_input_chars,max_output_tokens:value.max_output_tokens,max_daily_reviews:value.max_daily_reviews,max_daily_tokens:value.max_daily_tokens,review_days:value.review_days,require_human_approval:value.require_human_approval,policy_notes:value.policy_notes.trim()};}
+export const externalPath=(id:string)=>`/external-resources/${encodeURIComponent(id)}`;
+export const listExternal=(courseId:string,schoolId:string)=>request<ExternalList>(schoolPath(`/courses/${encodeURIComponent(courseId)}/external-resources`,schoolId));
+export const externalDetail=(id:string,schoolId:string)=>request<ExternalResource>(schoolPath(externalPath(id),schoolId));
+export const saveExternal=(courseId:string,schoolId:string,draft:ExternalDraft,initial?:ExternalResource)=>send<ExternalResource>(schoolPath(initial?externalPath(initial.id):`/courses/${encodeURIComponent(courseId)}/external-resources`,schoolId),{...externalPayload(draft),...(initial?{expected_version:initial.version}:{})},initial?'PUT':'POST');
+export const requestPlayback=(id:string,schoolId?:string)=>send<Playback>(schoolId?schoolPath(`${externalPath(id)}/playback`,schoolId):`${externalPath(id)}/playback`,{});
+export type ExternalReviewIdentity={resource_id:string;version:number;key:string};
+export function externalReviewIdentity(previous:ExternalReviewIdentity|null,resource:Pick<ExternalResource,'id'|'version'>,makeId:()=>string=()=>crypto.randomUUID()):ExternalReviewIdentity{return previous?.resource_id===resource.id&&previous.version===resource.version?previous:{resource_id:resource.id,version:resource.version,key:makeId()};}
+export const reviewExternal=(resource:ExternalResource,schoolId:string,idempotencyKey:string)=>send<ExternalReviewJob>(schoolPath(`${externalPath(resource.id)}/review`,schoolId),{expected_version:resource.version,idempotency_key:idempotencyKey});
+export const approveExternal=(resource:ExternalResource,schoolId:string,watchedVideo:boolean,transcriptComplete:boolean)=>send<ExternalResource>(schoolPath(`${externalPath(resource.id)}/approve`,schoolId),{expected_version:resource.version,review_id:resource.review?.id,snapshot_sha256:resource.snapshot_sha256,watched_video:watchedVideo,transcript_complete:transcriptComplete});
+export const revokeExternal=(resource:ExternalResource,schoolId:string,reason:string)=>send<ExternalResource>(schoolPath(`${externalPath(resource.id)}/revoke`,schoolId),{expected_version:resource.version,reason:reason.trim()});
+export const importCorpus=(courseId:string,schoolId:string)=>send(schoolPath(`/courses/${encodeURIComponent(courseId)}/external-resources/import-corpus`,schoolId),{});
+export const getAuditAgent=(schoolId:string)=>request<AuditAgentState>(`/schools/${encodeURIComponent(schoolId)}/audit-agent`);
+export const saveAuditAgent=(schoolId:string,draft:AuditAgentDraft,expectedVersion:number|null)=>send<AuditAgentState>(`/schools/${encodeURIComponent(schoolId)}/audit-agent`,auditAgentPayload(draft,expectedVersion),'PUT');
+export const externalQueue=(schoolId:string)=>request<ExternalList>(`/schools/${encodeURIComponent(schoolId)}/external-review`);
+export function safeAttribution(value:string){try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&!['youtube.com','www.youtube.com','m.youtube.com','youtu.be','youtube-nocookie.com','www.youtube-nocookie.com'].includes(url.hostname)?url.href:null;}catch{return null;}}
+export function reviewedEmbed(value:string,expectedOrigin?:string):string|null{
+ try{const url=new URL(value);if(url.href!==value||url.protocol!=='https:'||url.hostname!=='www.youtube-nocookie.com'||url.port||url.username||url.password||url.hash||!/^\/embed\/[A-Za-z0-9_-]{11}$/.test(url.pathname))return null;
+  const required:Record<string,string>={controls:'1',autoplay:'0',rel:'0',playsinline:'1'},allowed=new Set([...Object.keys(required),'origin','start','end']);
+  for(const key of url.searchParams.keys())if(!allowed.has(key)||url.searchParams.getAll(key).length!==1)return null;
+  for(const [key,part] of Object.entries(required))if(url.searchParams.get(key)!==part)return null;
+  const origin=url.searchParams.get('origin');if(origin){const source=new URL(origin);if(source.origin!==origin||source.username||source.password||!['https:','http:'].includes(source.protocol)||(expectedOrigin&&origin!==expectedOrigin))return null;}
+  let start=0,end:number|null=null;for(const key of ['start','end']){const part=url.searchParams.get(key);if(part!==null){if(!/^(0|[1-9][0-9]{0,5})$/.test(part)||Number(part)>86400)return null;if(key==='start')start=Number(part);else end=Number(part);}}if(end!==null&&end<=start)return null;
+  return url.href;
+ }catch{return null;}
+}

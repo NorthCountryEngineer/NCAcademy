@@ -1,0 +1,202 @@
+diff --git a/platform_services/agent_api.py b/platform_services/agent_api.py
+--- a/platform_services/agent_api.py
++++ b/platform_services/agent_api.py
+@@ -3,8 +3,74 @@
+ 
+ from identity.access import decision, effective_tags, record_decision, require_access
+ from .api import body, response, workload_api
+-from .agent_identity import authorization, issue_credential, principal_for
++from .agent_identity import authorization, binding_valid, issue_credential, principal_for
+ from .models import AgentBinding
++
++
++@workload_api(methods=('POST',))
++def authorize_binding(request):
++    """Read current authority of this consumer's own approved agent, without a token."""
++    if not request.credential:
++        raise PermissionDenied('Only a registered consuming service can authorize its own agent bindings.')
++    values = body(request)
++    required = {'binding_id', 'environment', 'task_id', 'permission', 'resource_type', 'resource_id'}
++    if set(values) != required:
++        raise ValidationError('Use an exact binding, environment, task, permission and resource context.')
++    from uuid import UUID
++    try:
++        if not isinstance(values['binding_id'], str) or str(UUID(values['binding_id'])) != values['binding_id']:
++            raise ValueError()
++        if values['task_id'] is not None and (not isinstance(values['task_id'], str) or str(UUID(values['task_id'])) != values['task_id']):
++            raise ValueError()
++    except (ValueError, TypeError, AttributeError):
++        raise ValidationError('Use canonical binding and task identifiers.')
++    if (not isinstance(values['environment'], str) or values['environment'] not in {'sandbox', 'development', 'staging', 'uat', 'production'}
++            or any(not isinstance(values[key], str) or not 1 <= len(values[key]) <= 200 for key in ('permission', 'resource_type', 'resource_id'))
++            or values['permission'] == 'admin'):
++        raise ValidationError('Use a bounded nonadministrative service permission and resource.')
++    service = request.credential.installation.service
++    binding = AgentBinding.objects.select_related('account__organization', 'installation__service', 'task').filter(
++        pk=values['binding_id'], account__organization=request.organization,
++        installation=request.credential.installation).first()
++    if not binding or not binding_valid(binding):
++        record_decision(request.access_principal, service, 'agent.binding_authorized', False, 'binding_unavailable', effective_tags(service))
++        return response({'active': False})
++    task_id = str(binding.task_id) if binding.task_id else None
++    if (values['environment'] != binding.environment or values['task_id'] != task_id
++            or request.credential.environment_id and binding.environment != request.credential.environment.name):
++        record_decision(request.access_principal, service, 'agent.binding_authorized', False, 'task_context_mismatch', effective_tags(service))
++        return response({'active': False})
++    require_access(request.access_principal, binding, 'agent.binding_authorization_read')
++    from identity.access import Principal
++    principal = Principal(agent_binding=binding, purpose=request.access_principal.purpose,
++        request_id=request.access_principal.request_id)
++    if not decision(principal, request.credential.installation)[0]:
++        record_decision(principal, service, 'agent.binding_authorized', False, 'target_service_policy', effective_tags(service))
++        return response({'active': False})
++    require_access(principal, request.credential.installation, 'agent.target_service')
++    grants = authorization(principal, service)
++    from identity.models import ProtectedResource
++    resource = ProtectedResource.objects.filter(service=service, active=True,
++        resource_type=values['resource_type'], external_id=values['resource_id']).first()
++    active = bool(values['permission'] in grants['permissions'] and resource and decision(principal, resource)[0])
++    if resource:
++        record_decision(principal, resource, 'agent.resource_authorization', active,
++            'policy_satisfied' if active else 'resource_denied', effective_tags(resource))
++    record_decision(principal, service, 'agent.binding_authorized', active,
++        'live_service_roles' if active else 'agent_role_or_resource_required', effective_tags(service))
++    if not active:
++        return response({'active': False})
++    from datetime import timedelta
++    from django.conf import settings
++    from django.utils import timezone
++    checked = timezone.now()
++    expires = min(checked + timedelta(seconds=60), binding.task.expires_at) if binding.task_id else checked + timedelta(seconds=60)
++    return response({'active': True, 'iss': settings.ISSUER, 'sub': f'urn:core:agent:{binding.account_id}',
++        'principal_kind': 'agent', 'agent_id': str(binding.account_id), 'organization_id': str(request.organization.pk),
++        'aud': service.audience, 'consumer_service_id': str(binding.installation.service_id),
++        'binding_id': str(binding.pk), 'environment': binding.environment, 'task_id': task_id,
++        'permission': values['permission'], 'resource_type': values['resource_type'], 'resource_id': values['resource_id'],
++        'iat': int(checked.timestamp()), 'exp': int(expires.timestamp()), **grants})
+ 
+ 
+ @workload_api(['agents.run'], methods=('POST',))
+diff --git a/platform_services/urls.py b/platform_services/urls.py
+--- a/platform_services/urls.py
++++ b/platform_services/urls.py
+@@ -104,6 +104,7 @@
+     path('organizations/<slug:slug>/platform/agent-tasks/<uuid:pk>/', agent_portal.task, name='agent_task_edit'),
+     path('api/platform/v1/agent-credentials/exchange/', agent_api.exchange),
+     path('api/platform/v1/agent-credentials/introspect/', agent_api.introspect),
++    path('api/platform/v1/agent-bindings/authorize/', agent_api.authorize_binding),
+     path("onboarding/", onboarding.onboarding, name="onboarding"),
+     path("organizations/<slug:slug>/platform/", portal.dashboard, name="platform_dashboard"),
+     path("organizations/<slug:slug>/marketplace/", portal.marketplace, name="marketplace"),
+diff --git a/platform_services/tests/test_agent_binding_authorization.py b/platform_services/tests/test_agent_binding_authorization.py
+new file mode 100644
+--- /dev/null
++++ b/platform_services/tests/test_agent_binding_authorization.py
+@@ -0,0 +1,107 @@
++"""Own-consumer live agent authorization without credential exchange."""
++from datetime import timedelta
++from django.test import TestCase
++from django.utils import timezone
++from identity.models import AuditEvent, PermissionTag, ProtectedResource, ServicePermission
++from platform_services.models import AgentCredential, AgentDefinition, AgentTask, MarketplacePackage
++from platform_services.services import install_package, issue_workload_credential
++from platform_services.tests.test_agent_accounts import AgentAccountTests
++
++
++class AgentBindingAuthorizationTests(TestCase):
++    @classmethod
++    def setUpTestData(cls):
++        AgentAccountTests.setUpTestData.__func__(cls)
++        cls.resource = ProtectedResource.objects.create(service=cls.installation.service,
++            resource_type='academy-school', external_id='approved-school', name='Approved school')
++        cls.task.resources = {**cls.task.resources, 'service_resources': [str(cls.resource.pk)]}
++        cls.task.save()
++
++    api = AgentAccountTests.api
++
++    def authorize(self, **changes):
++        values = {'binding_id': str(self.binding.pk), 'environment': 'development', 'task_id': None,
++            'permission': 'test-execute', 'resource_type': 'academy-school', 'resource_id': 'approved-school'}
++        caller = changes.pop('caller', None)
++        values.update(changes)
++        return self.api('/agent-bindings/authorize/', values, caller)
++
++    def test_authorizes_exact_own_consumer_context_without_issuing_credentials(self):
++        count = AgentCredential.objects.count()
++        claims = self.authorize().json()
++        self.assertTrue(claims['active'])
++        self.assertEqual(claims['aud'], self.installation.service.audience)
++        self.assertEqual(claims['binding_id'], str(self.binding.pk))
++        self.assertEqual(claims['agent_id'], str(self.agent.account_id))
++        self.assertEqual(claims['consumer_service_id'], str(self.installation.service_id))
++        self.assertEqual(claims['resource_id'], 'approved-school')
++        self.assertEqual(claims['permissions'], ['test-execute'])
++        self.assertLessEqual(claims['exp'] - claims['iat'], 60)
++        self.assertGreater(claims['exp'], timezone.now().timestamp())
++        self.assertEqual(AgentCredential.objects.count(), count)
++        self.assertNotIn('access_token', claims)
++        event = AuditEvent.objects.filter(action='agent.binding_authorized', outcome='allowed').last()
++        self.assertEqual(event.principal_kind, 'agent')
++        self.assertEqual(event.principal_id, self.agent.account_id)
++        self.assertIn('no-store', self.authorize()['Cache-Control'])
++
++    def test_foreign_org_or_same_org_other_consumer_cannot_query_binding(self):
++        self.assertFalse(self.authorize(caller=self.foreign_raw).json()['active'])
++        package = MarketplacePackage.objects.create(slug='other-consumer', name='Other consumer', kind='application',
++            description='Separate synthetic consumer', manifest={'image': 'registry.example.test/other@sha256:' + 'b' * 64, 'capabilities': []})
++        consumer = install_package(self.org, package, [])
++        _, raw = issue_workload_credential(consumer, 'Other own-organization consumer')
++        self.assertFalse(self.authorize(caller=raw).json()['active'])
++        self.assertEqual(self.authorize(caller=self.agent_raw).status_code, 403)
++
++    def test_current_agent_binding_definition_and_role_revocation_are_enforced(self):
++        self.binding.active = False
++        self.binding.save()
++        self.assertFalse(self.authorize().json()['active'])
++        self.binding.active = True
++        self.binding.save()
++        self.agent.account.active = False
++        self.agent.account.save()
++        self.assertFalse(self.authorize().json()['active'])
++        self.agent.account.active = True
++        self.agent.account.save()
++        AgentDefinition.objects.filter(pk=self.agent.pk).update(active=False)
++        self.assertFalse(self.authorize().json()['active'])
++        AgentDefinition.objects.filter(pk=self.agent.pk).update(active=True)
++        self.binding.roles.clear()
++        self.assertFalse(self.authorize().json()['active'])
++
++    def test_environment_task_expiry_and_permission_resource_context_are_exact(self):
++        self.assertFalse(self.authorize(environment='production').json()['active'])
++        self.assertFalse(self.authorize(task_id=str(self.task.pk)).json()['active'])
++        self.assertFalse(self.authorize(permission='ungranted').json()['active'])
++        self.assertFalse(self.authorize(resource_id='another-school').json()['active'])
++        self.assertFalse(self.authorize(resource_type='another-kind').json()['active'])
++        self.assertTrue(self.authorize(binding_id=str(self.uat_binding.pk), environment='uat', task_id=str(self.task.pk)).json()['active'])
++        AgentTask.objects.filter(pk=self.task.pk).update(resources={})
++        self.assertFalse(self.authorize(binding_id=str(self.uat_binding.pk), environment='uat', task_id=str(self.task.pk)).json()['active'])
++        AgentTask.objects.filter(pk=self.task.pk).update(expires_at=timezone.now() - timedelta(seconds=1))
++        self.assertFalse(self.authorize(binding_id=str(self.uat_binding.pk), environment='uat', task_id=str(self.task.pk)).json()['active'])
++
++    def test_actual_agent_resource_tags_and_human_only_administration_apply(self):
++        tag = PermissionTag.objects.create(organization=self.org, slug='restricted-school', name='Restricted school', allow_workloads=True)
++        self.resource.permission_tags.add(tag)
++        self.assertFalse(self.authorize().json()['active'])
++        self.binding.access_tags.add(tag)
++        self.assertTrue(self.authorize().json()['active'])
++        reserved = ServicePermission.objects.create(service=self.installation.service, codename='admin', name='Reserved admin')
++        self.role.permissions.add(reserved)
++        self.assertNotIn('admin', self.authorize().json()['permissions'])
++        self.assertEqual(self.authorize(permission='admin').status_code, 400)
++        tag.requires_mfa = True
++        tag.save()
++        self.assertFalse(self.authorize().json()['active'])
++
++    def test_malformed_or_extra_context_is_rejected_without_exchange(self):
++        count = AgentCredential.objects.count()
++        self.assertEqual(self.authorize(binding_id='bad').status_code, 400)
++        self.assertEqual(self.authorize(task_id=True).status_code, 400)
++        self.assertEqual(self.authorize(permission=True).status_code, 400)
++        self.assertEqual(self.authorize(token='not-a-teacher-token').status_code, 400)
++        self.assertEqual(self.api('/agent-bindings/authorize/', method='GET').status_code, 405)
++        self.assertEqual(AgentCredential.objects.count(), count)

@@ -69,6 +69,33 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
         assert client.post("/api/auth/logout", headers=headers).status_code == 200
     engine = create_engine(runtime_url, hide_parameters=True)
     try:
+        for kind in ("turn", "lesson_turn", "external_review_job"):
+            identifier = "pending-" + uuid4().hex
+            with engine.begin() as connection:
+                connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"status":"pending"}'})
+                connection.execute(text("UPDATE records SET data=:data WHERE id=:id"), {"id": identifier, "data": '{"status":"pending","send_marker":"synthetic"}'})
+                connection.execute(text("UPDATE records SET data=:data WHERE id=:id"), {"id": identifier, "data": '{"status":"released","approved_text":"Reviewed source"}'})
+            for statement in ("UPDATE records SET data='{}' WHERE id=:id", "UPDATE records SET kind='draft' WHERE id=:id", "DELETE FROM records WHERE id=:id"):
+                with pytest.raises(DBAPIError) as caught:
+                    with engine.begin() as connection:
+                        connection.execute(text(statement), {"id": identifier})
+                assert caught.value.orig.sqlstate == "P0001", kind
+        for kind in ("submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+            identifier = "protected-" + uuid4().hex
+            with engine.begin() as connection:
+                connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})
+            for statement in (
+                "UPDATE records SET data = '{}' WHERE id = :id",
+                "UPDATE records SET kind = 'draft' WHERE id = :id",
+                "DELETE FROM records WHERE id = :id",
+            ):
+                with pytest.raises(DBAPIError) as caught:
+                    with engine.begin() as connection:
+                        connection.execute(text(statement), {"id": identifier})
+                assert caught.value.orig.sqlstate == "P0001", kind
+            with engine.connect() as connection:
+                stored = connection.execute(text("SELECT kind,data FROM records WHERE id = :id"), {"id": identifier}).one()
+                assert stored == (kind, '{"original":true}')
         for statement in (
             "UPDATE audit_events SET payload = '{}'",
             "DELETE FROM audit_events",

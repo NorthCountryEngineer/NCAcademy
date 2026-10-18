@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, approvedItems, integrationPayload, request, setCsrf, tutorIdentity, type Connection } from './api';
+import { ApiError, approvedItems, integrationPayload, request, setCsrf, stamp, tutorIdentity, type Connection } from './api';
 afterEach(()=>{vi.unstubAllGlobals();setCsrf('');});
+describe('calendar dates and timestamps',()=>{
+ it('preserves date-only values while localizing full timestamps',()=>{expect(stamp('2026-10-18')).toBe('2026-10-18');const timestamp='2026-10-18T02:30:00Z';expect(stamp(timestamp)).toBe(new Date(timestamp).toLocaleString());expect(stamp(timestamp)).not.toBe(timestamp);});
+});
 describe('authenticated API requests',()=>{
  it('includes the session CSRF header only on writes and uses same-origin cookies',async()=>{
   const fetcher=vi.fn().mockImplementation(async()=>new Response('{}',{status:200}));vi.stubGlobal('fetch',fetcher);setCsrf('session-token');

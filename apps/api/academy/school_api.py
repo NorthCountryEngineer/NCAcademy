@@ -71,7 +71,7 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                 raise HTTPException(403, "Only Admin assigns Core resource references")
             if core_resource_id != row.value.get("core_resource_id") and any(p.value.get("active") for p in records(db, identity, "agent_placement", school_id)):
                 raise HTTPException(409, "Deactivate agent placements before changing the school Core resource")
-            row.set({**body.model_dump(), "core_resource_id": core_resource_id})
+            row.set({**body.model_dump(), "core_resource_id": core_resource_id, **({"external_audit_required": True} if row.value.get("external_audit_required") else {})})
             audit_actor(db, identity, "school.updated", {"school_id": school_id, **row.value})
             return school_dict(db, row, identity)
 
@@ -171,8 +171,20 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
         data = row.value
         if data["audience"] == "teachers" and role == "student":
             raise HTTPException(403, "Teaching resource required")
+        if role == "student" and data["kind"] == "text" and not data.get("course_id"):
+            school = db.get(Record, sid)
+            if school.value.get("external_audit_required"):
+                raise HTTPException(403, "Attach this resource to a class and complete external review before student use")
         if data.get("course_id"):
             course_access(db, identity, data["course_id"], sid, write)
+            if role == "student" and data["kind"] == "text":
+                from .external_review import filter_reviewed_documents
+                from .standards import snapshot_material
+                course = db.get(Record, data["course_id"])
+                documents = [item for item in snapshot_material(db, course, sid, external=False)["documents"] if item["id"] == "resource:" + row.id]
+                school = db.get(Record, sid)
+                if school.value.get("external_audit_required") and not filter_reviewed_documents(db, course, sid, documents):
+                    raise HTTPException(403, "Current external review and publication approval required")
         elif write and role not in {"admin", "school"}:
             raise HTTPException(403, "Teachers manage resources only for their assigned class")
         if write and role == "student":
@@ -284,9 +296,10 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
             db.flush()
             scoped = {r.record_id for r in db.scalars(select(RecordScope).where(RecordScope.tenant_id == identity["tenant_id"], RecordScope.school_id == school_id))}
             session_ids = set()
-            for row in db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind.in_(("turn", "draft", "submission")))):
+            for row in db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind.in_(("turn", "draft", "submission", "lesson_turn")))):
                 if row.id in scoped:
-                    session_ids.add(hashlib.sha256((identity["tenant_id"] + ":" + row.parent_id + ":" + row.owner_id).encode()).hexdigest())
+                    prefix = ":lesson:" if row.kind == "lesson_turn" else ":"
+                    session_ids.add(hashlib.sha256((identity["tenant_id"] + prefix + row.parent_id + ":" + row.owner_id).encode()).hexdigest())
             events = []
             for row in db.scalars(select(Audit).where(Audit.tenant_id == identity["tenant_id"]).order_by(Audit.sequence)):
                 event = audit_dict(row)
@@ -338,12 +351,18 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                 from .schemas import CourseInput
                 content = CourseInput.model_validate(value["payload"])
                 if operation == "course.create":
-                    target = add(db, identity, "course", {"title": content.title, "description": content.description}, sid, row.owner_id, parent="")
+                    target = add(db, identity, "course", {"title": content.title, "description": content.description, "curriculum": content.curriculum.model_dump() if content.curriculum else None}, sid, row.owner_id, parent="")
                     target.parent_id = ""
                     add(db, identity, "enrollment", {"role": "teacher"}, sid, row.owner_id, target.id)
                 else:
                     target = course
-                    target.set({**target.value, "title": content.title, "description": content.description})
+                    curriculum = target.value.get("curriculum")
+                    if "curriculum" in content.model_fields_set:
+                        curriculum = content.curriculum.model_dump() if content.curriculum else None
+                    target.set({**target.value, "title": content.title, "description": content.description, "curriculum": curriculum})
+                from .standards import build_course_corpus
+                if target.value.get("curriculum") or "curriculum" in content.model_fields_set:
+                    build_course_corpus(db, identity, target, sid, audit_actor)
             elif operation in {"assignment.create", "assignment.update"}:
                 content = AssignmentInput.model_validate(value["payload"])
                 validate_binding(db, content.tutor_policy.model_dump(), identity, sid)

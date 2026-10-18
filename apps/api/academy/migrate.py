@@ -1,7 +1,7 @@
 """Explicit schema admission; never run migrations during login/readiness."""
 from sqlalchemy import text
 from .config import Settings
-from .db import Base, Database, AuditHead, Record, audit, canonical
+from .db import Base, Database, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
 from .database_roles import configure_runtime_role, runtime_credentials
 from .permissions import migrate_school_scopes
 
@@ -11,18 +11,27 @@ def migrate(settings=None):
     database = Database(settings)
     runtime = runtime_credentials(settings, database.engine.dialect.name)
     Base.metadata.create_all(database.engine)
+    protected = ",".join("'" + kind + "'" for kind in sorted(IMMUTABLE_RECORD_KINDS))
+    sealed_jobs = ",".join("'" + kind + "'" for kind in sorted(SEALED_JOB_KINDS))
     with database.engine.begin() as connection:
         if database.engine.dialect.name == "sqlite":
             for operation in ("UPDATE", "DELETE"):
                 connection.execute(text(f"CREATE TRIGGER IF NOT EXISTS immutable_audit_{operation.lower()} BEFORE {operation} ON audit_events BEGIN SELECT RAISE(ABORT, 'Audit events are append-only'); END"))
-                connection.execute(text(f"CREATE TRIGGER IF NOT EXISTS immutable_submission_{operation.lower()} BEFORE {operation} ON records WHEN OLD.kind = 'submission' BEGIN SELECT RAISE(ABORT, 'Submitted work is immutable'); END"))
+                connection.execute(text(f"DROP TRIGGER IF EXISTS immutable_submission_{operation.lower()}"))
+                connection.execute(text(f"CREATE TRIGGER immutable_submission_{operation.lower()} BEFORE {operation} ON records WHEN OLD.kind IN ({protected}) BEGIN SELECT RAISE(ABORT, 'Submitted work and approved teaching snapshots are immutable'); END"))
+                connection.execute(text(f"DROP TRIGGER IF EXISTS immutable_turn_{operation.lower()}"))
+                condition = "1" if operation == "DELETE" else "(OLD.kind <> NEW.kind OR COALESCE(json_extract(OLD.data, '$.status'), '') <> 'pending')"
+                connection.execute(text(f"CREATE TRIGGER immutable_turn_{operation.lower()} BEFORE {operation} ON records WHEN OLD.kind IN ({sealed_jobs}) AND {condition} BEGIN SELECT RAISE(ABORT, 'Completed tutoring turns are immutable'); END"))
         else:
             connection.execute(text("CREATE OR REPLACE FUNCTION academy_reject_audit_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Audit events are append-only'; END $$"))
-            connection.execute(text("CREATE OR REPLACE FUNCTION academy_reject_submission_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.kind = 'submission' THEN RAISE EXCEPTION 'Submitted work is immutable'; END IF; IF TG_OP = 'DELETE' THEN RETURN OLD; END IF; RETURN NEW; END $$"))
+            connection.execute(text(f"CREATE OR REPLACE FUNCTION academy_reject_submission_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.kind IN ({protected}) THEN RAISE EXCEPTION 'Submitted work and approved teaching snapshots are immutable'; END IF; IF TG_OP = 'DELETE' THEN RETURN OLD; END IF; RETURN NEW; END $$"))
             connection.execute(text("DROP TRIGGER IF EXISTS immutable_audit ON audit_events"))
             connection.execute(text("CREATE TRIGGER immutable_audit BEFORE UPDATE OR DELETE ON audit_events FOR EACH ROW EXECUTE FUNCTION academy_reject_audit_mutation()"))
             connection.execute(text("DROP TRIGGER IF EXISTS immutable_submission ON records"))
             connection.execute(text("CREATE TRIGGER immutable_submission BEFORE UPDATE OR DELETE ON records FOR EACH ROW EXECUTE FUNCTION academy_reject_submission_mutation()"))
+            connection.execute(text(f"CREATE OR REPLACE FUNCTION academy_reject_turn_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.kind IN ({sealed_jobs}) THEN IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'Tutoring turns cannot be deleted'; END IF; IF OLD.kind <> NEW.kind OR COALESCE(OLD.data::jsonb->>'status','') <> 'pending' THEN RAISE EXCEPTION 'Completed tutoring turns are immutable'; END IF; END IF; IF TG_OP = 'DELETE' THEN RETURN OLD; END IF; RETURN NEW; END $$"))
+            connection.execute(text("DROP TRIGGER IF EXISTS immutable_turn ON records"))
+            connection.execute(text("CREATE TRIGGER immutable_turn BEFORE UPDATE OR DELETE ON records FOR EACH ROW EXECUTE FUNCTION academy_reject_turn_mutation()"))
             if runtime:
                 configure_runtime_role(connection, *runtime)
     with database.write() as db:
@@ -40,6 +49,14 @@ def migrate(settings=None):
             audit(db, settings.tenant_id, "deployment-migration", "demo.seeded", {"synthetic": True})
         if migrate_school_scopes(db, settings):
             audit(db, settings.tenant_id, "deployment-migration", "schema.school_scopes_initialized", {"version": 2, "historical_records_preserved": True})
+        marker_id = teaching_schema_id(settings.tenant_id)
+        if not db.get(Record, marker_id):
+            db.add(Record(id=marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 3, "immutable_teaching_snapshots": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.teaching_snapshots_initialized", {"version": 3, "historical_records_preserved": True})
+        review_marker_id = external_review_schema_id(settings.tenant_id)
+        if not db.get(Record, review_marker_id):
+            db.add(Record(id=review_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 4, "immutable_external_reviews": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.external_reviews_initialized", {"version": 4, "historical_records_preserved": True})
     database.engine.dispose()
 
 

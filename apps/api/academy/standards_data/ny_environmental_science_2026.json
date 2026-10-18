@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "state": "US-NY",
+  "state_name": "New York",
+  "subject": "environmental_science",
+  "subject_name": "Environmental science",
+  "grades": [
+    9,
+    10,
+    11,
+    12
+  ],
+  "academic_years": [
+    "2026-2027"
+  ],
+  "standards_version": "nyssls-2016",
+  "mapping_version": "ncacademy-ny-hs-environmental-2026-10-18-v2",
+  "reviewed_at": "2026-10-18",
+  "review_valid_through": "2027-06-30",
+  "effective_from": "2017-2018",
+  "coverage": "partial",
+  "mapping_note": "Locally reviewed environmental science selection from the NYSED high-school 9–12 band. This is not a NYSED Grade 10 environmental science course specification. Standards are versioned independently of school years. The current science index and assessment index still identify the 2016 standards at this review; later years require a new source review.",
+  "sources": [
+    {
+      "id": "nysed-nyssls-2016-hs",
+      "title": "New York State High School Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/curriculum-instruction/hs-science-learning-standards.pdf",
+      "publisher": "New York State Education Department",
+      "content_sha256": "0f3d02ec4a52051ed6e92c3c7ce98991615f29d84e8fdc4b349c7fd8a9f74e55",
+      "byte_length": 749309,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "effective_from": "2017-2018",
+      "hash_scope": "Exact downloaded PDF bytes; summaries below are local paraphrases, not full performance expectations",
+      "rights_note": "Source references the NRC Framework for disciplinary core ideas. No Framework text or full standards PDF is redistributed."
+    },
+    {
+      "id": "nysed-science-index-2026",
+      "title": "Science — New York State Education Department",
+      "url": "https://www.nysed.gov/standards-instruction/science",
+      "publisher": "New York State Education Department",
+      "content_sha256": "759f5fe2dcad3f320140546cd2d2dc33b3dc06c1fafa869af636ead9a194571e",
+      "byte_length": 63550,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; confirms high-school band and linked standards"
+    },
+    {
+      "id": "nasa-carbon-cycle",
+      "title": "The Carbon Cycle",
+      "url": "https://science.nasa.gov/earth/earth-observatory/the-carbon-cycle/",
+      "publisher": "NASA Earth Observatory",
+      "content_sha256": "5da825f90f69194476004a776ae3461aaced80bb15f66067aed0d37a55a725f5",
+      "byte_length": 376273,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; bundled teaching text is an original bounded summary of selected scientific facts",
+      "rights_note": "Federal educational source. Only original summaries of scientific facts are included; source images, logos, full articles and third-party media are not redistributed.",
+      "source_publication_or_update_date": "2011-06-16"
+    },
+    {
+      "id": "noaa-water-cycle",
+      "title": "The water cycle",
+      "url": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+      "publisher": "NOAA Education",
+      "content_sha256": "16a42ea7274cd06aa52a09311291dfad98cbe35928779b35517c2ae6b692daa5",
+      "byte_length": 154938,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; bundled teaching text is an original bounded summary of selected scientific facts",
+      "rights_note": "Federal educational source. Only original summaries of scientific facts are included; source images, logos, full articles and third-party media are not redistributed."
+    },
+    {
+      "id": "noaa-reef-ecosystems",
+      "title": "Why are coral reefs important?",
+      "url": "https://oceanservice.noaa.gov/education/tutorial_corals/coral07_importance.html",
+      "publisher": "NOAA National Ocean Service",
+      "content_sha256": "b3fb0febe20aafa50743de4d608c7a6f8b4f0fae7aaf448bd1306df6624c9c94",
+      "byte_length": 42912,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; bundled teaching text is an original bounded summary of selected scientific facts",
+      "rights_note": "Federal educational source. Only original summaries of scientific facts are included; source images, logos, full articles and third-party media are not redistributed.",
+      "source_publication_or_update_date": "2026-09-23"
+    },
+    {
+      "id": "epa-recycling-resources",
+      "title": "Recycling Basics and Benefits",
+      "url": "https://www.epa.gov/recycle/recycling-basics-and-benefits",
+      "publisher": "U.S. Environmental Protection Agency",
+      "content_sha256": "1748ba442c859afd5b3e277859858d1cbba486d5edfbe916b758b1457806d42d",
+      "byte_length": 66394,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; bundled teaching text is an original bounded summary of selected scientific facts",
+      "rights_note": "Federal educational source. Only original summaries of scientific facts are included; source images, logos, full articles and third-party media are not redistributed.",
+      "source_publication_or_update_date": "2026-06-22"
+    }
+  ],
+  "applicability_references": [
+    {
+      "title": "High School Sciences — NYSED",
+      "url": "https://www.nysed.gov/state-assessment/high-school-sciences",
+      "reviewed_at": "2026-10-18",
+      "finding": "Current assessment page labels NYSP12SLS adopted 2016 and links 2026–2027 examination information."
+    },
+    {
+      "title": "Science Guidance & Resources — NYSED",
+      "url": "https://www.nysed.gov/standards-instruction/science-guidance-resources",
+      "reviewed_at": "2026-10-18",
+      "finding": "Official course maps are Biology, Earth and Space Sciences, Chemistry, and Physics. Environmental selection here is local."
+    }
+  ],
+  "standards": [
+    {
+      "code": "HS-LS2-1",
+      "title": "Carrying capacity",
+      "summary": "Quantitatively explain how living and physical factors constrain ecosystem populations.",
+      "topic": "ecosystems",
+      "source_page": 67,
+      "pdf_page": 14
+    },
+    {
+      "code": "HS-LS2-2",
+      "title": "Population evidence",
+      "summary": "Interpret supplied population data to revise biodiversity explanations across scales.",
+      "topic": "biodiversity",
+      "source_page": 67,
+      "pdf_page": 14
+    },
+    {
+      "code": "HS-LS2-4",
+      "title": "Matter and energy",
+      "summary": "Represent ecosystem matter cycling and energy transfer using proportional mathematics.",
+      "topic": "ecosystems",
+      "source_page": 65,
+      "pdf_page": 12
+    },
+    {
+      "code": "HS-LS2-5",
+      "title": "Carbon cycling",
+      "summary": "Model carbon exchanges between Earth's living and nonliving reservoirs.",
+      "topic": "carbon",
+      "source_page": 65,
+      "pdf_page": 12
+    },
+    {
+      "code": "HS-LS2-6",
+      "title": "Ecosystem resilience",
+      "summary": "Assess evidence for ecosystem stability and responses to disturbances.",
+      "topic": "ecosystems",
+      "source_page": 67,
+      "pdf_page": 14
+    },
+    {
+      "code": "HS-LS2-7",
+      "title": "Protecting biodiversity",
+      "summary": "Improve designs that lessen human pressure on ecosystems and biodiversity.",
+      "topic": "biodiversity",
+      "source_page": 67,
+      "pdf_page": 14
+    },
+    {
+      "code": "HS-ESS2-4",
+      "title": "Climate energy",
+      "summary": "Model climate responses to changing energy flows through Earth systems.",
+      "topic": "climate",
+      "source_page": 79,
+      "pdf_page": 26
+    },
+    {
+      "code": "HS-ESS3-1",
+      "title": "Resources and societies",
+      "summary": "Explain societal responses to resource availability, hazards, and climate evidence.",
+      "topic": "sustainability",
+      "source_page": 81,
+      "pdf_page": 28
+    },
+    {
+      "code": "HS-ESS3-2",
+      "title": "Resource tradeoffs",
+      "summary": "Compare energy and mineral resource designs using costs and benefits.",
+      "topic": "resources",
+      "source_page": 81,
+      "pdf_page": 28
+    },
+    {
+      "code": "HS-ESS3-3",
+      "title": "Sustainability modeling",
+      "summary": "Simulate resource management relationships with human sustainability and biodiversity.",
+      "topic": "sustainability",
+      "source_page": 81,
+      "pdf_page": 28
+    },
+    {
+      "code": "HS-ESS3-4",
+      "title": "Reducing impacts",
+      "summary": "Evaluate technological approaches to reducing human impacts on natural systems.",
+      "topic": "sustainability",
+      "source_page": 81,
+      "pdf_page": 28
+    },
+    {
+      "code": "HS-ESS3-5",
+      "title": "Climate evidence",
+      "summary": "Use climate observations and models to support forecasts of impacts.",
+      "topic": "climate",
+      "source_page": 79,
+      "pdf_page": 26
+    },
+    {
+      "code": "HS-ESS3-6",
+      "title": "Connected Earth systems",
+      "summary": "Interpret published computational models of human changes to interacting systems.",
+      "topic": "earth_systems",
+      "source_page": 81,
+      "pdf_page": 28
+    }
+  ],
+  "teaching_pack_version": "federal-environmental-foundations-2026-10-18-v1",
+  "teaching_documents": [
+    {
+      "id": "carbon-reservoirs-and-climate",
+      "title": "Carbon reservoirs, transfers and climate connections",
+      "source_id": "nasa-carbon-cycle",
+      "source_sections": [
+        "The Slow Carbon Cycle",
+        "The Fast Carbon Cycle",
+        "Effects of Changing the Carbon Cycle"
+      ],
+      "topics": [
+        "carbon",
+        "climate",
+        "earth_systems"
+      ],
+      "standard_codes": [
+        "HS-LS2-5",
+        "HS-ESS2-4",
+        "HS-ESS3-6"
+      ],
+      "content": "Carbon is stored in rocks, ocean water, the atmosphere, living organisms, soils and fossil fuels. Transfers connect these reservoirs over different timescales. Weathering, sediment formation and tectonic processes belong to the slow geological cycle. Plants and phytoplankton draw carbon dioxide from their surroundings during photosynthesis, using sunlight to build organic matter. Respiration, decomposition and combustion return carbon to the atmosphere. Burning fossil fuels moves previously stored carbon into the active cycle. Carbon dioxide absorbs and re-emits infrared energy, influencing Earth’s energy balance. Some additional atmospheric carbon dissolves in ocean water and changes its chemistry toward greater acidity. A reservoir model distinguishes stored quantities from transfer rates; changing one transfer can affect multiple reservoirs."
+    },
+    {
+      "id": "water-pools-fluxes-and-people",
+      "title": "Water storage, movement and human effects",
+      "source_id": "noaa-water-cycle",
+      "source_sections": [
+        "What is the water cycle?",
+        "Fluxes: How water moves.",
+        "Humans and the water cycle"
+      ],
+      "topics": [
+        "water",
+        "earth_systems",
+        "resources"
+      ],
+      "standard_codes": [
+        "HS-ESS3-1",
+        "HS-ESS3-4",
+        "HS-ESS3-6"
+      ],
+      "content": "The water cycle connects atmospheric, surface and underground stores. Water occurs as liquid, ice and vapor. A pool describes where water is stored; a flux describes its movement between pools. Evaporation changes liquid to vapor, while transpiration releases water from plants. Condensation produces liquid droplets from vapor, and precipitation transfers water to the surface. Runoff carries water across land; infiltration and percolation move it into soil and groundwater. Energy absorption supports evaporation, and gravity helps drive falling precipitation and downhill flow. People alter storage and movement through dams, river diversions and water withdrawals. Water quality also determines whether available water can support people and ecosystems. Describing only a circular evaporation–rain diagram misses these connected pathways and human influences."
+    },
+    {
+      "id": "reef-biodiversity-and-ecosystem-services",
+      "title": "Reef ecosystems, biodiversity and coastal services",
+      "source_id": "noaa-reef-ecosystems",
+      "source_sections": [
+        "Why are coral reefs important?"
+      ],
+      "topics": [
+        "ecosystems",
+        "biodiversity",
+        "human_impact"
+      ],
+      "standard_codes": [
+        "HS-LS2-1",
+        "HS-LS2-6",
+        "HS-LS2-7"
+      ],
+      "content": "Coral reefs provide habitat for diverse marine organisms and support food webs and fisheries. Their benefits extend beyond the organisms living directly on a reef: coastal communities obtain food, livelihoods and recreation from reef-associated systems. Reef structure also reduces wave energy reaching shorelines, helping limit erosion and storm damage. Damage to that structure can therefore change risks for nearby communities. Reef organisms participate in processes such as filtering water and forming beach sand. These connections illustrate ecosystem services, where ecological functions benefit people. Conservation decisions can consider habitat condition together with fisheries, shoreline protection and community needs. A reef example supports discussion of interacting species and ecosystem change, but does not represent every terrestrial or freshwater ecosystem."
+    },
+    {
+      "id": "materials-conservation-and-recycling",
+      "title": "Resource conservation and the recycling system",
+      "source_id": "epa-recycling-resources",
+      "source_sections": [
+        "Benefits of Recycling",
+        "U.S. Recycling System Overview",
+        "Challenges to Recycling System"
+      ],
+      "topics": [
+        "resources",
+        "sustainability",
+        "human_impact"
+      ],
+      "standard_codes": [
+        "HS-ESS3-2",
+        "HS-ESS3-3",
+        "HS-ESS3-4",
+        "HS-LS2-7"
+      ],
+      "content": "EPA’s materials-management hierarchy gives priority to avoiding waste and reusing materials before recycling them. Recycling collects discarded materials and processes them into inputs for manufacturing new products. This can reduce demand for extracting timber, water and minerals, conserve energy and divert material from disposal. Collection alone does not complete the recycling loop: sorting and processing, manufacturing, and purchasing recycled-content products are also involved. A product marked recyclable is not necessarily made with recycled content, and acceptance differs among local collection programs. Practical comparisons should consider material type, collection rules, processing capability and markets for recovered materials. Resource-management solutions involve tradeoffs; reducing unnecessary consumption and keeping useful materials in service can avoid impacts before waste is created."
+    }
+  ]
+}

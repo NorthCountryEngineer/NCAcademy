@@ -75,6 +75,10 @@ The retained owner credential is injected exclusively into the controlled migrat
 
 ## Source preparation and release
 
+The original onboarding and school/agent recipe changes above have already been adopted by the October 18 school-permissions release. The later local teacher revision includes a separate [existing-binding authorization supplement](teacher-binding-authorization.patch) against Core `e6eb31f3caed491445e2582e34b8da43b3556d97`. Its [baseline receipt](teacher-binding-authorization-baseline.json) records exact file/patch hashes and 30 offline Core checks plus 33 mocked Academy adapter checks. These are scoped tests, not a full Core CI run or production/PostgreSQL acceptance.
+
+The new read-only `POST /api/platform/v1/agent-bindings/authorize/` authorizes a selected existing agent binding under its own installation's workload credential, current account/definition/roles and resource/task/environment policy. It issues no agent credentials and changes no account, placement, grant or cloud setting. It is required for Core-bound selected-teacher tutoring and fails closed if absent. Application-managed AI personas have no Core principal and do not require this supplement for approved public-corpus Lesson Q&A. Release the supplement through Core's normal process before enabling the bound-teacher path. The active Core source and deployed service were preserved during this work.
+
 ```sh
 python3 scripts/check_package.py
 python3 scripts/package_source.py

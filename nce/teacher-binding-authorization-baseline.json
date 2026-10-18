@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "core_commit": "e6eb31f3caed491445e2582e34b8da43b3556d97",
+  "patch_sha256": "6da804e679db009a73b4cf4821e8ec569efbdc76865c832db3dbafcf3df93eae",
+  "files": [
+    "platform_services/agent_api.py",
+    "platform_services/urls.py",
+    "platform_services/tests/test_agent_binding_authorization.py"
+  ],
+  "baseline_file_sha256": {
+    "platform_services/agent_api.py": "813e0dba85f89a3668304f3d262c4ed3b77460832164444041f7820fdeb2bbe3",
+    "platform_services/urls.py": "8cf935a2edaff2f99da52a749386ea5e1433d115bca1d2d7407af8712e03ad11",
+    "platform_services/tests/test_agent_binding_authorization.py": null
+  },
+  "patched_file_sha256": {
+    "platform_services/agent_api.py": "d3721413ad3e822ff373344c2e5428e918eaa22caabb60a72838ef2312e9af94",
+    "platform_services/urls.py": "11f547534c2df81a2af98fc9a462ffa61f5931a1fba447770ce181dc0d3f57f5",
+    "platform_services/tests/test_agent_binding_authorization.py": "3aea9039cb1dff292071d6a0ae85647583a1d27779b0372dc258ddea2b8327e9"
+  },
+  "scope": "Local-only read authorization of an existing agent binding by its own installation workload credential; current actual agent roles, task, environment and resource policy. No account, permission, role, binding, credential or cloud creation. Normal Core access audits are expected.",
+  "endpoint": "POST /api/platform/v1/agent-bindings/authorize/",
+  "claims_ttl_seconds": 60,
+  "production_applied": false,
+  "validation": {
+    "patch_application": "Clean baseline copies git apply --check/apply/reverse --check passed; patched file hashes match isolated development export",
+    "core_tests": "30 offline Core tests passed: 6 new binding-authorization tests and 24 existing AgentAccountTests. Exact frozen patch was applied to a fresh full export of the pinned baseline, with all patched file hashes checked before tests.",
+    "ncacademy_tests": "33 mocked adapter, local-approval race, scope, claims and actual HTTP transport tests passed; outbound networks blocked by test fixture.",
+    "baseline_checkout_untouched": "Confirmed clean git status and unchanged e6eb31f3caed491445e2582e34b8da43b3556d97 after testing",
+    "migration_consistency": "makemigrations --check --dry-run: no changes detected",
+    "offline_container": "Existing nce-core-ci-tests:20261016 image sha256:629cb385150ec4ba6f92df4a6424b020de5ef9bf243af17aaeae15520a646b4c; --network none --read-only --pull never; ephemeral SQLite test database only"
+  }
+}
