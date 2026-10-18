@@ -7,6 +7,7 @@
 - Prepared additive Default-school membership/resource scoping while retaining human identity aliases, existing record IDs/data, immutable submissions and historical audit hashes. School/session exports are partial; full tenant chain export remains Admin-only.
 - Updated current operating references to `https://core.nnytech.ai` while preserving historical release/issuer records. Prepared an optional, disabled-by-default Core recipe path for agent authentication; no cloud configuration, credential issuance, GitHub publication or deployment is implied by these local changes.
 - Reviewed compatibility with the completed Core domain upgrade. Aligned the supplemental recipe's full permission definitions with the Academy manifest and strengthened its registration regression check; the Core supplement and explicit installation upgrade remain separate release requirements.
+- Updated the loopback container smoke workflow to recognize Teacher fixtures while retaining legacy Instructor compatibility.
 
 ## 2026-10-17
 

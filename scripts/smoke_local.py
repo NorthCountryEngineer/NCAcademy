@@ -53,7 +53,7 @@ def run(origin):
     if config['mode'] != 'local':
         raise ValueError('Refusing to test a production/Core installation')
     users = config['demo_users']
-    instructor_id = next(u['id'] for u in users if u['role'] == 'instructor')
+    instructor_id = next(u['id'] for u in users if u['role'] in {'teacher', 'instructor'})
     student_ids = [u['id'] for u in users if u['role'] == 'student']
     admin_id = next(u['id'] for u in users if u['role'] == 'admin')
     instructor, student, admin = (Client(origin) for _ in range(3))
