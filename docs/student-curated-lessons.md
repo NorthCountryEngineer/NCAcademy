@@ -42,7 +42,7 @@ Reviewer replay distinguishes private curated lessons, shows the exact released 
 
 The existing schema-3 `lesson_turn` lifecycle provides pending-send and terminal immutability; no new database table or schema migration is introduced by this extension. The owner migration remains the normal admission step. Locked Pillow supplies server-side image verification/normalization; it does not contact a media provider. API request limits increase only for the exact curation POST route, with the same bound applied to actual chunked bytes and declared length. Other routes retain their smaller limit.
 
-The API and frontend must be rebuilt together and released with a new immutable image digest and exact-source CI. The current work is local; no production gate, credential or cloud deployment is changed. The previously included Core supplement is still required only for Core-bound selected teachers. See [verification](verification.md) for actual completed checks and [deployment](deployment.md) for activation requirements.
+The API and frontend must be rebuilt together and released with a new immutable image digest and exact-source CI. Deployment preserves existing model/agent gates and credentials. Production availability is established by the normal Core release and separate acceptance checks. The previously included Core supplement is still required only for Core-bound selected teachers. See [verification](verification.md) for actual completed checks and [deployment](deployment.md) for activation requirements.
 
 ## Reviewed YouTube sources
 

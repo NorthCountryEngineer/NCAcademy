@@ -1,20 +1,20 @@
 # Changelog
 
-## Unreleased external media review — October 18, 2026
+## External media review source revision — October 18, 2026
 
 - Added class YouTube lessons and supplied external teaching copies, strict canonical video identities, pinned bounded public metadata transport and click-to-load privacy-enhanced players. Raw iframe HTML, playlist/timestamp URLs, transcript scraping and pre-click third-party media loads are excluded.
 - Added a separate school audit-agent assignment, bounded fixed findings, current exact-source reviews and configurable clean text/corpus automatic approval. YouTube retains human viewing/transcript checks because model coverage is supplied text/metadata only. Audit models receive no administrative API powers or student/private records.
 - Added a permanent school public-teaching-corpus review gate on assignment, idempotent import, source/policy/model/class-context invalidation, expiry/revocation, current retrieval/send/release/history/playback checks and historical evidence preservation.
-- Added schema 4 immutable external snapshots, policy revisions, results and publication decisions, sealed review jobs, additive audit receipt and readiness admission. Existing schema markers, identities, submissions and audit bytes are preserved. Kept production unchanged; rebuilt source remains local.
+- Added schema 4 immutable external snapshots, policy revisions, results and publication decisions, sealed review jobs, additive audit receipt and readiness admission. Existing schema markers, identities, submissions and audit bytes are preserved. Prepared the matching schema-4 API/frontend for the normal exact-source production release.
 
-## Unreleased private student-curated lessons — October 18, 2026
+## Private student-curated lessons source revision — October 18, 2026
 
 - Added a student course activity for written task context and/or two normalized assignment photos, with named-model photo confirmation and private lesson history. Explicit human-approved curation/image options default off; existing profile approvals are preserved.
 - Added one-call text/image source curation with strict document/associated visual/reflection IDs, cited reading, four source-linked interactive science diagrams, optional browser read-aloud and audited student reflections. No generated assignment response, shared publication, arbitrary model markup or grading is introduced.
 - Added independent image verification/metadata stripping, encrypted admitted photo evidence, protected current student/reviewer reads, wire-request fingerprints and cipher-free replay/exports. Blocked pre-send photos retain metadata only. Invalid provider prose is retained as a hash.
 - Shared Q&A/curation daily UTC quotas, pending-send blocks and idempotency; added cross-activity conflict checks, exact route-specific upload bounds and before-send/release revalidation. Kept publication, model enablement and Core/cloud deployment unchanged.
 
-## Unreleased local teacher onboarding and standards — October 18, 2026
+## Teacher onboarding and standards source revision — October 18, 2026
 
 - Added school-scoped human/AI teacher onboarding with a shared portrait/name/biography/contact/expertise form and structured AI behavior. Stable profiles support multiple classes and grades, exact existing identity links, version conflicts and reversible archival.
 - Added explicit human approval of immutable teacher-profile revisions and course corpus snapshots. Profile metadata never creates a Core account, credential or permission grant. Existing school/class authorization remains mandatory.
@@ -24,7 +24,7 @@
 - Lesson Q&A selects exact approved public-source excerpts with citations and fixed style prompts; provider prose and teacher-only resources cannot reach students. Assignment tutoring retains approved hint/question IDs and a student attempt. Both pin exact context, reserve before send, revalidate before send/release and preserve full reviewer evidence.
 - Added shared student/course daily UTC tutoring quotas across profiles, durable idempotency, cross-day pending-send blocking and terminal assignment/lesson turn immutability. Added distinct lesson replay/export without fictitious student drafts.
 - Packaged a separate Core existing-binding authorization supplement against the reviewed deployed Core baseline. It changes no live Core checkout, issues no credentials and is required only for Core-bound selected-teacher tutoring.
-- Kept this revision local and the new API image unresolved pending publication. The deployed school-permissions baseline remains `c15d5068121bdb18e778976198430249c38c1098`.
+- Based this revision on school-permissions release `c15d5068121bdb18e778976198430249c38c1098`; a separately verified immutable API image, exact-source CI and owner migration are required for this release.
 
 ## Released school permissions — October 18, 2026
 
