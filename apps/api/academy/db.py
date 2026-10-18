@@ -64,6 +64,14 @@ class CoreIdentityBinding(Base):
     user_id: Mapped[str] = mapped_column(String(64), index=True)
 
 
+class RecordScope(Base):
+    """Additive school ownership, without rewriting historical record payloads."""
+    __tablename__ = "record_scopes"
+    record_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(64), index=True)
+    school_id: Mapped[str] = mapped_column(String(64), index=True)
+
+
 class Flow(Base):
     __tablename__ = "oauth_flows"
     state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)

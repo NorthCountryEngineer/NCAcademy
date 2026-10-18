@@ -1,6 +1,6 @@
 # Requirements and acceptance boundaries
 
-Updated October 17, 2026 for the authorized Core release. The requested outcome is an education service integrated with NCE Core, using Proposal Studio's administrative UX and deployment process, with stricter model behavior and instructor-readable student sessions. The owner has authorized replacing the application contents in `NorthCountryEngineer/NCAcademy`, Cloudflare/AWS DNS configuration and deployment through NCE Core, using `ncacademy.app` as the canonical frontend.
+Updated October 18, 2026 for local school-permissions development. The requested outcome is an education service integrated with NCE Core, using Proposal Studio's administrative UX and deployment process, with stricter model behavior and instructor-readable student sessions. The existing service uses `ncacademy.app` as the canonical frontend. This permissions revision is prepared locally; its publication and cloud adoption are separate release actions.
 
 ## Evidence and continuity
 
@@ -11,6 +11,8 @@ The local reference `Downloads/NCAcademy-development` (May 2024) contains a READ
 | Area | Required behavior |
 | --- | --- |
 | Identity | NCE Core owns production identities, organization permissions and application registration. No student self-elevation or role picker in production. |
+| School access | Admin accesses all application schools; School administrators manage assigned schools/resources; Teachers use school resources and maintain assigned classes; Students consume enrolled coursework and own work. Core organization remains the deployment tenant. |
+| Agent teachers | Approved Core agent accounts have their own identity, placement and class assignments. Every request checks live Core authority and local scope. Agent-authored student-facing changes require human approval; agents cannot write student work or administer credentials/roles. |
 | Curriculum | Instructors create courses, group assignments into modules, enroll students, publish assignment prompts and configure assistance. |
 | Student work | Students save their own attempts and submit immutable versions. Generated drafts and automated submission are absent. |
 | Tutoring | Assignment-scoped disabled, curated and Socratic assistance; student attempt required, bounded turns and model context/output tokens, explicit model binding. |
@@ -24,7 +26,9 @@ The local reference `Downloads/NCAcademy-development` (May 2024) contains a READ
 
 Use instructor-approved content, text assignments and manual instructor review. Live model traffic stays off; curated guidance can operate without a provider. Production identity belongs exclusively to Core, with additional course membership enforced inside NCAcademy. Keep raw student records out of platform logs. Grant initial production access only to the owner with both `admin` and `academy-use`; issue no student grants until audit controls are verified.
 
-The deployment uses `https://ncacademy.app`, protected API origin `https://api.ncacademy.app` and the existing Core issuer `https://main.dpn5tiolbymzn.amplifyapp.com`. The API receives a restricted PostgreSQL login, while owner-only migration uses a separate secret and execution role. An independent retained audit bucket and KMS-signed checkpoints are operated outside the application; no automatic checkpoint worker or API AWS task role is included.
+The deployment uses `https://ncacademy.app`, protected API origin `https://api.ncacademy.app` and the canonical Core issuer `https://core.nnytech.ai`. The API receives a restricted PostgreSQL login, while owner-only migration uses a separate secret and execution role. An independent retained audit bucket and KMS-signed checkpoints are operated outside the application; no automatic checkpoint worker or API AWS task role is included.
+
+The additive school migration preserves stable human owners, both reviewed Core issuer aliases, coursework, immutable submissions and historical audit hashes. Core resource assignments are an additional application boundary: a School administrator cannot grant upstream Core access by entering a resource ID. See [permissions](permissions.md) for role, agent and migration details.
 
 ## Production decisions retained for owner
 

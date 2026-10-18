@@ -48,6 +48,11 @@ def core(tmp_path):
             return {**current_claims, "active": state["active"], "permissions": state["permissions"], **state["overrides"]}
         if path == "/oauth/revoke/":
             return {}
+        if path == "/api/v1/authorize/":
+            assert confidential is True
+            assert data['token'] == 'synthetic-access-token'
+            assert data['organization_id'] == settings.core_organization_id
+            return {'allowed': state.get('resource_allowed', True), 'subject': state.get('resource_subject', subject)}
         raise AssertionError("Unexpected authority endpoint")
     app.state.auth.core = fake
     with TestClient(app, base_url=settings.app_url) as browser:
@@ -105,7 +110,7 @@ def test_fresh_introspection_permissions_revocation_and_outage(core):
     assert after - before == 2
     state["permissions"] = ["academy-use", "academy-teach", "academy-audit"]
     me = client.get("/api/auth/me").json()
-    assert me["role"] == "instructor" and me["can_audit"] is True
+    assert me["role"] == "teacher" and me["can_audit"] is True
     assert client.get("/api/admin/settings").status_code == 403
     state["permissions"].append("admin")
     assert client.get("/api/admin/settings").status_code == 200
@@ -170,3 +175,25 @@ def test_configuration_rejects_network_demo_and_live_demo(monkeypatch):
     monkeypatch.setenv("ALLOW_LIVE_MODELS", "true")
     with pytest.raises(ValueError):
         Settings.load()
+
+
+def test_school_core_descriptor_requires_fresh_human_resource_authority(core):
+    app, client, state = core
+    state['permissions'] = ['academy-use', 'admin']
+    me = sign_in(core)
+    school = client.get('/api/schools').json()[0]['id']
+    headers = {'Origin': app.state.settings.app_url, 'X-CSRF-Token': me['csrf_token']}
+    response = client.post(f'/api/schools/{school}/resources', headers=headers, json={
+        'name': 'Synthetic Core reference', 'kind': 'core', 'core_resource_type': 'model-interface',
+        'core_resource_id': 'synthetic-registered-resource', 'permission': 'academy-use'})
+    assert response.status_code == 201, response.text
+    resource = response.json()['id']
+    resolved = client.get(f'/api/resources/{resource}/resolve')
+    assert resolved.status_code == 200 and resolved.json()['authorized'] is True
+    decisions = [(path, data, confidential) for path, data, confidential in state['calls'] if path == '/api/v1/authorize/']
+    assert decisions[-1][1]['resource_type'] == 'model-interface'
+    assert decisions[-1][1]['resource_id'] == 'synthetic-registered-resource'
+    state['resource_allowed'] = False
+    assert client.get(f'/api/resources/{resource}/resolve').status_code == 403
+    state['resource_allowed'] = True;state['resource_subject'] = 'foreign-subject'
+    assert client.get(f'/api/resources/{resource}/resolve').status_code == 403

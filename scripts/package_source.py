@@ -10,7 +10,7 @@ import tarfile
 
 from check_package import ROOT, validate
 
-TOP_LEVEL = {'.dockerignore', '.gitignore', '.env.example', 'AGENTS.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+TOP_LEVEL = {'.dockerignore', '.gitignore', '.gitattributes', '.env.example', 'AGENTS.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
              'README.md', 'compose.yaml', 'nce-deploy.json', 'pyproject.toml', 'NCAcademy.code-workspace'}
 DIRECTORIES = {'.github', 'apps', 'deploy', 'docs', 'nce', 'scripts'}
 SKIP = {'node_modules', 'dist', '__pycache__', '.pytest_cache', '.venv', '.git', 'var', 'test-results', 'playwright-report', '.DS_Store'}

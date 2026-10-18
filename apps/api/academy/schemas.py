@@ -35,6 +35,8 @@ class TutorPolicy(Strict):
 class CourseInput(Strict):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(default="", max_length=10000)
+    school_id: str | None = Field(default=None, min_length=1, max_length=64)
+    teacher_id: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class AssignmentInput(Strict):
@@ -46,7 +48,7 @@ class AssignmentInput(Strict):
 
 class EnrollmentInput(Strict):
     user_id: str = Field(min_length=1, max_length=64)
-    role: Literal["student", "instructor"] = "student"
+    role: Literal["student", "teacher", "instructor"] = "student"
 
 
 class ContentInput(Strict):
@@ -63,6 +65,7 @@ class TutorInput(Strict):
 
 
 class ConnectionInput(Strict):
+    school_id: str | None = Field(default=None, min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=100)
     protocol: Literal["openai_compatible"] = "openai_compatible"
     endpoint: str = Field(min_length=1, max_length=500)
@@ -79,3 +82,45 @@ class ConnectionInput(Strict):
         if len(value) != len(set(value)) or any(not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}", item) for item in value):
             raise ValueError("Unique explicit model IDs required")
         return value
+
+
+class SchoolInput(Strict):
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=10000)
+    core_resource_id: str | None = Field(default=None, min_length=1, max_length=200)
+
+
+class MembershipInput(Strict):
+    role: Literal["school", "teacher", "student"]
+    active: bool = True
+
+
+class AgentPlacementInput(Strict):
+    name: str = Field(min_length=1, max_length=200)
+    core_agent_id: str
+    core_binding_id: str
+    core_consumer_service_id: str
+    environment: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+    task_id: str | None = None
+    active: bool = True
+    purpose: str = Field(default="", max_length=80, pattern=r"^[-a-zA-Z0-9_]*$")
+    core_resource_id: str = Field(min_length=1, max_length=200)
+
+    @field_validator("core_agent_id", "core_binding_id", "core_consumer_service_id", "task_id")
+    @classmethod
+    def uuid_value(cls, value):
+        from uuid import UUID
+        if value is not None and str(UUID(value)) != value:
+            raise ValueError("Canonical UUID required")
+        return value
+
+
+class ResourceInput(Strict):
+    name: str = Field(min_length=1, max_length=200)
+    kind: Literal["text", "core"] = "text"
+    content: str = Field(default="", max_length=20000)
+    core_resource_type: str | None = Field(default=None, min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    core_resource_id: str | None = Field(default=None, min_length=1, max_length=200)
+    permission: str = Field(default="academy-use", min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    audience: Literal["all", "teachers"] = "all"
+    course_id: str | None = Field(default=None, min_length=1, max_length=64)

@@ -1,0 +1,27 @@
+{
+  "core_commit": "79e9d5284c087fbcce67eb34b3efcfe46f6fbfa6",
+  "patch_sha256": "90a798226f61bab76b03949c1a853f957585b586c5bae779805f98ffc83748f9",
+  "files": [
+    "deployment/aws-apps/academy-fargate.template.json",
+    "deployment/aws-apps/runner.py",
+    "docs/cloud-deployments.md",
+    "platform_services/cloud_contract.py",
+    "platform_services/cloud_deployments.py",
+    "platform_services/cloud_portal.py",
+    "platform_services/tests/test_academy_fargate.py"
+  ],
+  "scope": "Supplemental local school capability and optional API-only teacher-agent credential injection; apply after the deployed Academy onboarding baseline. No cloud operations.",
+  "template_bytes_before": 28942,
+  "template_bytes_after": 30051,
+  "validation": {
+    "cfn_lint": "passed offline",
+    "cfn_guard": "passed applicable private database and Fargate rules; S3/browser/ECR/runtime-secret creation rules not applicable",
+    "core_tests": "115 offline Core cloud/recipe/registration checks plus 16 GitHub CI gate checks passed; migration consistency passed; final rerun includes exact ordered canonical permission dictionaries",
+    "patch_application": "Final hash verified; clean reviewed-baseline export git apply --check/apply/reverse --check passed; final exported artifact exercised in offline test image with networking disabled",
+    "authority_preservation": "Every resource except the two task definitions is byte-equivalent after JSON parsing, including all IAM roles, secret ARNs/policies, network and retained database; only task environments/API conditional secret and metadata changed.",
+    "recipe_sha256": "a495f6a8572db3cfa87a2d38c720e6adcec04f5a3867a0f58ca0b89fe9df4a69",
+    "template_unchanged_by_label_followup": true,
+    "simulation_identity_contract": "Exact four permission dictionaries and order match canonical NCAcademy nce-deploy.json, including Manage assigned schools and their resources"
+  },
+  "frozen_onboarding_patch_sha256": "18e9730f3c35e8eb71f0357f9a912ff1a6d5856997632b5d5278a04725354261"
+}

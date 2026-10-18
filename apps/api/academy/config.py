@@ -2,7 +2,8 @@
 import os
 import json
 import ipaddress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
 from sqlalchemy.engine import URL
@@ -24,6 +25,8 @@ class Settings:
     core_service_id: str = ""
     core_deployment_id: str = ""
     core_environment: str = "production"
+    allow_agent_teachers: bool = False
+    core_workload_token: str = field(default="", repr=False)
 
     @property
     def tenant_id(self):
@@ -42,7 +45,25 @@ class Settings:
         creds = json.loads(bundle) if bundle else {}
         if bundle and (set(creds) != {"client_id", "client_secret"} or any(os.getenv(k) for k in ("CORE_RESOURCE_CLIENT_ID", "CORE_RESOURCE_CLIENT_SECRET"))):
             raise ValueError("Conflicting or malformed Core resource credentials")
-        value = cls(db_url, mode, app_url, secret, os.getenv("ALLOW_LIVE_MODELS", "false").lower() == "true", os.getenv("DEMO_SEED", "true").lower() == "true", **{field: os.getenv(field.upper(), "production" if field == "core_environment" else "").rstrip("/") for field in ("core_issuer", "core_browser_client_id", "core_organization_id", "core_service_id", "core_deployment_id", "core_environment")}, core_resource_client_id=creds.get("client_id", os.getenv("CORE_RESOURCE_CLIENT_ID", "")), core_resource_client_secret=creds.get("client_secret", os.getenv("CORE_RESOURCE_CLIENT_SECRET", "")))
+        agent_flag = os.getenv("ALLOW_AGENT_TEACHERS", "false").lower()
+        if agent_flag not in {"true", "false"}:
+            raise ValueError("ALLOW_AGENT_TEACHERS must be true or false")
+        workload = ""
+        if agent_flag == "true":
+            workload, token_file = os.getenv("CORE_WORKLOAD_TOKEN", ""), os.getenv("CORE_WORKLOAD_TOKEN_FILE", "")
+            if workload and token_file:
+                raise ValueError("Use one Core workload credential input")
+            if token_file:
+                try:
+                    path = Path(token_file)
+                    if not path.is_absolute() or not path.is_file() or path.stat().st_size > 4096:
+                        raise ValueError()
+                    workload = path.read_text().strip()
+                except (OSError, UnicodeError, ValueError):
+                    raise ValueError("Core workload credential file unavailable") from None
+            if not workload.startswith("cw_") or not 40 <= len(workload) <= 256 or any(c.isspace() for c in workload):
+                raise ValueError("Agent teachers require a separate Core workload credential")
+        value = cls(db_url, mode, app_url, secret, os.getenv("ALLOW_LIVE_MODELS", "false").lower() == "true", os.getenv("DEMO_SEED", "true").lower() == "true", **{name: os.getenv(name.upper(), "production" if name == "core_environment" else "").rstrip("/") for name in ("core_issuer", "core_browser_client_id", "core_organization_id", "core_service_id", "core_deployment_id", "core_environment")}, core_resource_client_id=creds.get("client_id", os.getenv("CORE_RESOURCE_CLIENT_ID", "")), core_resource_client_secret=creds.get("client_secret", os.getenv("CORE_RESOURCE_CLIENT_SECRET", "")), allow_agent_teachers=agent_flag == "true", core_workload_token=workload)
         origin = urlsplit(app_url)
         if mode not in {"local", "core"} or len(secret) < 32 or origin.path or origin.query or origin.fragment or not origin.hostname or origin.scheme not in {"http", "https"} or origin.username is not None or origin.password is not None:
             raise ValueError("Invalid authentication configuration")
@@ -51,8 +72,8 @@ class Settings:
                 loopback = origin.hostname == "localhost" or ipaddress.ip_address(origin.hostname).is_loopback
             except ValueError:
                 loopback = False
-            if not loopback or value.allow_live_models:
-                raise ValueError("Local demo authentication requires a loopback application origin and disabled live models")
+            if not loopback or value.allow_live_models or value.allow_agent_teachers:
+                raise ValueError("Local demo authentication requires a loopback application origin and disabled live models/agent credentials")
         else:
             if origin.scheme != "https" or secret == "local-demo-only-change-before-production" or not db_url.startswith("postgresql"):
                 raise ValueError("Core mode requires HTTPS, an external session secret and PostgreSQL")

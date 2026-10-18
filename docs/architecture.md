@@ -5,6 +5,7 @@ NCAcademy is a separate application with its own database and credentials. NCE C
 ```mermaid
 flowchart LR
     Browser[Student or instructor browser] --> Web[React / same-origin API proxy]
+    Agent[Approved Core teacher agent] --> API
     Web --> API[NCAcademy API]
     API --> Core[NCE Core identity and live permission checks]
     API --> Identity[Exact tenant / issuer / subject binding]
@@ -21,9 +22,13 @@ flowchart LR
     Operator[Separate operator / KMS signer] --> Archive
 ```
 
-## Course and ownership boundaries
+## School, class and ownership boundaries
 
-Core organization is the tenant boundary. Instructors/admins manage course membership and assignments. Students can read only enrolled coursework and their own work/session records. Being an administrator does not make a student-owned submission editable. Submission snapshots preserve the actual work submitted; later draft edits cannot rewrite history.
+Core organization is the deployment tenant boundary. Schools are separate application scopes inside that tenant, with their own memberships, resources and classes. Admin accesses all application schools. A School administrator manages only assigned schools; this role does not confer Core organization administration. Teachers use permitted school resources and maintain classes to which they have teaching authority. Students can read only enrolled coursework and their own work/session records. Being an administrator does not make a student-owned submission editable. Submission snapshots preserve the actual work submitted; later draft edits cannot rewrite history. See the complete [permissions contract](permissions.md).
+
+Authorization combines fresh Core capability checks, active local principal and school membership, school-resource visibility and class membership. Every lookup follows the target record's stored school/class scope; a caller-selected school ID is not authority. Resource catalogs expose only authorized descriptors. A school assignment adds an application ACL and never creates an upstream Core permission or integration grant.
+
+Agent teachers are distinct nonhuman principals. They present short-lived Core agent credentials to the API; the backend uses its own scoped workload credential for Core's separate live agent-introspection endpoint. Human OIDC credentials, agent credentials and backend workload credentials are not interchangeable. Agent approvals, consumer, environment, task, permissions and local school/class assignments must all remain valid. Agents cannot grant roles, become administrators, obtain provider secrets or write student work. Approved agent Teachers can read immutable submissions and, with a current audit grant, assistance history in their assigned classes; recorded saved-draft versions remain part of explicitly authorized session evidence, while direct student-draft endpoints remain student-owned.
 
 `core_identity_bindings` resolves the verified Core tenant, issuer and subject to a stable application user record. A unique tenant/issuer/user constraint prevents two Core subjects from sharing one owner within an authority. Login and live session checks reject foreign-tenant, non-user, disabled or mismatched targets. A same-issuer legacy hash can be adopted during sign-in. Moving the authority origin requires an explicit operator backfill; email and names never link identities. Both reviewed issuer aliases can point to the same existing user, allowing configuration rollback without changing coursework or historical audit IDs. The API can select/insert bindings but cannot update/delete them; no public API accepts binding mutations. See [issuer migration](core-issuer-migration.md).
 
@@ -45,7 +50,7 @@ A hash chain detects modifications relative to a trusted exported head. Database
 
 ## Administrative UX reuse
 
-The fixed dark green sidebar, light workspace, administrative tab strip, integration cards and configuration modal follow Proposal Studio. Domain concepts map as courses → modules → assignments → student work/review. Administrators configure model interfaces in settings; students cannot choose arbitrary endpoints, enable models or change a policy. Proposal-generation and autonomous-agent actions are excluded from educational workflows.
+The fixed dark green sidebar, light workspace, administrative tab strip, integration cards and configuration modal follow Proposal Studio. Domain concepts map as school → classes → modules → assignments → student work/review. Administrative controls follow the active school and server-returned capabilities. Students cannot choose arbitrary endpoints, enable models or change a policy. Approving a teacher agent grants only its scoped teaching operations; it never grants autonomous assignment completion or an unrestricted student-facing model channel.
 
 ## Runtime and release
 

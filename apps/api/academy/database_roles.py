@@ -54,7 +54,7 @@ than trying to repurpose an identity belonging to another application.
             cursor.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(role))
             cursor.execute(sql.SQL("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM {}").format(role))
             cursor.execute(sql.SQL("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM {}").format(role))
-            cursor.execute(sql.SQL("GRANT SELECT, INSERT, UPDATE, DELETE ON records, logins, oauth_flows TO {}").format(role))
+            cursor.execute(sql.SQL("GRANT SELECT, INSERT, UPDATE, DELETE ON records, record_scopes, logins, oauth_flows TO {}").format(role))
             cursor.execute(sql.SQL("GRANT SELECT, INSERT ON core_identity_bindings TO {}").format(role))
             cursor.execute(sql.SQL("GRANT SELECT, INSERT ON audit_events TO {}").format(role))
             cursor.execute(sql.SQL("GRANT SELECT, INSERT, UPDATE ON audit_heads TO {}").format(role))

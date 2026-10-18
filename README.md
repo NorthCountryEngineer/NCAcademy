@@ -1,6 +1,6 @@
 # NCAcademy
 
-An independent NCE Core education application with courses, assignments, student-authored work and instructor-controlled tutoring. Its administrative workspace follows Proposal Studio's layout and integration-management conventions. Models may select approved hints/questions; they cannot supply newly generated prose to students.
+An independent NCE Core education application with schools, classes, assignments, student-authored work and instructor-controlled tutoring. Its administrative workspace follows Proposal Studio's layout and integration-management conventions. Admin, School, Teacher and Student access is enforced by the API. Teachers may be human users or explicitly approved Core agent accounts. Models may select approved hints/questions; they cannot supply newly generated prose to students.
 
 The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
 
@@ -19,6 +19,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 
 - [Requirements and deferred decisions](docs/requirements.md)
 - [Architecture](docs/architecture.md)
+- [School roles, resources and agent teachers](docs/permissions.md)
 - [API and data contracts](docs/api.md)
 - [Model interfaces and instructional controls](docs/model-controls.md)
 - [Session evidence and audit controls](docs/audit.md)
@@ -30,7 +31,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Verification and production acceptance](docs/verification.md)
 - [Changelog](docs/CHANGELOG.md)
 
-The dedicated `amplify-academy-fargate` recipe deploys the Amplify frontend, Fargate API and private PostgreSQL database. The manifest pins the private ECR image by digest. Core identity remains at `https://main.dpn5tiolbymzn.amplifyapp.com`; the canonical callback is `https://ncacademy.app/api/auth/core/callback`. See [deployment](docs/deployment.md) for release inputs and verification.
+The dedicated `amplify-academy-fargate` recipe deploys the Amplify frontend, Fargate API and private PostgreSQL database. The manifest pins the private ECR image by digest. Core identity uses `https://core.nnytech.ai`; the canonical callback is `https://ncacademy.app/api/auth/core/callback`. See [deployment](docs/deployment.md) for release inputs and verification. The school-permissions change is prepared locally; its source changes do not deploy themselves or activate agent credentials.
 
 Initial access is restricted to the owner with both Core `admin` and `academy-use` permissions. Live models remain disabled and no student grants are issued until audit retention and access controls are verified. The API uses a restricted database login and has no AWS task role. Independent retained exports and KMS-signed checkpoints are operator-run; this release has no automatic checkpoint worker.
 

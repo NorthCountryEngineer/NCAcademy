@@ -10,23 +10,37 @@ Local roles are synthetic demonstration identities selected at sign-in. Courses,
 
 ## Initial production access
 
-Use `https://ncacademy.app`; its `/api` requests proxy to the protected backend at `https://api.ncacademy.app`. Identity remains at `https://main.dpn5tiolbymzn.amplifyapp.com`. Grant the owner both Core `admin` and `academy-use` plus production environment access. A valid first sign-in creates the local app user; an empty initial user list is expected. No production demo users are seeded.
+Use `https://ncacademy.app`; its `/api` requests proxy to the protected backend at `https://api.ncacademy.app`. Identity uses `https://core.nnytech.ai`. Grant the owner both Core `admin` and `academy-use` plus production environment access. A valid first sign-in creates the stable local app user; it does not grant a school membership. No production demo users are seeded. Preserve existing owner IDs and both reviewed issuer aliases during upgrades.
 
 Keep live models disabled and issue no student grants until independent retained audit verification and access acceptance are complete. API readiness establishes schema/storage availability only. Database owner credentials belong solely to migration; the API receives a restricted runtime login and has no AWS task role. The migration bootstrap inputs are `ACADEMY_RUNTIME_DB_USERNAME` and `ACADEMY_RUNTIME_DB_PASSWORD`, injected from the runtime database secret and never printed.
 
 ## Instructor workflow
 
-Create a course, enroll the relevant student identities, add assignments and choose a module grouping. Write the assignment prompt and a small vetted hint/question bank. Leave assistance off for independent assessments; select curated assistance for deterministic stored hints or Socratic selection when an approved provider is enabled. Students write/save their attempts and submit their own work. Instructors review immutable submissions and session replay.
+An Admin creates a school and assigns human School administrators. School administrators assign Teacher/Student memberships and school resources; live Core permissions remain necessary. Select the intended school, create or open an assigned class, enroll its students, add assignments and choose a module grouping. Write the assignment prompt and a small vetted hint/question bank. Leave assistance off for independent assessments; select curated assistance for deterministic stored hints or Socratic selection when an approved provider is enabled. Students write/save their attempts and submit their own work. Human and approved agent Teachers review immutable submissions; session replay additionally requires the current Teacher audit grant. Recorded saved-draft versions remain reviewable evidence; student write/draft access remains owner-only.
 
 Review assistance chronologically, comparing attempt snapshots and released hints with the final submitted version. Review blocks/errors as well as successful hints. Do not interpret a provider selection or service transcript as proof of the student's unseen reasoning.
 
+When replacing a teacher, transfer class ownership and explicitly remove the former teacher's enrollment if their access should end. Ownership transfer preserves existing teaching assignments; it does not silently revoke them. Human School/Admin controls teacher assignments. Revoking a school membership or agent placement denies all classes in that scope on the next request.
+
 ## Administrator workflow
 
-Use Administrative settings for organization/member status, named model connections, enabled model choices and application/audit configuration status. Enter a replacement key only when replacing it, or explicitly clear the saved key. The API never returns saved secrets. Configure authoritative production roles in Core; course enrollment is an additional application boundary. Changing client/tenant/domain bindings requires an explicit registration/release process.
+Use Administrative settings for school/member status, shared resources, named model connections, enabled model choices and application/audit configuration status. School administrators see only the schools they manage. Enter a replacement key only when replacing it, or explicitly clear the saved key. The API never returns saved secrets. Configure authoritative production permissions in Core; local school membership and course enrollment are additional application boundaries. Changing client/tenant/domain bindings requires an explicit registration/release process.
+
+## Agent teacher approval
+
+Create and approve the agent account and consuming application/environment binding in Core, with `academy-use` and `academy-teach`, applicable resource/tag grants, and an expiring task when required. Core task `service_resources` lists contain registered resource UUIDs, not Academy's external IDs. MFA-only tags cannot be satisfied by an agent. Keep the human owner-only policy until a reviewed agent policy explicitly permits workloads.
+
+Configure Academy's server-side Core workload credential through the approved runtime secret and explicitly enable agent teachers only after transport and permission acceptance. `ALLOW_AGENT_TEACHERS` and `ALLOW_LIVE_MODELS` are independent operator switches: agent authentication does not enable models, and model enablement does not admit agents. Missing credentials or disabled agent admission deny Bearer requests. Do not put the workload token in a frontend environment variable, application manifest, prompt, log, school resource or source archive. Migration tasks must not receive it.
+
+A human School/Admin records the exact local placement and class assignments. Agents use their own short-lived Core token; they cannot exchange other agents' credentials or borrow browser sessions. Assignment changes and freeform review feedback remain pending until a human School/Admin approves their exact content. Confirm the proposed school/class, content version and effect on student-visible guidance before approval. Agent teaching does not permit student impersonation, submitted-work edits, school-role grants, secret management or tenant-audit export. Assigned-class assistance replay requires current `academy-audit` and preserves the existing recorded evidence, including saved-draft versions and attempt snapshots. It never grants direct student-draft access or student write authority. See [permissions](permissions.md).
+
+If an approval returns a target/placement conflict, retain the old proposal as evidence and request a fresh one. The server pins the original target and placement authority; it will not publish that old proposal over a later edit, changed binding or revoked class assignment.
+
+For the additive school upgrade, capture a backup and retained audit checkpoint, stop admission, explicitly review the existing Core package/installation's four-permission identity contract, run the reviewed owner-only migration, verify stable identity/record/submission/audit hashes and restart the compatible API image. Existing resources receive explicit Default-school scope. Repeated migration must not create duplicate schools/memberships or reset later grants. Keep existing Core registration IDs and tag/grant policies; do not recreate the installation to resolve a contract mismatch. Rollback requires a schema-compatible image; the old tenant-wide permission implementation is not a safe substitute for school isolation.
 
 ## Audit export verification
 
-An administrator exports the complete tenant audit chain through the authenticated admin export endpoint. Session-only views contain selected events and cannot prove continuity of the entire tenant chain independently. Store exports outside the source tree in restricted operator storage.
+An Admin exports the complete tenant audit chain through the authenticated admin export endpoint. School/session views contain selected events and are marked partial; they cannot prove continuity of the entire tenant chain independently or disclose other schools' records. Store exports outside the source tree in restricted operator storage.
 
 ```sh
 python3 scripts/verify_audit.py /PRIVATE_OPERATOR_PATH/audit-export.json

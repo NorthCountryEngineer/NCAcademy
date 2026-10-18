@@ -11,7 +11,9 @@ from sqlalchemy import select, text
 
 from .auth import Auth
 from .config import Settings
-from .db import Database, Record, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid
+from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid
+from .permissions import normalized_role, global_admin, scope_id, bind_scope, school_role, require_school, default_school_id, membership_id
+from .school_api import register_school_api
 from .schemas import CourseInput, AssignmentInput, EnrollmentInput, ContentInput, ReviewInput, TutorInput, ConnectionInput
 from . import provider
 
@@ -84,16 +86,27 @@ def create_app(settings=None):
 
     def actor(request: Request):
         identity = auth.actor(request)
-        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+        identity["role"] = normalized_role(identity["role"])
+        if request.method not in {"GET", "HEAD", "OPTIONS"} and identity.get("principal_kind", "human") == "human":
             auth.csrf(request, identity)
+        if identity.get("principal_kind") == "agent":
+            route = getattr(request.scope.get("route"), "path", "")
+            operation = request.method + " " + route
+            payload = {"school_id": identity["school_id"], "request_operation": operation}
+            for key in ("course_id", "assignment_id", "submission_id", "resource_id", "change_id"):
+                value = request.path_params.get(key)
+                if isinstance(value, str) and len(value) <= 64:
+                    payload[key] = value
+            with database.write() as db:
+                audit_actor(db, identity, "agent.request_admitted", payload)
         return identity
 
     def teacher(identity):
-        if identity["role"] not in {"admin", "instructor"}:
+        if identity["role"] not in {"admin", "school", "teacher"}:
             raise HTTPException(403, "Teaching permission required")
 
     def admin(identity):
-        if identity["role"] != "admin":
+        if not global_admin(identity):
             raise HTTPException(403, "Administrator permission required")
 
     def find(db, record_id, kind, identity):
@@ -108,15 +121,75 @@ def create_app(settings=None):
             query = query.where(getattr(Record, key) == value)
         return list(db.scalars(query.order_by(Record.created_at, Record.id)))
 
+    def selected_school(db, identity, school_id=None, roles=None, human=False):
+        if school_id:
+            require_school(db, identity, school_id, settings, roles, human)
+            return school_id
+        available = [r.id for r in rows(db, "school", identity) if school_role(db, identity, r.id, settings)]
+        default = default_school_id(identity["tenant_id"])
+        if len(available) == 1 or global_admin(identity) and default in available:
+            chosen = available[0] if len(available) == 1 else default
+            require_school(db, identity, chosen, settings, roles, human)
+            return chosen
+        raise HTTPException(422 if available else 403, "Choose an authorized school")
+
     def membership(db, course_id, identity, write=False):
         course = find(db, course_id, "course", identity)
+        school_id = scope_id(db, course)
+        role = require_school(db, identity, school_id, settings)
         member = db.scalar(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "enrollment", Record.parent_id == course.id, Record.owner_id == identity["id"]))
-        if identity["role"] != "admin":
-            if not member or write and (identity["role"] != "instructor" or member.value["role"] != "instructor"):
+        if role not in {"admin", "school"}:
+            assigned = member and normalized_role(member.value.get("role")) == role
+            if role == "teacher":
+                assigned = assigned or course.owner_id == identity["id"]
+            if not assigned or write and role != "teacher":
                 raise HTTPException(403, "Course membership required")
-        if write:
-            teacher(identity)
         return course
+
+    def course_dict(db, row, identity):
+        school_id = scope_id(db, row)
+        teacher_id = row.owner_id or next((r.owner_id for r in rows(db, "enrollment", identity, parent_id=row.id) if normalized_role(r.value.get("role")) == "teacher"), None)
+        try:
+            membership(db, row.id, identity, True)
+            can_manage = True
+        except HTTPException:
+            can_manage = False
+        return {**dump(row), "school_id": school_id, "teacher_id": teacher_id, "teacher_name": user_name(db, teacher_id), "teacher_principal_kind": "agent" if teacher_id and teacher_id.startswith("agent:") else "human", "course_role": school_role(db, identity, school_id, settings), "can_manage": can_manage}
+
+    def audit_actor(db, identity, operation, payload, session_id=""):
+        context = {key: identity.get(key) for key in ("principal_kind", "account_id", "binding_id", "consumer_service_id", "environment", "task_id", "placement_id") if key in identity}
+        context.setdefault("principal_kind", "human")
+        course_id = payload.get("course_id")
+        assignment_id = payload.get("assignment_id")
+        if not assignment_id:
+            for key in ("submission_id", "turn_id"):
+                child = db.get(Record, payload[key]) if payload.get(key) else None
+                if child and child.tenant_id == identity["tenant_id"]:
+                    assignment_id = child.parent_id
+                    break
+        if not course_id and assignment_id:
+            task = db.get(Record, assignment_id)
+            course_id = task.parent_id if task and task.tenant_id == identity["tenant_id"] else None
+        if not course_id and payload.get("resource_id"):
+            resource = db.get(Record, payload["resource_id"])
+            if resource and resource.tenant_id == identity["tenant_id"]:
+                course_id = resource.value.get("course_id")
+        if course_id:
+            course = db.get(Record, course_id)
+            context.update(course_id=course_id, school_id=identity.get("school_id") or (scope_id(db, course) if course and course.tenant_id == identity["tenant_id"] else None))
+        elif identity.get("school_id"):
+            context["school_id"] = identity["school_id"]
+        audit(db, identity["tenant_id"], identity["id"], operation, {**payload, "principal": context, "operation": operation}, session_id)
+
+    def staged_change(db, identity, school_id, course_id, operation, payload, target_id=None):
+        target = db.get(Record, target_id) if target_id else None
+        placement = db.get(Record, identity["placement_id"])
+        target_snapshot = hashlib.sha256(canonical({"id": target.id, "parent_id": target.parent_id, "owner_id": target.owner_id, "data": target.data}).encode()).hexdigest() if target else None
+        placement_snapshot = hashlib.sha256(placement.data.encode()).hexdigest()
+        row = add(db, "change_request", identity, {"school_id": school_id, "course_id": course_id, "operation": operation, "payload": payload, "target_id": target_id, "target_snapshot_sha256": target_snapshot, "placement_snapshot_sha256": placement_snapshot, "status": "pending", "author_id": identity["id"], "author_name": identity.get("name", "AI teacher"), "principal_kind": "agent", "author_context": {key: identity.get(key) for key in ("account_id", "binding_id", "consumer_service_id", "environment", "task_id", "placement_id")}, "created_at": now()}, school_id, identity["id"])
+        bind_scope(db, row, school_id)
+        audit_actor(db, identity, "change.proposed", {"change_id": row.id, "course_id": course_id, "proposal_operation": operation, "payload": payload})
+        return JSONResponse({"change_request": dump(row), "status": "pending", "publication": "human_approval_required"}, status_code=202)
 
     def assignment(db, assignment_id, identity, write=False):
         row = find(db, assignment_id, "assignment", identity)
@@ -127,18 +200,28 @@ def create_app(settings=None):
         row = Record(id=record_id or uid(), tenant_id=identity["tenant_id"], kind=kind, parent_id=parent, owner_id=owner, data=canonical(data))
         db.add(row)
         db.flush()
+        if parent:
+            parent_row = db.get(Record, parent)
+            school_id = parent if parent_row and parent_row.kind == "school" else scope_id(db, parent_row) if parent_row else None
+            if school_id:
+                bind_scope(db, row, school_id)
         return row
 
     def user_name(db, user_id):
+        if not user_id:
+            return "Unassigned teacher"
         user = db.get(Record, user_id)
-        return user.value["name"] if user else "Unavailable member"
+        if user:
+            return user.value["name"]
+        placement = db.scalar(select(Record).where(Record.tenant_id == settings.tenant_id, Record.kind == "agent_placement", Record.owner_id == user_id))
+        return placement.value["name"] if placement else "Unavailable member"
 
     def dump(row):
         return {"id": row.id, **row.value}
 
-    def assignment_dict(row, identity):
+    def assignment_dict(row, identity, db):
         value = row.value
-        if identity["role"] == "student":
+        if school_role(db, identity, scope_id(db, row), settings) == "student":
             value["tutor_policy"] = {key: val for key, val in value["tutor_policy"].items() if key not in {"hints", "questions", "connection_id", "model"}}
         return {"id": row.id, "course_id": row.parent_id, **value}
 
@@ -173,74 +256,171 @@ def create_app(settings=None):
                     raise ValueError()
                 db.execute(select(Record.id).limit(1))
                 db.execute(select(CoreIdentityBinding.subject).limit(1))
+                db.execute(select(RecordScope.record_id).limit(1))
+                school = db.get(Record, default_school_id(settings.tenant_id))
+                if not school or school.kind != "school":
+                    raise ValueError()
             return {"status": "ready", "service": "ncacademy"}
         except Exception:
             return JSONResponse({"status": "migration_required"}, status_code=503)
 
     @app.get("/api/users")
-    def users(identity=Depends(actor)):
-        teacher(identity)
+    def users(school_id: str | None = None, identity=Depends(actor)):
         with database.factory() as db:
-            return [{"id": row.id, "name": row.value["name"], "role": row.value["role"]} for row in rows(db, "user", identity)]
+            sid = selected_school(db, identity, school_id, {"admin", "school", "teacher"})
+            result = []
+            for member in rows(db, "school_membership", identity, parent_id=sid):
+                if not member.value.get("active"):
+                    continue
+                user = db.get(Record, member.owner_id)
+                if user and user.kind == "user" and not user.value.get("disabled"):
+                    result.append({"id": user.id, "name": user.value["name"], "role": normalized_role(member.value["role"]), "principal_kind": "human"})
+            for placement in rows(db, "agent_placement", identity, parent_id=sid):
+                if placement.value.get("active"):
+                    result.append({"id": placement.owner_id, "name": placement.value["name"], "role": "teacher", "principal_kind": "agent"})
+            return result
 
     @app.get("/api/courses")
-    def courses(identity=Depends(actor)):
+    def courses(school_id: str | None = None, identity=Depends(actor)):
         with database.factory() as db:
-            visible = {r.parent_id for r in rows(db, "enrollment", identity, owner_id=identity["id"])}
-            return [{**dump(row), "assignment_count": len(rows(db, "assignment", identity, parent_id=row.id)), "student_count": sum(r.value["role"] == "student" for r in rows(db, "enrollment", identity, parent_id=row.id))} for row in rows(db, "course", identity) if identity["role"] == "admin" or row.id in visible]
+            if school_id:
+                require_school(db, identity, school_id, settings)
+            result = []
+            for row in rows(db, "course", identity):
+                if school_id and scope_id(db, row) != school_id:
+                    continue
+                try:
+                    membership(db, row.id, identity)
+                except HTTPException:
+                    continue
+                result.append({**course_dict(db, row, identity), "assignment_count": len(rows(db, "assignment", identity, parent_id=row.id)), "student_count": sum(r.value["role"] == "student" for r in rows(db, "enrollment", identity, parent_id=row.id))})
+            return result
 
     @app.post("/api/courses", status_code=201)
     def create_course(body: CourseInput, identity=Depends(actor)):
-        teacher(identity)
         with database.write() as db:
-            row = add(db, "course", identity, body.model_dump())
-            add(db, "enrollment", identity, {"role": "instructor"}, row.id, identity["id"])
-            audit(db, identity["tenant_id"], identity["id"], "course.created", {"course_id": row.id, **body.model_dump()})
-            return dump(row)
+            sid = selected_school(db, identity, body.school_id, {"admin", "school", "teacher"})
+            role = school_role(db, identity, sid, settings)
+            owner = body.teacher_id or identity["id"]
+            if role == "teacher" and owner != identity["id"]:
+                raise HTTPException(403, "Teachers create their own classes")
+            if owner != identity["id"]:
+                ensure_teacher(db, owner, sid, identity)
+            if identity.get("principal_kind") == "agent":
+                return staged_change(db, identity, sid, None, "course.create", {"title": body.title, "description": body.description})
+            row = add(db, "course", identity, {"title": body.title, "description": body.description}, owner=owner)
+            bind_scope(db, row, sid)
+            add(db, "enrollment", identity, {"role": "teacher"}, row.id, owner)
+            audit_actor(db, identity, "course.created", {"course_id": row.id, "school_id": sid, "teacher_id": owner, **row.value})
+            return course_dict(db, row, identity)
+
+    def ensure_teacher(db, principal_id, school_id, identity):
+        if principal_id.startswith("agent:"):
+            if any(r.owner_id == principal_id and r.value.get("active") for r in rows(db, "agent_placement", identity, parent_id=school_id)):
+                return
+        else:
+            target = find(db, principal_id, "user", identity)
+            member = db.get(Record, membership_id(school_id, principal_id))
+            if not target.value.get("disabled") and member and member.value.get("active") and normalized_role(member.value.get("role")) == "teacher":
+                return
+        raise HTTPException(422, "An active school Teacher is required")
 
     @app.get("/api/courses/{course_id}")
     def get_course(course_id: str, identity=Depends(actor)):
         with database.factory() as db:
             course = membership(db, course_id, identity)
             members = []
-            if identity["role"] in {"admin", "instructor"}:
+            if school_role(db, identity, scope_id(db, course), settings) in {"admin", "school", "teacher"}:
                 membership(db, course_id, identity, True)
-                members = [{"user_id": r.owner_id, "name": user_name(db, r.owner_id), "role": r.value["role"]} for r in rows(db, "enrollment", identity, parent_id=course_id)]
-            return {**dump(course), "members": members, "assignments": [assignment_dict(row, identity) for row in rows(db, "assignment", identity, parent_id=course_id)]}
+                members = [{"user_id": r.owner_id, "name": user_name(db, r.owner_id), "role": normalized_role(r.value["role"])} for r in rows(db, "enrollment", identity, parent_id=course_id)]
+            return {**course_dict(db, course, identity), "members": members, "assignments": [assignment_dict(row, identity, db) for row in rows(db, "assignment", identity, parent_id=course_id)]}
+
+    @app.put("/api/courses/{course_id}")
+    def update_course(course_id: str, body: CourseInput, identity=Depends(actor)):
+        with database.write() as db:
+            row = membership(db, course_id, identity, True)
+            sid = scope_id(db, row)
+            if body.school_id and body.school_id != sid:
+                raise HTTPException(403, "Class school is immutable")
+            owner = body.teacher_id or row.owner_id
+            if owner != row.owner_id:
+                require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
+                ensure_teacher(db, owner, sid, identity)
+            if identity.get("principal_kind") == "agent":
+                return staged_change(db, identity, sid, course_id, "course.update", {"title": body.title, "description": body.description}, row.id)
+            row.set({**row.value, "title": body.title, "description": body.description})
+            row.owner_id = owner
+            if owner and not any(r.owner_id == owner for r in rows(db, "enrollment", identity, parent_id=course_id)):
+                add(db, "enrollment", identity, {"role": "teacher"}, course_id, owner)
+            audit_actor(db, identity, "course.updated", {"course_id": row.id, "school_id": sid, "teacher_id": owner, **row.value})
+            return course_dict(db, row, identity)
 
     @app.post("/api/courses/{course_id}/enrollments")
     def enroll(course_id: str, body: EnrollmentInput, identity=Depends(actor)):
         with database.write() as db:
             membership(db, course_id, identity, True)
-            find(db, body.user_id, "user", identity)
-            if body.role == "instructor" and identity["role"] != "admin":
-                raise HTTPException(403, "Only administrators assign instructors")
+            course = find(db, course_id, "course", identity)
+            sid = scope_id(db, course)
+            assigned_role = normalized_role(body.role)
+            role = school_role(db, identity, sid, settings)
+            if assigned_role == "teacher":
+                if role not in {"admin", "school"} or identity.get("principal_kind", "human") != "human":
+                    raise HTTPException(403, "School administrators assign teachers")
+                ensure_teacher(db, body.user_id, sid, identity)
+            else:
+                target = find(db, body.user_id, "user", identity)
+                school_member = db.get(Record, membership_id(sid, body.user_id))
+                if target.value.get("disabled") or not school_member or not school_member.value.get("active") or school_member.value.get("role") != "student":
+                    raise HTTPException(422, "An active school Student is required")
             current = next((r for r in rows(db, "enrollment", identity, parent_id=course_id) if r.owner_id == body.user_id), None)
             if current:
-                current.set({"role": body.role})
+                current.set({"role": assigned_role})
             else:
-                add(db, "enrollment", identity, {"role": body.role}, course_id, body.user_id)
-            audit(db, identity["tenant_id"], identity["id"], "enrollment.updated", {"course_id": course_id, **body.model_dump()})
-            return {"user_id": body.user_id, "role": body.role}
+                add(db, "enrollment", identity, {"role": assigned_role}, course_id, body.user_id)
+            audit_actor(db, identity, "enrollment.updated", {"course_id": course_id, "user_id": body.user_id, "role": assigned_role})
+            return {"user_id": body.user_id, "role": assigned_role}
+
+    @app.delete("/api/courses/{course_id}/enrollments/{user_id}")
+    def unenroll(course_id: str, user_id: str, identity=Depends(actor)):
+        with database.write() as db:
+            course = membership(db, course_id, identity, True)
+            sid = scope_id(db, course)
+            member = next((r for r in rows(db, "enrollment", identity, parent_id=course_id) if r.owner_id == user_id), None)
+            if not member:
+                raise HTTPException(404, "Enrollment not found")
+            if normalized_role(member.value.get("role")) == "teacher":
+                require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
+                if course.owner_id == user_id:
+                    raise HTTPException(409, "Assign another class owner before removing this Teacher")
+            db.delete(member)
+            scope = db.get(RecordScope, member.id)
+            if scope:
+                db.delete(scope)
+            audit_actor(db, identity, "enrollment.revoked", {"course_id": course_id, "user_id": user_id})
+            return {"removed": True}
 
     @app.get("/api/courses/{course_id}/assignments")
     def assignments(course_id: str, identity=Depends(actor)):
         with database.factory() as db:
             membership(db, course_id, identity)
-            return [assignment_dict(row, identity) for row in rows(db, "assignment", identity, parent_id=course_id)]
+            return [assignment_dict(row, identity, db) for row in rows(db, "assignment", identity, parent_id=course_id)]
 
     @app.post("/api/courses/{course_id}/assignments", status_code=201)
     def create_assignment(course_id: str, body: AssignmentInput, identity=Depends(actor)):
         with database.write() as db:
-            membership(db, course_id, identity, True)
-            validate_binding(db, body.tutor_policy.model_dump(), identity)
+            course = membership(db, course_id, identity, True)
+            validate_binding(db, body.tutor_policy.model_dump(), identity, scope_id(db, course))
+            if identity.get("principal_kind") == "agent":
+                return staged_change(db, identity, scope_id(db, course), course_id, "assignment.create", body.model_dump())
             row = add(db, "assignment", identity, {**body.model_dump(), "version": 1}, course_id)
-            audit(db, identity["tenant_id"], identity["id"], "assignment.created", {"assignment_id": row.id, **row.value})
-            return assignment_dict(row, identity)
+            audit_actor(db, identity, "assignment.created", {"assignment_id": row.id, **row.value})
+            return assignment_dict(row, identity, db)
 
-    def validate_binding(db, policy, identity):
+    def validate_binding(db, policy, identity, school_id):
         if policy["mode"] == "socratic":
             connection = find(db, policy.get("connection_id"), "connection", identity)
+            if scope_id(db, connection) != school_id:
+                raise HTTPException(403, "Model connection belongs to another school")
             if policy.get("model") not in connection.value["models"]:
                 raise HTTPException(422, "Choose a manually allowed model")
             if not policy["questions"]:
@@ -252,10 +432,12 @@ def create_app(settings=None):
     def update_assignment(assignment_id: str, body: AssignmentInput, identity=Depends(actor)):
         with database.write() as db:
             row = assignment(db, assignment_id, identity, True)
-            validate_binding(db, body.tutor_policy.model_dump(), identity)
+            validate_binding(db, body.tutor_policy.model_dump(), identity, scope_id(db, row))
+            if identity.get("principal_kind") == "agent":
+                return staged_change(db, identity, scope_id(db, row), row.parent_id, "assignment.update", body.model_dump(), row.id)
             row.set({**body.model_dump(), "version": row.value.get("version", 1) + 1})
-            audit(db, identity["tenant_id"], identity["id"], "assignment.updated", {"assignment_id": row.id, **row.value})
-            return assignment_dict(row, identity)
+            audit_actor(db, identity, "assignment.updated", {"assignment_id": row.id, **row.value})
+            return assignment_dict(row, identity, db)
 
     @app.get("/api/assignments/{assignment_id}")
     def get_assignment(assignment_id: str, identity=Depends(actor)):
@@ -263,13 +445,13 @@ def create_app(settings=None):
             row = assignment(db, assignment_id, identity)
             draft = next(iter(rows(db, "draft", identity, parent_id=row.id, owner_id=identity["id"])), None)
             own = rows(db, "submission", identity, parent_id=row.id, owner_id=identity["id"])
-            return {**assignment_dict(row, identity), "draft": draft.value if draft else None, "submissions": [submission_dict(db, r, identity) for r in own]}
+            return {**assignment_dict(row, identity, db), "draft": draft.value if draft else None, "submissions": [submission_dict(db, r, identity) for r in own]}
 
     @app.put("/api/assignments/{assignment_id}/draft")
     def draft(assignment_id: str, body: ContentInput, identity=Depends(actor)):
         with database.write() as db:
-            assignment(db, assignment_id, identity)
-            if identity["role"] != "student":
+            task = assignment(db, assignment_id, identity)
+            if school_role(db, identity, scope_id(db, task), settings) != "student":
                 raise HTTPException(403, "Student work is student-owned")
             row = next(iter(rows(db, "draft", identity, parent_id=assignment_id, owner_id=identity["id"])), None)
             value = {"content": body.content, "updated_at": now()}
@@ -277,7 +459,7 @@ def create_app(settings=None):
                 row.set(value)
             else:
                 row = add(db, "draft", identity, value, assignment_id, identity["id"])
-            audit(db, identity["tenant_id"], identity["id"], "student.draft_saved", {"assignment_id": assignment_id, **value}, tutor_session_id(assignment_id, identity["id"]))
+            audit_actor(db, identity, "student.draft_saved", {"assignment_id": assignment_id, **value}, tutor_session_id(assignment_id, identity["id"]))
             return value
 
     @app.post("/api/assignments/{assignment_id}/submit", status_code=201)
@@ -286,18 +468,18 @@ def create_app(settings=None):
             raise HTTPException(422, "Submission cannot be empty")
         with database.write() as db:
             task = assignment(db, assignment_id, identity)
-            if identity["role"] != "student":
+            if school_role(db, identity, scope_id(db, task), settings) != "student":
                 raise HTTPException(403, "Student work is student-owned")
             prior = rows(db, "submission", identity, parent_id=assignment_id, owner_id=identity["id"])
             row = add(db, "submission", identity, {"content": body.content, "version": len(prior) + 1, "submitted_at": now(), "assignment_snapshot": {"title": task.value["title"], "module": task.value["module"], "instructions": task.value["instructions"], "version": task.value["version"]}}, assignment_id, identity["id"])
-            audit(db, identity["tenant_id"], identity["id"], "student.submitted", {"assignment_id": assignment_id, "submission_id": row.id, **row.value}, tutor_session_id(assignment_id, identity["id"]))
+            audit_actor(db, identity, "student.submitted", {"assignment_id": assignment_id, "submission_id": row.id, **row.value}, tutor_session_id(assignment_id, identity["id"]))
             return submission_dict(db, row, identity)
 
     @app.get("/api/assignments/{assignment_id}/submissions")
     def submissions(assignment_id: str, identity=Depends(actor)):
         with database.write() as db:
             assignment(db, assignment_id, identity, True)
-            audit(db, identity["tenant_id"], identity["id"], "submission.roster_viewed", {"assignment_id": assignment_id})
+            audit_actor(db, identity, "submission.roster_viewed", {"assignment_id": assignment_id})
             return [submission_dict(db, row, identity) for row in rows(db, "submission", identity, parent_id=assignment_id)]
 
     @app.post("/api/submissions/{submission_id}/review")
@@ -305,32 +487,35 @@ def create_app(settings=None):
         with database.write() as db:
             row = find(db, submission_id, "submission", identity)
             assignment(db, row.parent_id, identity, True)
+            if identity.get("principal_kind") == "agent":
+                task = db.get(Record, row.parent_id)
+                return staged_change(db, identity, scope_id(db, row), task.parent_id, "review.create", body.model_dump(), row.id)
             add(db, "review", identity, {"feedback": body.feedback, "created_at": now()}, row.id, identity["id"])
-            audit(db, identity["tenant_id"], identity["id"], "submission.reviewed", {"submission_id": row.id, "feedback": body.feedback})
+            audit_actor(db, identity, "submission.reviewed", {"submission_id": row.id, "feedback": body.feedback})
             return {"feedback": body.feedback}
 
     def connection_dict(row):
         data = row.value
-        return {"id": row.id, **{key: data[key] for key in ("name", "protocol", "endpoint", "models", "enabled", "version")}, "key_configured": bool(data.get("key_cipher"))}
+        return {"id": row.id, "school_id": data.get("school_id"), **{key: data[key] for key in ("name", "protocol", "endpoint", "models", "enabled", "version")}, "key_configured": bool(data.get("key_cipher"))}
 
     @app.get("/api/admin/settings")
     def settings_status(identity=Depends(actor)):
         admin(identity)
-        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 1}
+        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 2}
 
     @app.get("/api/admin/connections")
-    def connections(identity=Depends(actor)):
-        admin(identity)
+    def connections(school_id: str | None = None, identity=Depends(actor)):
         with database.factory() as db:
-            return [connection_dict(row) for row in rows(db, "connection", identity)]
+            sid = selected_school(db, identity, school_id, {"admin", "school"}, human=True)
+            return [{**connection_dict(row), "school_id": sid} for row in rows(db, "connection", identity) if scope_id(db, row) == sid]
 
     @app.get("/api/models")
-    def models(identity=Depends(actor)):
-        teacher(identity)
+    def models(school_id: str | None = None, identity=Depends(actor)):
         with database.factory() as db:
-            return [{"connection_id": row.id, "connection_name": row.value["name"], "model": model} for row in rows(db, "connection", identity) if row.value["enabled"] for model in row.value["models"]]
+            sid = selected_school(db, identity, school_id, {"admin", "school", "teacher"})
+            return [{"connection_id": row.id, "connection_name": row.value["name"], "model": model, "school_id": sid} for row in rows(db, "connection", identity) if scope_id(db, row) == sid and row.value["enabled"] for model in row.value["models"]]
 
-    def save_connection(db, body, identity, row=None):
+    def save_connection(db, body, identity, school_id, row=None):
         try:
             normalized = provider.endpoint(body.endpoint)
         except ValueError as error:
@@ -343,25 +528,32 @@ def create_app(settings=None):
         if row and normalized != old["endpoint"] and old.get("key_cipher") and not (body.api_key or body.clear_key):
             raise HTTPException(422, "Endpoint change requires key replacement or clear")
         cipher = auth.seal({"api_key": body.api_key}) if body.api_key else "" if body.clear_key else old.get("key_cipher", "")
-        data = {"name": body.name, "protocol": body.protocol, "endpoint": normalized, "models": body.models, "enabled": body.enabled, "version": old.get("version", 0) + 1, "key_cipher": cipher}
+        data = {"school_id": school_id, "name": body.name, "protocol": body.protocol, "endpoint": normalized, "models": body.models, "enabled": body.enabled, "version": old.get("version", 0) + 1, "key_cipher": cipher}
         if row:
             row.set(data)
         else:
             row = add(db, "connection", identity, data)
-        audit(db, identity["tenant_id"], identity["id"], "connection.updated", {**connection_dict(row), "credential_action": "replaced" if body.api_key else "cleared" if body.clear_key else "unchanged"})
+            bind_scope(db, row, school_id)
+        audit_actor(db, identity, "connection.updated", {**connection_dict(row), "credential_action": "replaced" if body.api_key else "cleared" if body.clear_key else "unchanged"})
         return connection_dict(row)
 
     @app.post("/api/admin/connections", status_code=201)
-    def create_connection(body: ConnectionInput, identity=Depends(actor)):
-        admin(identity)
+    def create_connection(body: ConnectionInput, school_id: str | None = None, identity=Depends(actor)):
         with database.write() as db:
-            return save_connection(db, body, identity)
+            if school_id and body.school_id and school_id != body.school_id:
+                raise HTTPException(422, "Conflicting school scope")
+            sid = selected_school(db, identity, body.school_id or school_id, {"admin", "school"}, human=True)
+            return save_connection(db, body, identity, sid)
 
     @app.put("/api/admin/connections/{connection_id}")
-    def update_connection(connection_id: str, body: ConnectionInput, identity=Depends(actor)):
-        admin(identity)
+    def update_connection(connection_id: str, body: ConnectionInput, school_id: str | None = None, identity=Depends(actor)):
         with database.write() as db:
-            return save_connection(db, body, identity, find(db, connection_id, "connection", identity))
+            row = find(db, connection_id, "connection", identity)
+            sid = scope_id(db, row)
+            require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
+            if body.school_id and body.school_id != sid or school_id and school_id != sid:
+                raise HTTPException(403, "Model connection school is immutable")
+            return save_connection(db, body, identity, sid, row)
 
     @app.get("/api/assignments/{assignment_id}/tutor")
     def turns(assignment_id: str, identity=Depends(actor)):
@@ -375,7 +567,7 @@ def create_app(settings=None):
         connection, key_cipher, prompt = None, None, None
         with database.write() as db:
             task = assignment(db, assignment_id, identity)
-            if identity["role"] != "student":
+            if school_role(db, identity, scope_id(db, task), settings) != "student":
                 raise HTTPException(403, "Tutoring is a student activity")
             previous = rows(db, "turn", identity, parent_id=assignment_id, owner_id=identity["id"])
             existing = next((row for row in previous if row.value["idempotency_key"] == body.idempotency_key), None)
@@ -417,7 +609,7 @@ def create_app(settings=None):
                     if spent + reservation > policy["max_total_tokens"]:
                         data.update(status="blocked", error="Assignment token reservation limit reached", reservation=0)
             turn = add(db, "turn", identity, data, assignment_id, identity["id"])
-            audit(db, identity["tenant_id"], identity["id"], "tutor." + ("blocked" if data["status"] == "blocked" else "admitted"), {"turn_id": turn.id, **data}, session_id)
+            audit_actor(db, identity, "tutor." + ("blocked" if data["status"] == "blocked" else "admitted"), {"turn_id": turn.id, **data}, session_id)
             turn_id = turn.id
             if data["status"] == "blocked":
                 return turn_dict(turn)
@@ -491,15 +683,21 @@ def create_app(settings=None):
                 failure = "Course access changed while processing; output withheld"
             data.update(status="withheld" if failure else "released", error=failure, response=response, usage=usage, selected_id=selected if selected_text else None, approved_text=selected_text if not failure else None)
             stored.set(data)
-            audit(db, identity["tenant_id"], identity["id"], "tutor.provider_result", {"turn_id": turn_id, "response": response, "usage": usage, "error": failure}, session_id)
-            audit(db, identity["tenant_id"], identity["id"], "tutor." + data["status"], {"turn_id": turn_id, "selected_id": data["selected_id"], "approved_text": data["approved_text"], "error": failure}, session_id)
+            audit_actor(db, identity, "tutor.provider_result", {"turn_id": turn_id, "response": response, "usage": usage, "error": failure}, session_id)
+            audit_actor(db, identity, "tutor." + data["status"], {"turn_id": turn_id, "selected_id": data["selected_id"], "approved_text": data["approved_text"], "error": failure}, session_id)
             result = turn_dict(stored)
         # Output and release decision are durable before returning to the browser.
         return result
 
+    def can_review_school(db, identity, school_id):
+        role = school_role(db, identity, school_id, settings)
+        if role in {"admin", "school"}:
+            return identity.get("principal_kind", "human") == "human"
+        if role != "teacher":
+            return False
+        return "academy-audit" in identity.get("permissions", []) or settings.auth_mode == "local" and identity.get("principal_kind", "human") == "human"
+
     def review_session(db, session_id, identity):
-        if not identity["can_audit"]:
-            raise HTTPException(403, "Audit permission required")
         turns = rows(db, "turn", identity)
         matched = [row for row in turns if tutor_session_id(row.parent_id, row.owner_id) == session_id]
         if not matched:
@@ -510,15 +708,23 @@ def create_app(settings=None):
             raise HTTPException(404, "Session not found")
         first = matched[0]
         task = assignment(db, first.parent_id, identity, True)
-        return {"id": session_id, "student_id": first.owner_id, "student_name": user_name(db, first.owner_id), "assignment_id": task.id, "assignment_title": task.value["title"]}
+        if not can_review_school(db, identity, scope_id(db, task)):
+            raise HTTPException(403, "Audit permission required for this school")
+        return {"id": session_id, "school_id": scope_id(db, task), "course_id": task.parent_id, "student_id": first.owner_id, "student_name": user_name(db, first.owner_id), "assignment_id": task.id, "assignment_title": task.value["title"]}
 
     @app.get("/api/audit/sessions")
-    def audit_sessions(identity=Depends(actor)):
-        if not identity["can_audit"]:
-            raise HTTPException(403, "Audit permission required")
+    def audit_sessions(school_id: str | None = None, identity=Depends(actor)):
         with database.write() as db:
+            if school_id:
+                require_school(db, identity, school_id, settings)
+                if not can_review_school(db, identity, school_id):
+                    raise HTTPException(403, "Audit permission required for this school")
+            elif not any(can_review_school(db, identity, r.id) for r in rows(db, "school", identity)):
+                raise HTTPException(403, "Audit permission required")
             found = {}
             for row in rows(db, "turn", identity) + rows(db, "draft", identity) + rows(db, "submission", identity):
+                if school_id and scope_id(db, row) != school_id:
+                    continue
                 sid = tutor_session_id(row.parent_id, row.owner_id)
                 if sid not in found:
                     try:
@@ -528,15 +734,15 @@ def create_app(settings=None):
                         continue
                 found[sid]["turn_count"] += row.kind == "turn"
                 found[sid]["last_activity"] = max(found[sid]["last_activity"], row.created_at)
-            audit(db, identity["tenant_id"], identity["id"], "audit.sessions_accessed", {"count": len(found)})
+            audit_actor(db, identity, "audit.sessions_accessed", {"count": len(found)})
             return list(found.values())
 
     def replay(session_id, identity, export=False):
         with database.write() as db:
             descriptor = review_session(db, session_id, identity)
-            audit(db, identity["tenant_id"], identity["id"], "audit.session_exported" if export else "audit.session_viewed", {"session_id": session_id}, session_id)
+            audit_actor(db, identity, "audit.session_exported" if export else "audit.session_viewed", {"session_id": session_id, "school_id": descriptor["school_id"], "course_id": descriptor["course_id"], "assignment_id": descriptor["assignment_id"], "student_id": descriptor["student_id"]}, session_id)
             db.flush()
-            return {"session": descriptor, "turns": [turn_dict(row, True) for row in rows(db, "turn", identity, parent_id=descriptor["assignment_id"], owner_id=descriptor["student_id"])], "events": [audit_dict(row) for row in db.scalars(select(Audit).where(Audit.tenant_id == identity["tenant_id"], Audit.session_id == session_id).order_by(Audit.sequence))]}
+            return {"scope": "session_partial", "complete_tenant_chain": False, "session": descriptor, "turns": [turn_dict(row, True) for row in rows(db, "turn", identity, parent_id=descriptor["assignment_id"], owner_id=descriptor["student_id"])], "events": [audit_dict(row) for row in db.scalars(select(Audit).where(Audit.tenant_id == identity["tenant_id"], Audit.session_id == session_id).order_by(Audit.sequence))]}
 
     @app.get("/api/audit/sessions/{session_id}")
     def get_replay(session_id: str, identity=Depends(actor)):
@@ -550,7 +756,7 @@ def create_app(settings=None):
     def full_export(identity=Depends(actor)):
         admin(identity)
         with database.write() as db:
-            audit(db, identity["tenant_id"], identity["id"], "audit.tenant_exported", {})
+            audit_actor(db, identity, "audit.tenant_exported", {})
             db.flush()
             events = [audit_dict(row) for row in db.scalars(select(Audit).where(Audit.tenant_id == identity["tenant_id"]).order_by(Audit.sequence))]
             head = db.get(AuditHead, identity["tenant_id"])
@@ -567,9 +773,10 @@ def create_app(settings=None):
                 previous = row.hash
             head = db.get(AuditHead, identity["tenant_id"])
             valid = bool(valid and head and head.sequence == count and head.digest == previous)
-            audit(db, identity["tenant_id"], identity["id"], "audit.verified", {"valid": valid, "checked_sequence": count, "checked_digest": previous})
+            audit_actor(db, identity, "audit.verified", {"valid": valid, "checked_sequence": count, "checked_digest": previous})
             return {"valid": valid, "count": count, "head": previous}
 
+    register_school_api(app, database, auth, settings, actor, staged_change, validate_binding, audit_actor)
     return app
 
 

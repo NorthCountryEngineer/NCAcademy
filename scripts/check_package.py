@@ -28,9 +28,9 @@ def validate(root: Path = ROOT, release: bool = False) -> dict:
         raise ValueError('Unexpected Core callback contract.')
     permissions = identity['permissions']
     if (not isinstance(permissions, list) or any(set(p) != {'codename', 'name'} for p in permissions)
-            or {p['codename'] for p in permissions} != {'academy-use', 'academy-teach', 'academy-audit'}):
+            or {p['codename'] for p in permissions} != {'academy-use', 'academy-school', 'academy-teach', 'academy-audit'}):
         raise ValueError('Unexpected permission vocabulary.')
-    if len(permissions) != 3:
+    if len(permissions) != 4:
         raise ValueError('Duplicate application permissions.')
     required = ('apps/api/Dockerfile', 'apps/api/requirements.lock.txt', 'apps/web/Dockerfile',
                 'apps/web/package-lock.json', 'compose.yaml', 'nce/core-onboarding.patch', 'nce/core-patch-baseline.json')

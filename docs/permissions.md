@@ -1,0 +1,50 @@
+# Schools, roles and agent teachers
+
+The API enforces four application roles: **Admin**, **School**, **Teacher** and **Student**. A School role means an administrator of specific schools. A school is a resource and membership boundary inside the configured Core organization, analogous to a company workspace. It is not a new Core organization or a shared login.
+
+## Authority and scope
+
+| Role | Permitted scope | Principal |
+| --- | --- | --- |
+| Admin | All application schools, school memberships/resources, classes, provider settings and full tenant audit. Student submissions remain immutable. | Human with current Core `admin` and `academy-use`. |
+| School | Manage assigned schools, their memberships/resources and classes; review school activity and approve pending teacher-agent content. Cannot administer other schools or the Core organization. | Human with current Core `academy-school`, `academy-use` and active local School membership. |
+| Teacher | Use permitted school resources, maintain owned/assigned classes, assignments, roster and reviews. Cannot grant school roles or manage another teacher's class. | Human or explicitly approved agent with current Core `academy-teach`, `academy-use` and active school/class authority. |
+| Student | Consume shared school resources and enrolled coursework; save attempts, request bounded guidance, submit and read own work. | Human with current Core `academy-use`, active school membership and course enrollment. |
+
+The server combines live Core permissions with local school membership, record scope, resource visibility, course enrollment and student ownership. An elevated local role cannot replace a revoked Core permission. `instructor` is accepted for legacy records and normalized to Teacher; it is not an extra authority tier. School/Class selectors help choose a workspace but never grant access.
+
+Admin is the only tenant-wide role. School administrators cannot create an Admin grant or change the configured Core organization/service/deployment. Teacher assignment does not let a teacher enroll another teacher or turn a student into a school administrator. Revoking a membership, placement or enrollment denies subsequent operations in that scope.
+
+Class ownership and teaching assignment are explicit separate grants. Transferring a class owner retains an existing teacher enrollment; remove that enrollment separately when revocation is intended. Human School/Admin revokes teacher assignments through the enrollment DELETE operation. The current owner cannot be removed until another owner is assigned. A school-membership or agent-placement revocation removes access to all its classes.
+
+## School resources
+
+Schools maintain their own text-resource catalog and explicit audiences. Admin assigns Core-backed descriptors and the school's registered Core resource reference; a School administrator cannot repoint them. Teachers and students see only resources shared with their role and scope; teacher-only material is not included in student listings or responses. Resource identifiers and display names are not authorization evidence.
+
+A catalog entry referring to a Core resource is an additional local assignment. It does not create a Core role, permission tag, approved integration, credential grant or protected-resource registration. At resolution time, the backend checks current Core permission and the registered resource in addition to school/class access. Unknown, inactive, foreign or unapproved resources fail closed. There is no fallback to cached descriptors or local credentials when Core denies a selected Core resource.
+
+Core protected-resource checks are scoped to Academy's registered receiving service. Human authorization uses the confidential resource client at `POST /api/v1/authorize/`. Agent checks use the separate endpoint below. An arbitrary resource on another Core service cannot be authorized merely by passing its ID to Academy. A future executable Core integration must also use that service's approved application-integration contract and live consumption checks.
+
+## Teacher agents
+
+An AI teacher is a Core **agent account**, not a model impersonating a human teacher. A human School/Admin first approves a local placement with exact account, binding, consuming service, environment and optional task, then assigns its school/classes. Core's independent administrator approval is also required. Local placement never mints Core credentials or grants upstream permissions.
+
+The runner presents its short-lived Core agent Bearer token in `Authorization: Bearer …` and selects its approved local placement through `X-Academy-Agent-Placement`. A caller-supplied placement ID is only a selector; the server reloads its complete trusted scope and compares it with Core. Supplying a browser session/flow cookie together with these headers is rejected. Academy authenticates to `POST /api/platform/v1/agent-credentials/introspect/` with its own server-side Core workload credential. Its JSON request includes the incoming token, trusted environment and task, required operation permission and the applicable registered resource. The model cannot select credential, principal, tenant, task or authority destination. Human OIDC, agent and backend workload credentials are not interchangeable.
+
+Every protected agent operation checks `active`, `principal_kind: agent`, exact issuer/audience/organization, account and binding IDs, `sub: urn:core:agent:<UUID>`, expiration, environment, task, consuming service and current permissions. The response must match the locally approved placement. Agent claims do not use human browser-client, OAuth scope or deployment claims. There is no shared positive authorization cache; Core failure or revocation denies access.
+
+Core checks the account, listing/definition, consuming installation, binding, credential, environment, task, roles, tags and expiry live. Agents need explicit applicable tag grants and `allow_workloads`; MFA/fresh-human-authentication tags deny agent access. Task-scoped registered resources must appear in the task's `service_resources` UUID allowlist. The introspection request identifies the registered resource by type and external ID. Empty or mismatched task scopes deny access.
+
+Agents can maintain their approved classes, but cannot administer schools, grant memberships/placements, change provider settings, retrieve credentials, edit or submit student work, call student-owned draft/write endpoints, or export the tenant audit. An approved agent Teacher can read immutable student submissions in assigned classes and, with fresh `academy-audit`, recorded class-session evidence, including saved-draft versions and attempt snapshots already captured by the audit trail. That explicit reviewer grant never permits student impersonation or direct draft editing. Their assignment changes and review feedback are pending change requests until a human School/Admin approves the exact content. Pending material does not reach students. Rejection preserves the proposal and decision evidence. Approval must not silently change student work, relax assistance limits or authorize an unrestricted model response.
+
+Pending changes pin the target record and complete author-placement snapshot. Publication checks the active placement, its unchanged authority context, current class assignment and unchanged target. Editing the assignment/resource/class or repointing the placement invalidates the old proposal with a conflict; request and review a new proposal. Approval never silently overwrites a later human edit.
+
+No model provider, autonomous runner or paid inference is started by this permission support. Production agent use remains off until the operator supplies a scoped workload credential, Core approvals/environment/resource registrations and compatible permission tags. The existing owner-only admission policy must not be loosened implicitly.
+
+## Evidence and compatibility
+
+New agent events attribute the real principal kind, account, binding, consuming service, environment, task and placement, plus school/class and operation where applicable. Human approval records identify both the proposing agent and approving human. Tokens, workload keys and provider credentials are never audit material.
+
+Schema version 2 adds record-to-school scope and a deterministic Default school for existing records. Legacy roles and instructor enrollments establish the corresponding local memberships during migration. Existing record IDs/data, human identity aliases, course ownership, immutable submissions, tutor-session IDs and original audit events/hashes are preserved. Local membership remains subject to current Core permissions. Migration is explicit, transactional and repeatable; callbacks and readiness do not create schema. Preserve the identity-aware image and [issuer migration](core-issuer-migration.md) procedure.
+
+The tenant audit chain remains authoritative. School/session views and exports are partial scoped evidence; they cannot prove continuity of the complete tenant chain or expose other schools' events. Only Admin can export and verify the full tenant chain. Human School administrators review their own school through their school capability; human and agent Teachers additionally need current `academy-audit` and exact assigned-class authority. Use independently retained, authenticated checkpoints for tamper/truncation acceptance, as described in [audit controls](audit.md).

@@ -6,8 +6,9 @@ import pytest
 from sqlalchemy import delete, event, select
 
 from academy.core_identity import IdentityConflict, legacy_user_id, resolve_user
-from academy.db import Audit, AuditHead, CoreIdentityBinding, Flow, Login, Record, audit, audit_dict, canonical
+from academy.db import Audit, AuditHead, CoreIdentityBinding, Flow, Login, Record, RecordScope, audit, audit_dict, canonical
 from academy.migrate_core_issuer import MigrationBlocked, backfill
+from academy.permissions import default_school_id, membership_id
 from test_core_auth import core, sign_in, begin
 
 OLD = "https://previous-core.example.test"
@@ -35,6 +36,10 @@ def seed(app, issuer=OLD):
         db.add(Record(id="owned-course", tenant_id=tenant, kind="course", data=canonical({"title": "Existing course"})))
         db.add(Record(id="owned-enrollment", tenant_id=tenant, kind="enrollment", parent_id="owned-course", owner_id=owner, data=canonical({"role": "student"})))
         db.add(Record(id="retained-submission", tenant_id=tenant, kind="submission", parent_id="assignment", owner_id=owner, data=canonical({"content": "Student-authored immutable work"})))
+        school_id = default_school_id(tenant)
+        db.add(Record(id=membership_id(school_id, owner), tenant_id=tenant, kind="school_membership", parent_id=school_id, owner_id=owner, data=canonical({"role": "student", "active": True})))
+        for record_id in ("owned-course", "owned-enrollment", "retained-submission"):
+            db.add(RecordScope(record_id=record_id, tenant_id=tenant, school_id=school_id))
         db.add(Login(id="old-login", user_id=owner, tenant_id=tenant, csrf="synthetic-csrf", token_cipher="synthetic-encrypted", expires=int(time.time()) + 300))
         db.add(Flow(state_hash="old-flow", cipher="synthetic", expires=int(time.time()) + 300))
         audit(db, tenant, owner, "synthetic.coursework", {"submission_id": "retained-submission"}, "stable-tutor-session")
@@ -44,7 +49,7 @@ def seed(app, issuer=OLD):
 def state(app):
     with app.state.database.factory() as db:
         return {model.__tablename__: [dict(row) for row in db.execute(select(model.__table__)).mappings()]
-                for model in (Record, Login, Flow, Audit, AuditHead, CoreIdentityBinding)}
+                for model in (Record, RecordScope, Login, Flow, Audit, AuditHead, CoreIdentityBinding)}
 
 
 def test_fresh_login_records_exact_authority_binding(core):

@@ -51,15 +51,28 @@ class Auth:
             raise HTTPException(401, "Session unavailable; sign in again") from None
 
     def core(self, path, data=None, confidential=False):
+        kwargs = {"data": data} if data is not None else {}
+        if confidential:
+            from urllib.parse import quote
+            kwargs["auth"] = (quote(self.settings.core_resource_client_id, safe=""), quote(self.settings.core_resource_client_secret, safe=""))
+        return self._core_document("POST" if data is not None else "GET", path, kwargs)
+
+    def core_agent(self, path, data, purpose=""):
+        # A receiving service's workload credential is separate from browser
+        # OAuth and resource-client Basic authentication. Never forward cookies.
+        if not self.settings.allow_agent_teachers or not self.settings.core_workload_token:
+            raise HTTPException(403, "Agent teacher access is not enabled")
+        headers = {"Authorization": "Bearer " + self.settings.core_workload_token}
+        if purpose:
+            headers["X-Core-Purpose"] = purpose
+        return self._core_document("POST", path, {"json": data, "headers": headers})
+
+    def _core_document(self, method, path, kwargs):
         try:
-            kwargs = {"data": data} if data is not None else {}
-            if confidential:
-                from urllib.parse import quote
-                kwargs["auth"] = (quote(self.settings.core_resource_client_id, safe=""), quote(self.settings.core_resource_client_secret, safe=""))
             # Identity transport never accepts, retains or sends upstream cookies.
             self.http.cookies.clear()
             started = time.monotonic()
-            with self.http.stream("POST" if data is not None else "GET", self.settings.core_issuer + path, **kwargs) as response:
+            with self.http.stream(method, self.settings.core_issuer + path, **kwargs) as response:
                 body = bytearray()
                 for chunk in response.iter_bytes():
                     body.extend(chunk)
@@ -126,6 +139,15 @@ class Auth:
             raise HTTPException(401, "Invalid Core identity token") from None
 
     def actor(self, request: Request):
+        # An invalid machine credential must never fall back to a human cookie.
+        if request.headers.get("authorization") is not None or request.headers.get("x-academy-agent-placement") is not None:
+            if request.cookies.get(COOKIE) or request.cookies.get(FLOW_COOKIE):
+                raise HTTPException(401, "Use one authenticated identity per request")
+            from .agent_auth import actor
+            return actor(self, request)
+        return self.human_actor(request)
+
+    def human_actor(self, request: Request):
         sid = request.cookies.get(COOKIE, "")
         with self.database.factory() as db:
             login = db.get(Login, sid)
@@ -158,10 +180,30 @@ class Auth:
             # Core admin is live authority. Teaching assignments are separately
             # administered app enrollment, never inferred from a role claim.
             if self.settings.auth_mode == "core":
-                role = role or ("instructor" if "academy-teach" in permissions else "student")
+                role = role or ("school" if "academy-school" in permissions else "teacher" if "academy-teach" in permissions else "student")
             else:
-                role = data["role"]
-            return {"id": user.id, "name": data["name"], "role": role, "tenant_id": current.tenant_id, "csrf_token": current.csrf, "login_id": sid, "permissions": permissions, "can_audit": role == "admin" or (self.settings.auth_mode == "local" and role == "instructor") or "academy-audit" in permissions}
+                role = "teacher" if data["role"] == "instructor" else data["role"]
+            return {"id": user.id, "name": data["name"], "role": role, "principal_kind": "human", "tenant_id": current.tenant_id, "csrf_token": current.csrf, "login_id": sid, "permissions": permissions, "can_audit": role in {"admin", "school"} or (self.settings.auth_mode == "local" and role == "teacher") or "academy-audit" in permissions}
+
+    def authorize_resource(self, request, identity, permission, resource_type, resource_id):
+        """A school's local resource assignment never substitutes for Core ACLs."""
+        if identity.get("principal_kind") == "agent":
+            from .agent_auth import authorize_resource
+            return authorize_resource(self, request, identity, permission, resource_type, resource_id)
+        if self.settings.auth_mode != "core":
+            raise HTTPException(403, "Core resources are unavailable in the local demonstration")
+        with self.database.factory() as db:
+            login = db.get(Login, identity.get("login_id", ""))
+            if not login or login.user_id != identity["id"] or login.tenant_id != self.settings.tenant_id or login.expires <= time.time():
+                raise HTTPException(401, "Sign in required")
+            tokens = self.unseal(login.token_cipher)
+        claims = self.introspect(tokens["access_token"], tokens["subject"])
+        if permission not in claims["permissions"]:
+            raise HTTPException(403, "Core resource permission required")
+        value = self.core("/api/v1/authorize/", {"token": tokens["access_token"], "permission": permission, "organization_id": self.settings.core_organization_id, "resource_type": resource_type, "resource_id": resource_id}, confidential=True)
+        if value.get("allowed") is not True or value.get("subject") != tokens["subject"]:
+            raise HTTPException(403, "Core resource access denied")
+        return value
 
     def register(self, app):
         @app.get("/api/auth/config")
@@ -198,6 +240,8 @@ class Auth:
         @app.post("/api/auth/logout")
         def logout(request: Request):
             # Local logout remains available during Core outage/revocation.
+            if request.headers.get("authorization") is not None or request.headers.get("x-academy-agent-placement") is not None:
+                raise HTTPException(401, "Agent credentials do not create browser sessions")
             with self.database.factory() as db:
                 login = db.get(Login, request.cookies.get(COOKIE, ""))
                 if not login:
@@ -270,6 +314,11 @@ class Auth:
             raise HTTPException(403, "Application Origin required")
 
     def csrf(self, request, actor):
+        if actor.get("principal_kind") == "agent":
+            # Only an already-authenticated machine actor can take this path.
+            if not getattr(request.state, "academy_agent_token", None) or request.cookies.get(COOKIE):
+                raise HTTPException(401, "Agent authorization required")
+            return
         self.check_origin(request)
         if not hmac.compare_digest(request.headers.get("x-csrf-token", ""), actor["csrf_token"]):
             raise HTTPException(403, "CSRF token required")

@@ -6,7 +6,7 @@
     "output": "dist"
   },
   "backend": {
-    "image": "015454941623.dkr.ecr.us-east-1.amazonaws.com/nce-family-academy-api@sha256:2d816f0511192401c719895c44ae4ee166eba397748f475af1f9085cc31e772d"
+    "image": "015454941623.dkr.ecr.us-east-1.amazonaws.com/nce-family-academy-api@sha256:f08efa827ebce798a9a3e62702b8124ce9fd81f30bf9414574676dd8c0f912bc"
   },
   "identity": {
     "callback_path": "/api/auth/core/callback",
@@ -14,6 +14,10 @@
       {
         "codename": "academy-use",
         "name": "Use NCAcademy"
+      },
+      {
+        "codename": "academy-school",
+        "name": "Manage assigned schools and their resources"
       },
       {
         "codename": "academy-teach",

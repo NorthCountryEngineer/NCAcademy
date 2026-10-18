@@ -17,10 +17,26 @@ Core baseline: `b2c4172fbe500a7d9744a8d6246b8a5bdf3026c9`. The original `amplify
 | API admission | Port 8000, `/api/ready` |
 | Runtime | UID/GID 10001, read-only root, task scratch at `/tmp` and `/app/.local` |
 | Identity | `/api/auth/core/callback`, public PKCE and paired confidential introspection client |
-| Permissions | `academy-use`, `academy-teach`, `academy-audit`; Core adds reserved `admin` |
+| Permissions | `academy-use`, `academy-school`, `academy-teach`, `academy-audit`; Core adds reserved human `admin` |
 | Source policy | `NorthCountryEngineer/NCAcademy`, `.github/workflows/ci.yml`, `NCAcademy required checks` |
 
 The owner-approved source repository is `NorthCountryEngineer/NCAcademy`. A different target requires updating the explicit Core CI policy before release.
+
+## Supplemental school and agent permissions
+
+The frozen onboarding patch above describes the original recipe adoption. The supplemental [school-agent-permissions.patch](school-agent-permissions.patch) targets reviewed Core `79e9d5284c087fbcce67eb34b3efcfe46f6fbfa6`, after that adoption. [Its separate baseline](school-agent-patch-baseline.json) records the exact patch hash, changed files and offline validation. Do not apply the original onboarding patch twice or silently rebase either patch onto unrelated active Core changes.
+
+The supplement adds `academy-school` to Academy's simulated registration vocabulary and extends the operator-owned Academy configuration with `allow_agent_teachers`, default false. The trusted runner maps it to a constrained `AllowAgentTeachers` parameter. Only when enabled does ECS inject `CORE_WORKLOAD_TOKEN` from the existing approved runtime secret's `core_workload_token` JSON key into the API. Migration receives `ALLOW_AGENT_TEACHERS=false` and no workload token. The existing Basic introspection SSM parameter, API/migration execution-role resources and absence of an application AWS task role remain unchanged. Model inference is an independent switch.
+
+Core retains the installed identity-contract guard: a later source manifest cannot silently add permissions to an existing installation. Before adopting this revision, review an explicit package/installation upgrade to the exact `identity` block from the reviewed `nce-deploy.json`, including permission names. Core's installation-upgrade path creates `academy-school` while retaining external installation/service/deployment/client IDs. Preserve current role/tag grants; a new permission definition must not automatically assign School access to members. The supplemental patch does not bypass this guard or mutate a live installation.
+
+Validate without changing a Core checkout:
+
+```sh
+python3 scripts/test_school_agent_patch.py --core "/absolute/path/to/reviewed-Core-79e9d528"
+```
+
+The script verifies both patch hashes, requires the exact supplemental baseline, checks/applies/reverse-checks only in a temporary export, then runs the existing offline Core/cloud/CI checks in an installed image with networking disabled. `--apply-only` checks patch integrity/application without tests. A different Core revision requires a reviewed rebase and new baseline; the script never changes the active checkout or calls AWS.
 
 ## Validate the patch without modifying Core
 
@@ -43,12 +59,15 @@ After reviewing and applying the patch through Core's own release process, enabl
     "runtime_secret_arn": "OWNER_APPROVED_RUNTIME_SECRET_ARN",
     "certificate_arn": "OWNER_APPROVED_REGIONAL_CERTIFICATE_ARN",
     "api_host": "api.academy.example.invalid",
-    "allow_live_models": false
+    "allow_live_models": false,
+    "allow_agent_teachers": false
   }
 }
 ```
 
-These examples are intentionally invalid placeholders. The real image repository, secret and certificate must belong to the approved platform account/region/prefix. `allow_live_models` is an optional boolean, false by default, controlled by Core's operator settings; application manifests cannot enable it. The runtime secret contains a stable random `session_secret` used for sessions and encrypted vault records. Core transfers its confidential client credential directly to the deployment's SSM parameter. ECS injects the secret values only into the backend boundary. No keys belong in `nce-deploy.json`, frontend variables, logs, CI or chat.
+These examples are intentionally invalid placeholders. The real image repository, secret and certificate must belong to the approved platform account/region/prefix. `allow_live_models` and `allow_agent_teachers` are independent optional booleans, false by default, controlled by Core's operator settings; application manifests cannot enable either. The runtime secret contains a stable random `session_secret` used for sessions and encrypted vault records. Its optional `core_workload_token` key is required before agent authentication can be enabled and must belong to the approved consuming installation/environment. Core transfers its separate confidential Basic client credential directly to the deployment's SSM parameter. ECS injects secret values only into the backend boundary. No keys belong in `nce-deploy.json`, frontend variables, logs, CI or chat.
+
+Before agent admission, the operator separately approves the Core account/binding, roles, consuming application/environment/task, registered resources and workload-compatible tags; the human School/Admin approves exact Academy placements/classes. The owner-only service tag is not loosened automatically. A local school resource assignment never substitutes for Core authorization. See [school permissions](../docs/permissions.md).
 
 The template reuses Core's existing scoped Fargate provisioning role and application permissions boundary. Separate API and migration execution roles pull only the approved API image, inject assigned secrets and write logs. Application code has no AWS task role. Private PostgreSQL connections use `verify-full` and the RDS trust bundle.
 
