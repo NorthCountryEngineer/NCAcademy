@@ -1,6 +1,7 @@
 import { request, schoolPath, send } from './api';
 import type { LessonCitation } from './lesson-api';
 import type { LessonVisual } from './LessonMedia';
+import type { PreferenceAnswers } from './learning-api';
 
 export type LessonPreferences = {pace:'gentle'|'standard';formats:('read'|'visual'|'listen')[]};
 export type CuratedImage = {name:string;data_url:string;sha256:string;width:number;height:number};
@@ -11,6 +12,9 @@ export type CuratedTurn = {id:string;session_id:string;activity:'curated_lesson'
 export type CuratedIdentity = {key:string;signature:string};
 export type CuratedRequest = {teacher_profile_id:string;message:string;images:CuratedImage[];image_use_confirmed:boolean;preferences:LessonPreferences};
 export const defaultLessonPreferences = ():LessonPreferences=>({pace:'standard',formats:['read','visual']});
+export function savedLessonPreferences(weights:Partial<PreferenceAnswers>):LessonPreferences{
+ return {pace:(weights.pace??50)<=35?'gentle':'standard',formats:['read',...((weights.diagrams??50)>=50?['visual' as const]:[]),...((weights.audio??50)>=65?['listen' as const]:[])]};
+}
 const retainedIdentities = new Map<string,CuratedIdentity>();
 export function curatedIdentity(previous:CuratedIdentity|null,courseId:string,input:CuratedRequest,makeId:()=>string=()=>crypto.randomUUID()):CuratedIdentity{
  const signature=JSON.stringify([courseId,input.teacher_profile_id,input.message,input.preferences.pace,[...input.preferences.formats].sort(),input.images.map(image=>[image.name,image.sha256]),input.image_use_confirmed]);

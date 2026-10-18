@@ -265,6 +265,7 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
 
     def profile_dict(db, row, school_id):
         from .standards import corpus_descriptor
+        from .school_curriculum import workflow_descriptor
         value = row.value
         approval_current = _approval_current(db, row, school_id)
         principal_id, eligible = _binding_state(db, row, school_id)
@@ -275,7 +276,8 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
                 continue
             current = corpus_descriptor(db, course, school_id)
             assigned.append({"id": course.id, "title": course.value["title"], "curriculum": course.value.get("curriculum"), "corpus": {**_corpus_reference(current), "ready_for_teaching": current.get("ready_for_teaching", False), "gaps": current.get("gaps", [])}, "has_teaching_authority": eligible and _teaches(db, course, principal_id)})
-        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and value.get("tutor_model") and approval_current and assigned), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
+        workflow = next((item for item in reversed(_rows(db, row.tenant_id, "knowledge_workflow_run", school_id)) if item.value.get("teacher_profile_id") == row.id), None)
+        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "latest_onboarding_run": workflow_descriptor(db, workflow, db.get(Record, school_id)) if workflow else None, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and value.get("tutor_model") and approval_current and assigned), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
 
     @app.get("/api/schools/{school_id}/teachers")
     def teachers(school_id: str, identity=Depends(actor)):
@@ -292,6 +294,8 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
             validate_model(db, identity, school_id, value)
             row = add(db, identity, school_id, "teacher_profile", school_id, value)
             audit_profile(db, identity, "teacher_profile.created", school_id, row)
+            from .school_curriculum import record_teacher_workflow
+            record_teacher_workflow(db, identity, school_id, row, [], audit_actor, reason="profile_created")
             return profile_dict(db, row, school_id)
 
     @app.get("/api/schools/{school_id}/teachers/{profile_id}")
@@ -340,6 +344,7 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
     @app.put("/api/schools/{school_id}/teachers/{profile_id}/courses")
     def assign_courses(school_id: str, profile_id: str, body: TeacherCourses, identity=Depends(actor)):
         from .standards import build_course_corpus
+        from .school_curriculum import record_teacher_workflow
         with database.write() as db:
             manage(db, identity, school_id)
             row = find(db, identity, school_id, profile_id)
@@ -353,6 +358,7 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
             for link in links.values():
                 if link.value["course_id"] not in body.course_ids:
                     link.set({**link.value, "active": False})
+            results = []
             for course in courses:
                 corpus = build_course_corpus(db, identity, course, school_id, audit_actor)
                 value = {"course_id": course.id, "active": True, "curriculum": course.value.get("curriculum"), "corpus": _corpus_reference(corpus)}
@@ -360,9 +366,11 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
                     links[course.id].set(value)
                 else:
                     add(db, identity, school_id, "teacher_profile_course", row.id, value)
+                results.append({"course_id": course.id, "title": course.value["title"], "curriculum": course.value.get("curriculum"), "corpus": {**_corpus_reference(corpus), "ready_for_teaching": corpus.get("ready_for_teaching", False), "gaps": corpus.get("gaps", [])}})
             row.set(invalidate(row.value))
             audit_profile(db, identity, "teacher_profile.courses_assigned", school_id, row, course_ids=body.course_ids, authority_granted=False)
-            return profile_dict(db, row, school_id)
+            workflow = record_teacher_workflow(db, identity, school_id, row, results, audit_actor)
+            return {**profile_dict(db, row, school_id), "onboarding_run": workflow}
 
     @app.post("/api/schools/{school_id}/teachers/{profile_id}/approve")
     def approve_teacher(school_id: str, profile_id: str, body: TeacherVersion, identity=Depends(actor)):

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "read-only-contract-receipt",
+  "core_repository": "NorthCountryEngineer/NCE_Core",
+  "core_commit": "e6eb31f3caed491445e2582e34b8da43b3556d97",
+  "also_verified_chat_commit": "b2c4172fbe500a7d9744a8d6246b8a5bdf3026c9",
+  "production_contract_verified": false,
+  "core_patch_required_for_local_group_registry": false,
+  "active_core_checkout_modified": false,
+  "baseline_file_sha256": {
+    "core_chat/api.py": "4b3997d3dd460a54013bf142c36385c726d1cf9a368c1f6821857388b5d77868",
+    "core_chat/services.py": "b1e696e9f2a166fe5ea93787b1316e7c03caed939fc78bb02f3fee210b449640",
+    "core_chat/models.py": "d69480b938a52cf2b57d198c4d370b6b9b8c6b197ff282da6ad7ef0f9e1844d1",
+    "core_chat/urls.py": "7724f1aaf2015447b1038814ac2ad6bd995f332dc94dfa646cae6fc8070820d0",
+    "docs/chat.md": "b7b90a52c1ffc90c0aa737462b2eb322200fe313bc46b820760f88a0b16d503f",
+    "core_client.py": "dddee989b63e049c4180ca8f268ddcc8828fd54aebe9ce7d30e0259999579b15",
+    "platform_services/api.py": "52ba4b758931bf8c47b9b8236db740c857cd953a087a4bc3fe2156013f8cd01f",
+    "platform_services/services.py": "ad5b7f28422de3e62ecd3aeb2ff2c537be3a3417e9e4d363eb13785a3e3926e8",
+    "platform_services/agent_identity.py": "b12b9943f0e946f3d95aee2074fda91d2d21084c790408695433a51ab1ec3951",
+    "platform_services/cloud_deployments.py": "ce9775c3f61f23e806957962bbdcd11bbe2b80be7512394a6babd412f53f866b",
+    "platform_services/cloud_contract.py": "84056d61a86f6f0ff860eb17b3ef1fefbc5829e8e2712493aa3b97db77daf58e",
+    "deployment/aws-apps/runner.py": "1a07d5314f0cec35c76d9acfc5067474aded41bc291120d59ddcef8064cab432",
+    "deployment/aws-apps/academy-fargate.template.json": "a495f6a8572db3cfa87a2d38c720e6adcec04f5a3867a0f58ca0b89fe9df4a69"
+  },
+  "integration_mode": "application-only upstream participant; no human or agent-token delegation; local current school/class ACL and immutable actor receipts",
+  "required_capabilities": ["chat.read", "chat.send", "chat.manage"],
+  "optional_ai_publication_capability": "chat.ai",
+  "operator_work_remaining": [
+    "Explicit marketplace package dependency/capability declaration and approved existing-installation upgrade; preserve identity and role grants",
+    "Approved exact installation/environment workload and permission-tag policy",
+    "Independent default-off API chat flag and trusted recipe workload injection; existing teacher-agent switch is not a standalone chat contract",
+    "Authorized live acceptance and retained audit/restore verification"
+  ],
+  "known_contract_limits": [
+    "Creation has no idempotency key; uncertain creates require explicit recovery and must not be replayed",
+    "Joined conversation list is capped at 200 with no pagination",
+    "Discovery does not expose installation_id; send actor fields prove configured installation separately",
+    "No attachment, message edit/delete, retention, legal-hold or public group-discovery API is supplied",
+    "Core attribution is the calling application, with actual initiating human/agent preserved in NCAcademy receipts"
+  ],
+  "validation": {
+    "source": "Hashes computed directly from git show of the pinned commit, without checkout mutation",
+    "chat_contract_comparison": "No changes to core_chat, core_client.py, platform_services/agent_identity.py or platform_services/services.py between the two reviewed commits",
+    "live_core_calls": false,
+    "cloud_changes": false
+  }
+}

@@ -14,14 +14,28 @@ import jwt
 from cryptography.fernet import Fernet, InvalidToken
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, StrictStr
 from sqlalchemy import select
 
 from .db import Flow, Login, Record, audit, canonical
 from .core_identity import IdentityConflict, resolve_user, subject_owner
+from .local_identity import LocalIdentity
 
 COOKIE = "academy_session"
 FLOW_COOKIE = "academy_core_flow"
 CALLBACK = "/api/auth/core/callback"
+
+
+class PasswordLogin(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    username: StrictStr = Field(min_length=1, max_length=128)
+    password: SecretStr = Field(min_length=1, max_length=128)
+
+
+class PasswordChange(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+    new_password: SecretStr = Field(min_length=15, max_length=128)
 
 
 class NoIdentityCookies(DefaultCookiePolicy):
@@ -36,6 +50,7 @@ class Auth:
     def __init__(self, settings, database):
         self.settings, self.database = settings, database
         self.cipher = Fernet(base64.urlsafe_b64encode(hashlib.sha256((settings.session_secret + ":academy-vault-v1").encode()).digest()))
+        self.family = LocalIdentity(settings, database)
         self.http = httpx.Client(cookies=CookieJar(policy=NoIdentityCookies()), follow_redirects=False, trust_env=False, timeout=httpx.Timeout(10, connect=3, pool=1), limits=httpx.Limits(max_connections=16, max_keepalive_connections=8))
 
     def seal(self, value):
@@ -154,9 +169,13 @@ class Auth:
             if not login or login.expires <= time.time():
                 raise HTTPException(401, "Sign in required")
             snapshot = (login.user_id, login.tenant_id, login.token_cipher, login.csrf)
+        tokens = self.unseal(snapshot[2]) if snapshot[2] else {}
+        if tokens.get("auth_provider") == "academy":
+            return self.family_actor(request, sid, snapshot, tokens)
+        if "auth_provider" in tokens:
+            raise HTTPException(401, "Session unavailable; sign in again")
         role, permissions = None, []
         if self.settings.auth_mode == "core":
-            tokens = self.unseal(snapshot[2])
             if tokens.get("expires", 0) <= time.time():
                 raise HTTPException(401, "Session expired; sign in with Core again")
             claims = self.introspect(tokens["access_token"], tokens["subject"])
@@ -175,6 +194,8 @@ class Auth:
                 except IdentityConflict:
                     raise HTTPException(401, "Sign in with Core again.") from None
             data = user.value
+            if data.get("auth_provider") == "academy":
+                raise HTTPException(401, "Password sign-in required")
             if data.get("disabled"):
                 raise HTTPException(403, "Membership disabled")
             # Core admin is live authority. Teaching assignments are separately
@@ -183,10 +204,34 @@ class Auth:
                 role = role or ("school" if "academy-school" in permissions else "teacher" if "academy-teach" in permissions else "student")
             else:
                 role = "teacher" if data["role"] == "instructor" else data["role"]
-            return {"id": user.id, "name": data["name"], "role": role, "principal_kind": "human", "tenant_id": current.tenant_id, "csrf_token": current.csrf, "login_id": sid, "permissions": permissions, "can_audit": role in {"admin", "school"} or (self.settings.auth_mode == "local" and role == "teacher") or "academy-audit" in permissions}
+            return {"id": user.id, "name": data["name"], "role": role, "auth_provider": "core" if self.settings.auth_mode == "core" else "demo", "must_change_password": False, "principal_kind": "human", "tenant_id": current.tenant_id, "csrf_token": current.csrf, "login_id": sid, "permissions": permissions, "can_audit": role in {"admin", "school"} or (self.settings.auth_mode == "local" and role == "teacher") or "academy-audit" in permissions}
+
+    def family_actor(self, request, sid, snapshot, tokens):
+        if set(tokens) != {"auth_provider", "credential_version"} or type(tokens.get("credential_version")) is not int:
+            raise HTTPException(401, "Session unavailable; sign in again")
+        with self.database.factory() as db:
+            current = db.get(Login, sid)
+            user = db.get(Record, snapshot[0])
+            if not current or (current.user_id, current.tenant_id, current.token_cipher, current.csrf) != snapshot or current.expires <= time.time() or current.tenant_id != self.settings.tenant_id or not user or user.tenant_id != current.tenant_id or not self.family.validate_account(db, user):
+                raise HTTPException(401, "Session unavailable; sign in again")
+            value = user.value
+            if value["credential_version"] != tokens["credential_version"]:
+                raise HTTPException(401, "Password changed; sign in again")
+            account = db.get(Record, "local-account:" + user.id)
+            if not account or account.tenant_id != user.tenant_id or account.kind != "local_account" or account.owner_id != user.id:
+                raise HTTPException(401, "Session unavailable; sign in again")
+            profile = self.family.decrypt(account.value.get("profile_cipher"), user.tenant_id, user.id, "profile")
+            if not isinstance(profile, dict) or not isinstance(profile.get("name"), str):
+                raise HTTPException(503, "Platform account data is unavailable")
+            must_change = value.get("must_change_password") is True
+            if must_change and (request.method, request.url.path) not in {("GET", "/api/auth/me"), ("POST", "/api/auth/logout"), ("PUT", "/api/me/password")}:
+                raise HTTPException(403, "Change your temporary password before continuing")
+            return {"id": user.id, "name": profile.get("preferred_name") or profile["name"], "role": value["role"], "auth_provider": "academy", "must_change_password": must_change, "principal_kind": "human", "tenant_id": current.tenant_id, "csrf_token": current.csrf, "login_id": sid, "permissions": [], "can_audit": False}
 
     def authorize_resource(self, request, identity, permission, resource_type, resource_id):
         """A school's local resource assignment never substitutes for Core ACLs."""
+        if identity.get("auth_provider") == "academy":
+            raise HTTPException(403, "Platform family accounts cannot access Core resources")
         if identity.get("principal_kind") == "agent":
             from .agent_auth import authorize_resource
             return authorize_resource(self, request, identity, permission, resource_type, resource_id)
@@ -211,8 +256,71 @@ class Auth:
             users = []
             if self.settings.auth_mode == "local":
                 with self.database.factory() as db:
-                    users = [{"id": r.id, "name": r.value["name"], "role": r.value["role"]} for r in db.scalars(select(Record).where(Record.tenant_id == self.settings.tenant_id, Record.kind == "user"))]
-            return {"mode": self.settings.auth_mode, "demo_users": users, "login_url": "/api/auth/core"}
+                    users = [{"id": r.id, "name": r.value["name"], "role": r.value["role"]} for r in db.scalars(select(Record).where(Record.tenant_id == self.settings.tenant_id, Record.kind == "user")) if r.value.get("auth_provider") != "academy"]
+            return {"mode": self.settings.auth_mode, "demo_users": users, "login_url": "/api/auth/core", "password_login": self.settings.auth_mode == "local" or bool(self.settings.pii_encryption_key)}
+
+        @app.post("/api/auth/password")
+        def password_login(request: Request, body: PasswordLogin):
+            self.check_origin(request)
+            if request.headers.get("authorization") is not None or request.headers.get("x-academy-agent-placement") is not None:
+                raise HTTPException(401, "Use one authenticated identity per request")
+            snapshot = self.family.authenticate(body.username, body.password.get_secret_value(), request.client.host if request.client else "unavailable")
+            sid = secrets.token_urlsafe(48)
+            with self.database.write() as db:
+                user = db.get(Record, snapshot[0])
+                account = db.get(Record, "local-account:" + snapshot[0])
+                if not user or user.tenant_id != self.settings.tenant_id or user.data != snapshot[1] or not account or account.data != snapshot[2] or not self.family.validate_account(db, user):
+                    raise HTTPException(401, "Invalid username or password")
+                old = db.get(Login, request.cookies.get(COOKIE, ""))
+                if old:
+                    db.delete(old)
+                db.add(Login(id=sid, user_id=user.id, tenant_id=user.tenant_id, csrf=secrets.token_urlsafe(32), token_cipher=self.seal({"auth_provider": "academy", "credential_version": user.value["credential_version"]}), expires=int(time.time()) + 28800))
+                audit(db, user.tenant_id, user.id, "auth.password_login", {})
+            response = RedirectResponse("/api/auth/me", status_code=303)
+            response.set_cookie(COOKIE, sid, httponly=True, secure=self.settings.auth_mode == "core", samesite="lax", max_age=28800)
+            return response
+
+        @app.put("/api/me/password")
+        def change_password(request: Request, body: PasswordChange):
+            identity = self.actor(request)
+            self.csrf(request, identity)
+            if identity.get("auth_provider") != "academy":
+                raise HTTPException(403, "Platform password account required")
+            current_password, new_password = body.current_password.get_secret_value(), body.new_password.get_secret_value()
+            self.family.validate_password(new_password)
+            self.family.reserve_login("password-change:" + identity["id"], request.client.host if request.client else "unavailable")
+            with self.database.factory() as db:
+                user = db.get(Record, identity["id"])
+                account = db.get(Record, "local-account:" + identity["id"])
+                if not user or not account:
+                    raise HTTPException(401, "Session unavailable; sign in again")
+                snapshot = (user.data, account.data)
+                verifier = self.family.decrypt(account.value.get("password_cipher"), identity["tenant_id"], identity["id"], "password")
+            if not self.family.password_verify(current_password, verifier):
+                raise HTTPException(403, "Current password is incorrect")
+            if hmac.compare_digest(current_password.encode(), new_password.encode()):
+                raise HTTPException(422, "Choose a new password")
+            replacement = self.family.encrypt(self.family.password_hash(new_password), identity["tenant_id"], identity["id"], "password")
+            sid = secrets.token_urlsafe(48)
+            with self.database.write() as db:
+                user = db.get(Record, identity["id"])
+                account = db.get(Record, "local-account:" + identity["id"])
+                current = db.get(Login, identity["login_id"])
+                if not current or current.user_id != identity["id"] or current.tenant_id != identity["tenant_id"] or current.csrf != identity["csrf_token"] or current.expires <= time.time() or not user or not account or (user.data, account.data) != snapshot or not self.family.validate_account(db, user):
+                    raise HTTPException(401, "Session changed; sign in again")
+                value = user.value
+                value.update(credential_version=value["credential_version"] + 1, must_change_password=False)
+                user.set(value)
+                account_value = account.value
+                account_value.update(password_cipher=replacement, version=account_value.get("version", 0) + 1)
+                account.set(account_value)
+                for login in db.scalars(select(Login).where(Login.tenant_id == identity["tenant_id"], Login.user_id == identity["id"])):
+                    db.delete(login)
+                db.add(Login(id=sid, user_id=user.id, tenant_id=user.tenant_id, csrf=secrets.token_urlsafe(32), token_cipher=self.seal({"auth_provider": "academy", "credential_version": value["credential_version"]}), expires=int(time.time()) + 28800))
+                audit(db, user.tenant_id, user.id, "auth.password_changed", {"credential_version": value["credential_version"]})
+            response = RedirectResponse("/api/auth/me", status_code=303)
+            response.set_cookie(COOKIE, sid, httponly=True, secure=self.settings.auth_mode == "core", samesite="lax", max_age=28800)
+            return response
 
         @app.post("/api/auth/local")
         def local(request: Request, body: dict):
@@ -221,7 +329,7 @@ class Auth:
             self.check_origin(request)
             with self.database.write() as db:
                 user = db.get(Record, body.get("user_id", ""))
-                if not user or user.kind != "user" or user.tenant_id != self.settings.tenant_id:
+                if not user or user.kind != "user" or user.tenant_id != self.settings.tenant_id or user.value.get("auth_provider") == "academy":
                     raise HTTPException(403, "Unknown local demo user")
                 old = db.get(Login, request.cookies.get(COOKIE, ""))
                 if old:
@@ -235,7 +343,16 @@ class Auth:
 
         @app.get("/api/auth/me")
         def me(request: Request):
-            return {k: v for k, v in self.actor(request).items() if k != "login_id"}
+            identity = self.actor(request)
+            result = {k: v for k, v in identity.items() if k != "login_id"}
+            from .learning_preferences import preference_status, student_principal
+            with self.database.factory() as db:
+                try:
+                    student_principal(db, identity, self.settings)
+                    result["learning_preferences"] = preference_status(db, identity)
+                except HTTPException:
+                    pass
+            return result
 
         @app.post("/api/auth/logout")
         def logout(request: Request):
@@ -251,11 +368,13 @@ class Auth:
             tokens = None
             with self.database.write() as db:
                 login = db.get(Login, actor["login_id"])
+                if not login or login.user_id != actor["id"] or login.tenant_id != actor["tenant_id"] or login.csrf != actor["csrf_token"]:
+                    raise HTTPException(401, "Session unavailable; sign in again")
                 if login.token_cipher:
                     tokens = self.unseal(login.token_cipher)
                 db.delete(login)
                 audit(db, actor["tenant_id"], actor["id"], "auth.logout", {})
-            if tokens:
+            if tokens and tokens.get("auth_provider") != "academy":
                 try:
                     self.core("/oauth/revoke/", {"token": tokens["refresh_token"], "client_id": self.settings.core_browser_client_id})
                 except HTTPException:

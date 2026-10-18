@@ -1,6 +1,6 @@
 # Architecture
 
-NCAcademy is a separate application with its own database and credentials. NCE Core provides production identity, authorization and deployment control. The same-origin React frontend calls the FastAPI service; PostgreSQL stores curriculum, work, sessions, settings and audit records. SQLite is confined to local development/testing.
+NCAcademy is a separate application with its own database and credentials. NCE Core provides staff identity, staff authorization and deployment control. Platform-local students and parents use separately administered username/password identities with no upstream provisioning. The same-origin React frontend calls the FastAPI service; PostgreSQL stores curriculum, work, sessions, settings and audit records. SQLite is confined to local development/testing.
 
 ```mermaid
 flowchart LR
@@ -18,11 +18,14 @@ flowchart LR
     Provider --> Gate[Validate approved ID only]
     Gate --> Audit[Commit audit before response]
     Audit --> Browser
-    DB -. operator export .-> Archive[Independent retained S3 audit archive]
+    DB -. read-only extraction .-> Worker[Separate archive worker]
+    Worker --> Archive[Encrypted signed S3-compatible archive]
     Operator[Separate operator / KMS signer] --> Archive
 ```
 
 ## School, class and ownership boundaries
+
+The [local family account boundary](family-accounts.md) admits only Student/Parent roles, independent of Core availability. Current local status, credential/session version and school/class enrollment are checked on requests; a local account cannot acquire staff authority. Parent eligibility requires an enrolled local child and only exposes aggregate current progress. Schema 10 adds immutable encrypted lifecycle evidence; it preserves historical records and chains. A separate AES-256-GCM PII key protects new local-family profiles, credentials, educational payloads and related audit payloads. Hashes cover ciphertext; authorized replay supplies a separate decrypted view. Core identity resolution and issuer backfill explicitly exclude local family identities. No Google account linking, Core Chat or Core resource authorization is admitted for them.
 
 Core organization is the deployment tenant boundary. Schools are separate application scopes inside that tenant, with their own memberships, resources and classes. Admin accesses all application schools. A School administrator manages only assigned schools; this role does not confer Core organization administration. Teachers use permitted school resources and maintain classes to which they have teaching authority. Students can read only enrolled coursework and their own work/session records. Being an administrator does not make a student-owned submission editable. Submission snapshots preserve the actual work submitted; later draft edits cannot rewrite history. See the complete [permissions contract](permissions.md).
 
@@ -34,7 +37,21 @@ Agent teachers are distinct nonhuman principals. They present short-lived Core a
 
 Before creating a completely new local user, every existing tenant user must already have a binding under the configured issuer. A configuration-only authority change therefore fails closed until the operator backfill. An exact same-issuer legacy owner can still be adopted, and an empty tenant can admit its first valid Core user. During a legacy upgrade, bind existing owners before admitting additional users.
 
+## Google Classroom companion
+
+The [Classroom workspace](google-classroom.md) pairs transient read-only Google assignment data with the existing private Homework Help. Native Google editing/submission opens through an admitted Classroom link. NCE Core remains the app identity; a consenting human Student connects a separate Google subject to their own school-scoped encrypted account and local-course mapping. Neither a shared class nor a School/Admin role exposes another student's Google data.
+
+Server OAuth uses exact login-bound one-use state, PKCE and a fixed callback. Every external operation reserves safe local evidence before I/O and revalidates current local authority and connection/link/configuration revisions before release. Refresh and remote-revoke uncertainty cannot trigger automatic retries. Schema 9 protects only safe events/receipts; Google text, account identifiers and tokens remain outside immutable audit/session evidence. The help handoff supplies the local course, leaving the student to author the question. Own connection cleanup remains available after enrollment loss. The [Google contract](google-classroom-contract.md) records supported integration/embedding and activation requirements.
+
+## Group conversations
+
+The [Groups integration](group-chat.md) uses NCE Core Chat for message storage and an application-owned registry for school/class discovery, joins, invitations and required class membership. The installation is the sole upstream participant; local enrollment revocation therefore gates every subsequent browser/agent read and send without an upstream removal race. A managed persona is not a chat principal. Actual Core-bound agents retain their own current class authority and propose shared posts for human School/Admin approval.
+
+Core application/AI sender records bind to immutable local commands and exact delivery receipts carrying the actual actor. Only matching messages are projected; upstream text and reply previews are never identity authority. Markers commit before I/O and receipt/audit before output. Core message IDs support explicit same-command retries; non-idempotent uncertain room creation requires operator reconciliation. Schema 8 protects chat evidence and seals terminal attempts. Core transport, workload provisioning and package grants are documented separately in the [contract](core-chat-contract.md).
+
 ## Assistance boundary
+
+School setup owns a versioned curriculum intent independent of each class's effective teaching configuration. A deterministic reviewed-source planning agent snapshots installed jurisdiction packages and drafts local grade/subject/year courses. A human explicitly materializes selected classes through an immutable idempotent publication receipt; each class retains its exact school-curriculum origin. Logo/custom metadata, state/custom/no-curriculum selection, the teaching team and saved run evidence share a resumable administrative workspace. Custom ingestion is an extension point, not an active parser. Teacher assignment records the actual per-class corpus preparation in a separate immutable knowledge-workflow run. Schema 7 protects these receipts; none grants Core capabilities or teaching approval. See [school onboarding](school-onboarding.md).
 
 Teacher configuration is separate from identity. Human School/Admin manages shared human/AI profile metadata and explicit immutable approval. Managed AI profiles grant no Core authority; an approved profile/course/public corpus/model policy can serve bounded Lesson Q&A to enrolled students. Advanced Core-bound teachers additionally retain actual class placement, live Core authority and agent gates. Missing or revoked bindings never fall back to managed mode.
 
@@ -50,11 +67,19 @@ The server accepts the exact response schema and an ID from the current immutabl
 
 Disabled assistance makes no provider call. Assignment curated mode progresses through approved hints without inference; Socratic selection chooses approved questions using an explicitly enabled, administrator-allowed model connection. The separate private curation route alone accepts bounded task photos. Neither interface admits arbitrary tools, browser actions, document authoring or student-editable system instructions.
 
+## Homework Help and speech
+
+The student-owned Homework Help conversation is pinned to one school. A narrow triage component ranks currently enrolled, admitted course descriptors; ambiguity or photo-only context requires a student course choice. Handoff invokes the existing curated-lesson lifecycle with an exact approved teacher, corpus and model policy. Follow-up context is bounded to currently admitted prior questions for that same class/persona. Server-generated references point only to current coursework. Immutable messages/outcomes link to sealed course turns; explicit recovery of a request interrupted before admission reuses its original lesson key. Independent message/photo-storage budgets also count clarification and blocked requests.
+
+Optional ElevenLabs speech uses a school-scoped encrypted connection and an independently fixed stock catalog. A personal voice revision follows the stable teacher. Bounded microphone recordings become editable transcripts; students explicitly send the question. Read-aloud accepts only an owned released turn ID and derives the exact text on the server. Neither voice direction creates a new unrestricted tutoring model path. Before-send/release/playback authorization, durable markers, quotas and uncertainty apply. Raw microphone bytes do not enter persistent records or audit; transcripts, exact spoken text and processing evidence do. Generated playback is encrypted and privately served. Schema 6 protects Homework messages/outcomes, personal voice revisions and completed speech operations. See [Homework Help](homework-help.md) and [voice](homework-voice.md).
+
 ## Audit and evidence
+
+Student learning preferences are a separate personal layer over approved teaching configuration. Nine structured intake answers initialize bounded numeric presentation weights. Immutable per-interaction feedback contributes only to that student's teacher-specific adjustment. Accuracy concerns remain review evidence. Preferences cannot grant capabilities, admit sources or alter factual content. Each new tutoring operation pins the exact preference revision and effective weights and revalidates them before external send and release. School-wide teacher metadata and other students' weights are unaffected. The additive schema-5 migration preserves earlier identities and evidence. See [learning preferences](student-learning-preferences.md).
 
 Durable events preserve student input/attempt versions, assignment and policy snapshots, the actual bounded model request, nonsecret model binding, sanitized visible selection response, normalized usage and released approved text. A send marker commits before external I/O. Output is withheld until the completion audit commits. Requests use idempotency keys; a pending/uncertain operation must not cause another inference. Instructor read/export access is itself audited.
 
-A hash chain detects modifications relative to a trusted exported head. Database permissions protect application append-only behavior. Neither mechanism alone prevents a database owner from rewriting history or removing the tail. The restricted API database role cannot update/delete/truncate audit events or perform schema DDL. It can advance the mutable audit head as part of appending events. Independent retained exports, operator-run KMS-signed checkpoints and backup/restore verification are production prerequisites; see [audit controls](audit.md). Session replay shows observable student work and assistance. It does not expose or reconstruct a model's hidden chain of thought and cannot establish how a student reasoned outside this service.
+A hash chain detects modifications relative to a trusted exported head. Database permissions protect application append-only behavior. Neither mechanism alone prevents a database owner from rewriting history or removing the tail. The restricted API database role cannot update/delete/truncate audit events or perform schema DDL. It can advance the mutable audit head as part of appending events. Independent retained exports and backup/restore verification are production prerequisites; operator-run KMS checkpoints remain supported. This revision also packages a separate read-only archive worker with encrypted signed segments, conditional object creation and independently retained heads, targeting private S3-compatible storage. A Kubernetes storage package is separate from the current Fargate recipe. Cluster administrators and the archive/signing authority remain explicit trust boundaries; see [session archiving](session-archive.md) and [audit controls](audit.md). Session replay shows observable student work and assistance. It does not expose or reconstruct a model's hidden chain of thought and cannot establish how a student reasoned outside this service.
 
 ## Administrative UX reuse
 

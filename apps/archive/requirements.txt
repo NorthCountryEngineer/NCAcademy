@@ -1,0 +1,4 @@
+boto3==1.43.114
+SQLAlchemy==2.0.40
+psycopg[binary]==3.3.6
+cryptography==46.0.7

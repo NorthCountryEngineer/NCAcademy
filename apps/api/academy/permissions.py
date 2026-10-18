@@ -62,6 +62,9 @@ def school_role(db, identity, school_id, settings):
     role = normalized_role(member.value.get("role"))
     if role not in {"school", "teacher", "student"}:
         return None
+    if identity.get("auth_provider") == "academy":
+        # Local family accounts cannot acquire staff or upstream authority.
+        return "student" if identity.get("role") == "student" and role == "student" else None
     if settings.auth_mode == "core":
         required = {"school": "academy-school", "teacher": "academy-teach", "student": "academy-use"}[role]
         if required not in identity.get("permissions", []) or "academy-use" not in identity.get("permissions", []):

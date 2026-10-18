@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "state": "US-NY",
+  "state_name": "New York",
+  "subject": "earth_space_science",
+  "subject_name": "Earth and space sciences",
+  "grades": [
+    9,
+    10,
+    11,
+    12
+  ],
+  "academic_years": [
+    "2026-2027"
+  ],
+  "standards_version": "nyssls-2016",
+  "mapping_version": "ncacademy-ny-hs-earth-space-2026-10-18-v1",
+  "mapping_revision": 0,
+  "reviewed_at": "2026-10-18",
+  "review_valid_through": "2027-06-30",
+  "effective_from": "2017-2018",
+  "coverage": "partial",
+  "mapping_note": "Locally reviewed selection from the NYSED high-school 9–12 band and Earth and Space Sciences course map. This is not a prescribed grade-specific state curriculum, complete course map or Regents-preparation course. Schools choose course placement and sequence. Only the listed academic year is reviewed; standards versions and school years are separate.",
+  "instructional_coverage_note": "Bundled federal science summaries cover selected solar-energy, plate-boundary, radiometric-time, water-cycle and weather concepts. They do not cover all mapped expectations, a complete course sequence, required investigations, laboratory work, assessments or reference-table interpretation. Review suitability and add class materials as needed.",
+  "sources": [
+    {
+      "id": "nysed-hs-standards",
+      "title": "New York State High School Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/curriculum-instruction/hs-science-learning-standards.pdf",
+      "publisher": "New York State Education Department",
+      "content_sha256": "0f3d02ec4a52051ed6e92c3c7ce98991615f29d84e8fdc4b349c7fd8a9f74e55",
+      "byte_length": 749309,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact downloaded PDF bytes; full source is not redistributed",
+      "rights_note": "Source includes NRC Framework material. Only original short alignment summaries are included; no Framework text or full performance expectations are redistributed."
+    },
+    {
+      "id": "nysed-earth-course-map",
+      "title": "Earth and Space Sciences Course Map",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ess.pdf",
+      "publisher": "New York State Education Department",
+      "content_sha256": "d90f5a178a93edde41c8abae625939c97332e1d5bd83a807833c08ff69ad4a62",
+      "byte_length": 487141,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact downloaded PDF bytes; full source is not redistributed",
+      "rights_note": "Applicability and course-alignment evidence only. No full map, curriculum sequence or assessment material is redistributed."
+    },
+    {
+      "id": "nysed-science-faq",
+      "title": "Science FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/science-faq",
+      "publisher": "New York State Education Department",
+      "content_sha256": "13c113a4c9f079dd510be4909f0e4bb8afc32c03294e8007b67a7cea48e69433",
+      "byte_length": 88475,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Applicability evidence only; no required state curriculum or mandated grade placement is inferred."
+    },
+    {
+      "id": "nysed-reference-tables-index",
+      "title": "Reference Tables for Earth and Space Sciences",
+      "url": "https://www.nysed.gov/state-assessment/reference-tables-earth-and-space-sciences",
+      "publisher": "New York State Education Department",
+      "content_sha256": "903acecbe9c808aa7a8b333c611fd8112f12df57934b5f207f12493e3109a3a5",
+      "byte_length": 59458,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Current-edition applicability evidence only; reference tables are linked, not reproduced."
+    },
+    {
+      "id": "nysed-earth-reference-tables-2026",
+      "title": "2026 Revised Reference Tables for Earth and Space Sciences — English",
+      "url": "https://www.nysed.gov/sites/default/files/programs/state-assessment/earth_space_science_ref_tables_2026.pdf",
+      "publisher": "New York State Education Department",
+      "content_sha256": "0ede34a27075ff4888353971e4c7da559708eaa897fadb6c0fc0d516e395507e",
+      "byte_length": 11285991,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact downloaded PDF bytes; full source is not redistributed",
+      "rights_note": "Current-edition reference evidence only. Tables and images are not bundled, parsed into lesson text or automatically approved for student use."
+    },
+    {
+      "id": "nasa-sun-facts",
+      "title": "Sun: Facts",
+      "url": "https://science.nasa.gov/sun/facts/",
+      "publisher": "NASA Science",
+      "content_sha256": "dd31bbd8675c59deaa371689985765fb18c4806657333076616e0a85c94dcc8a",
+      "byte_length": 326256,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Federal educational source. Only original summaries of selected scientific facts are included; images, logos, tables, full articles and third-party media are not redistributed."
+    },
+    {
+      "id": "usgs-plate-boundaries",
+      "title": "Understanding plate motions — This Dynamic Earth",
+      "url": "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "publisher": "U.S. Geological Survey",
+      "content_sha256": "4ff4bf3bd700d9cbac28cfd1d6e6ae0980929907cef2eb21bdcddb2277fa8953",
+      "byte_length": 24181,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Federal educational source. Only original summaries of selected scientific facts are included; images, logos, tables, full articles and third-party media are not redistributed."
+    },
+    {
+      "id": "usgs-geologic-time",
+      "title": "Geologic Time: Radiometric Time Scale",
+      "url": "https://pubs.usgs.gov/gip/geotime/radiometric.html",
+      "publisher": "U.S. Geological Survey",
+      "content_sha256": "50e2e4610b12474c603723a3e42e52d8a83c281d72a03999de7b4306656a8162",
+      "byte_length": 13588,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Federal educational source. Only original summaries of selected scientific facts are included; images, logos, tables, full articles and third-party media are not redistributed."
+    },
+    {
+      "id": "noaa-water-cycle",
+      "title": "The water cycle",
+      "url": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+      "publisher": "NOAA Education",
+      "content_sha256": "ba6abf0340474b06b1d0beaa3e881d0eece543dcbf741746077e097708a93f2f",
+      "byte_length": 154938,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Federal educational source. Only original summaries of selected scientific facts are included; images, logos, tables, full articles and third-party media are not redistributed."
+    },
+    {
+      "id": "noaa-weather-patterns",
+      "title": "Weather systems and patterns",
+      "url": "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-systems-patterns",
+      "publisher": "NOAA Education",
+      "content_sha256": "15515ff7cb0724c99c509404919ee0f39d691f6e5d64b84b022bee6ceb8d439e",
+      "byte_length": 132935,
+      "retrieved_at": "2026-10-18",
+      "reviewed_at": "2026-10-18",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Federal educational source. Only original summaries of selected scientific facts are included; images, logos, tables, full articles and third-party media are not redistributed."
+    }
+  ],
+  "applicability_references": [
+    {
+      "source_id": "nysed-earth-course-map",
+      "title": "Earth and Space Sciences Course Map — NYSED",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ess.pdf",
+      "reviewed_at": "2026-10-18",
+      "finding": "The department identifies course-aligned expectations; teaching order and local instructional decisions remain school responsibilities."
+    },
+    {
+      "source_id": "nysed-science-faq",
+      "title": "Science FAQ — NYSED",
+      "url": "https://www.nysed.gov/standards-instruction/science-faq",
+      "reviewed_at": "2026-10-18",
+      "finding": "NYSED identifies locally developed curricula and a high-school grades 9–12 standards band, rather than a required state curriculum."
+    },
+    {
+      "source_id": "nysed-reference-tables-index",
+      "title": "Reference Tables for Earth and Space Sciences — NYSED",
+      "url": "https://www.nysed.gov/state-assessment/reference-tables-earth-and-space-sciences",
+      "reviewed_at": "2026-10-18",
+      "finding": "The 2026 Revised Edition is designated for classrooms beginning in 2026–27 and first used on the January 2027 examination. This differs from the 2024 edition used for August 2026."
+    }
+  ],
+  "standards": [
+    {
+      "code": "HS-ESS1-1",
+      "title": "Solar energy",
+      "summary": "Model fusion and solar energy transfer.",
+      "topic": "space_systems",
+      "source_page": 73,
+      "pdf_page": 20
+    },
+    {
+      "code": "HS-ESS1-4",
+      "title": "Orbits",
+      "summary": "Predict orbital motion mathematically.",
+      "topic": "space_systems",
+      "source_page": 73,
+      "pdf_page": 20
+    },
+    {
+      "code": "HS-ESS1-5",
+      "title": "Crustal ages",
+      "summary": "Relate rock ages to plate movement.",
+      "topic": "geologic_history",
+      "source_page": 75,
+      "pdf_page": 22
+    },
+    {
+      "code": "HS-ESS1-6",
+      "title": "Early Earth",
+      "summary": "Use ancient materials to reconstruct origins.",
+      "topic": "geologic_history",
+      "source_page": 75,
+      "pdf_page": 22
+    },
+    {
+      "code": "HS-ESS1-7",
+      "title": "Celestial cycles",
+      "summary": "Explain recurring Moon–Earth–Sun patterns.",
+      "topic": "space_systems",
+      "source_page": 73,
+      "pdf_page": 20
+    },
+    {
+      "code": "HS-ESS2-1",
+      "title": "Landforms",
+      "summary": "Model surface and internal processes across scales.",
+      "topic": "tectonics",
+      "source_page": 75,
+      "pdf_page": 22
+    },
+    {
+      "code": "HS-ESS2-2",
+      "title": "Feedback",
+      "summary": "Interpret evidence of interacting Earth changes.",
+      "topic": "earth_systems",
+      "source_page": 77,
+      "pdf_page": 24
+    },
+    {
+      "code": "HS-ESS2-3",
+      "title": "Interior convection",
+      "summary": "Model heat-driven cycling inside Earth.",
+      "topic": "tectonics",
+      "source_page": 77,
+      "pdf_page": 24
+    },
+    {
+      "code": "HS-ESS2-4",
+      "title": "Climate energy",
+      "summary": "Connect energy-flow changes to climate.",
+      "topic": "climate",
+      "source_page": 79,
+      "pdf_page": 26
+    },
+    {
+      "code": "HS-ESS2-5",
+      "title": "Water processes",
+      "summary": "Investigate water interacting with Earth materials.",
+      "topic": "water",
+      "source_page": 77,
+      "pdf_page": 24
+    },
+    {
+      "code": "HS-ESS2-6",
+      "title": "Carbon",
+      "summary": "Quantitatively represent connected carbon reservoirs.",
+      "topic": "carbon",
+      "source_page": 77,
+      "pdf_page": 24
+    },
+    {
+      "code": "HS-ESS2-8",
+      "title": "Weather",
+      "summary": "Explain changing weather through air-mass evidence.",
+      "topic": "weather",
+      "source_page": 79,
+      "pdf_page": 26
+    },
+    {
+      "code": "HS-ESS3-1",
+      "title": "Human activity",
+      "summary": "Explain societal responses to resources and hazards.",
+      "topic": "human_impact",
+      "source_page": 81,
+      "pdf_page": 28
+    },
+    {
+      "code": "HS-ESS3-5",
+      "title": "Climate forecasts",
+      "summary": "Evaluate observations and modeled climate impacts.",
+      "topic": "climate",
+      "source_page": 79,
+      "pdf_page": 26
+    }
+  ],
+  "teaching_pack_version": "federal-earth-space-foundations-2026-10-18-v1",
+  "teaching_documents": [
+    {
+      "id": "sun-fusion-and-energy",
+      "title": "The Sun, fusion and outward energy transfer",
+      "source_id": "nasa-sun-facts",
+      "source_sections": [
+        "Formation",
+        "Structure",
+        "Surface"
+      ],
+      "topics": [
+        "space_systems",
+        "solar_energy"
+      ],
+      "standard_codes": [
+        "HS-ESS1-1"
+      ],
+      "content": "The Sun is a star held together by gravity. Its core produces energy as hydrogen nuclei combine into helium. Energy moves outward through the radiative zone and then through a region where hot plasma rises and cooler plasma sinks. The visible photosphere releases radiation into space; some reaches Earth. The Sun formed from a collapsing cloud of gas and dust, and its structure changes over its lifetime. A model of solar energy should distinguish energy production in the core, transfer within the star and radiation traveling through space."
+    },
+    {
+      "id": "plate-boundaries-and-evidence",
+      "title": "Plate boundaries and changing landforms",
+      "source_id": "usgs-plate-boundaries",
+      "source_sections": [
+        "Divergent boundaries",
+        "Convergent boundaries",
+        "Transform boundaries",
+        "Rates of motion"
+      ],
+      "topics": [
+        "tectonics",
+        "geologic_history"
+      ],
+      "standard_codes": [
+        "HS-ESS1-5",
+        "HS-ESS2-1"
+      ],
+      "content": "At spreading boundaries, plates separate and rising magma forms new oceanic crust. At some convergent boundaries, one plate descends beneath another; collisions between continents can instead thicken and raise crust. Transform boundaries involve plates sliding sideways. These different movements help explain the locations of ridges, trenches, mountains and earthquakes. Seafloor spreading transports crust away from a ridge over geological time. Repeated measurements of points on Earth, including satellite-based measurements, can track present motion. A boundary diagram represents relative movement, while a map shows where those processes occur."
+    },
+    {
+      "id": "radiometric-clocks-and-rock-history",
+      "title": "Isotopic clocks and geological evidence",
+      "source_id": "usgs-geologic-time",
+      "source_sections": [
+        "RADIOMETRIC TIME SCALE"
+      ],
+      "topics": [
+        "geologic_history",
+        "radioactive_decay"
+      ],
+      "standard_codes": [
+        "HS-ESS1-6"
+      ],
+      "content": "Some isotopes change into other isotopes through radioactive decay. A half-life describes the interval in which half of an initial quantity of a radioactive parent decays. Measuring parent and daughter isotopes in suitable minerals helps estimate when those minerals formed. Different isotopic systems suit different materials and timescales. Dates from igneous layers can bracket the ages of nearby sedimentary deposits, connecting numerical ages with their relative sequence. Comparing suitable dating methods strengthens an interpretation. An age measurement must be connected to the material and event actually dated."
+    },
+    {
+      "id": "earth-water-stores-and-pathways",
+      "title": "Water stores, transfers and human changes",
+      "source_id": "noaa-water-cycle",
+      "source_sections": [
+        "Pools: Where and how water is stored.",
+        "Fluxes: How water moves.",
+        "Humans and the water cycle"
+      ],
+      "topics": [
+        "water",
+        "earth_systems",
+        "human_impact"
+      ],
+      "standard_codes": [
+        "HS-ESS2-5",
+        "HS-ESS3-1"
+      ],
+      "content": "Water is stored in oceans, air, ice, soil and underground. Transfers connect these stores rather than following one simple circular route. Evaporation moves liquid water into the atmosphere as vapor; condensation forms droplets; precipitation returns water to the surface. Water can flow over land or enter soil and groundwater. Solar energy supports evaporation, while gravity helps move water downward. People change pathways and storage through dams, diversions and withdrawals. A useful model labels both the stores and the transfers and recognizes that water quality affects availability."
+    },
+    {
+      "id": "air-masses-fronts-and-weather",
+      "title": "Air masses, fronts and weather maps",
+      "source_id": "noaa-weather-patterns",
+      "source_sections": [
+        "Global winds",
+        "Air masses",
+        "Fronts",
+        "Jet streams",
+        "Coriolis effect"
+      ],
+      "topics": [
+        "weather",
+        "earth_systems"
+      ],
+      "standard_codes": [
+        "HS-ESS2-8"
+      ],
+      "content": "Uneven solar heating contributes to large-scale atmospheric circulation. Air masses develop temperature and moisture characteristics related to the regions where they form. A front is a boundary between air masses: a cold front replaces warmer air with colder air, while a warm front advances warmer air. Weather maps help locate and follow these boundaries. Strong upper-atmosphere winds steer weather systems and transfer heat and moisture. Earth’s rotation deflects moving air. Interpreting a sequence of maps connects changing local conditions to moving air masses instead of treating each weather observation as isolated."
+    }
+  ]
+}

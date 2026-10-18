@@ -23,8 +23,32 @@ def external_review_schema_id(tenant_id):
     return "external-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
 
 
-IMMUTABLE_RECORD_KINDS = {"submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
-SEALED_JOB_KINDS = {"turn", "lesson_turn", "external_review_job"}
+def learning_preferences_schema_id(tenant_id):
+    return "learning-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def homework_voice_schema_id(tenant_id):
+    return "homework-voice-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def school_curriculum_schema_id(tenant_id):
+    return "curriculum-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def chat_schema_id(tenant_id):
+    return "chat-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def classroom_schema_id(tenant_id):
+    return "classroom-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+def family_schema_id(tenant_id):
+    return "family-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+IMMUTABLE_RECORD_KINDS = {"family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
+SEALED_JOB_KINDS = {"classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"}
 
 
 def now():
@@ -51,7 +75,8 @@ class Record(Base):
 
     @property
     def value(self):
-        return json.loads(self.data)
+        from .pii_storage import record_value
+        return record_value(self)
 
     def set(self, value):
         self.data = canonical(value)
@@ -169,6 +194,9 @@ def audit(db, tenant, actor, event_type, payload, session_id=""):
         db.add(head)
         db.flush()
     row = Audit(id=uid(), tenant_id=tenant, sequence=head.sequence + 1, session_id=session_id, actor_id=actor, event_type=event_type, payload=canonical(payload), previous_hash=head.digest, created_at=now())
+    from .pii_storage import protect_audit
+    row.payload = canonical(protect_audit(db, row, payload))
+    row._family_crypto = db.info.get("family_crypto")
     row.hash = hashlib.sha256(canonical(audit_material(row)).encode()).hexdigest()
     db.add(row)
     head.sequence, head.digest = row.sequence, row.hash
@@ -179,5 +207,9 @@ def audit_material(row):
     return {"id": row.id, "tenant_id": row.tenant_id, "sequence": row.sequence, "session_id": row.session_id, "actor_id": row.actor_id, "event_type": row.event_type, "payload": json.loads(row.payload), "previous_hash": row.previous_hash, "created_at": row.created_at}
 
 
-def audit_dict(row):
-    return {**audit_material(row), "hash": row.hash}
+def audit_dict(row, *, reveal=False):
+    result = {**audit_material(row), "hash": row.hash}
+    if reveal and "__academy_pii__" in result["payload"]:
+        from .pii_storage import audit_payload
+        result["private_payload"] = audit_payload(row)
+    return result

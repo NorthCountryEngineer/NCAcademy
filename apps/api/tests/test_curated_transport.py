@@ -13,6 +13,15 @@ from academy.main import RequestBodyLimit
     ("PUT", "/api/courses/class-a/curated-lessons", 150001, 413),
     ("POST", "/api/courses/class-a/curated-lessons/extra", 150001, 413),
     ("POST", "/api/courses/" + "x" * 65 + "/curated-lessons", 150001, 413),
+    ("POST", "/api/homework-help/sessions/session-a/messages", 400000, 204),
+    ("POST", "/api/homework-help/sessions/session-a/messages", 400001, 413),
+    ("PUT", "/api/homework-help/sessions/session-a/messages", 150001, 413),
+    ("POST", "/api/homework-help/sessions/session-a/messages/extra", 150001, 413),
+    ("POST", "/api/courses/class-a/voice/transcriptions", 4300000, 204),
+    ("POST", "/api/courses/class-a/voice/transcriptions", 4300001, 413),
+    ("PUT", "/api/courses/class-a/voice/transcriptions", 150001, 413),
+    ("POST", "/api/courses/class-a/voice/speech", 150001, 413),
+    ("POST", "/api/courses/class-a/voice/transcriptions/extra", 150001, 413),
 ])
 def test_chunked_photo_boundary_is_exact_and_applies_to_actual_bytes(method, path, size, expected):
     messages = []

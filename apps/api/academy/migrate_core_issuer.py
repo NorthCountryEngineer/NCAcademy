@@ -74,7 +74,7 @@ def snapshot(db, tenant, old_issuer, new_issuer, subjects):
         mappings.append({"subject": subject, "user_id": user_id})
     user_ids = {m["user_id"] for m in mappings}
     require(len(user_ids) == len(mappings), "competing_subject_owner")
-    existing_users = set(db.scalars(select(Record.id).where(Record.tenant_id == tenant, Record.kind == "user")))
+    existing_users = {row.id for row in db.scalars(select(Record).where(Record.tenant_id == tenant, Record.kind == "user")) if row.value.get("auth_provider") != "academy"}
     require(user_ids == existing_users, "unmapped_local_user")
     return mappings, missing
 

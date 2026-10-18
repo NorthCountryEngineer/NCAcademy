@@ -100,7 +100,13 @@ class AIBehavior(Strict):
     detail: Literal["concise", "balanced", "detailed"] = "balanced"
     question_frequency: Literal["low", "balanced", "high"] = "balanced"
     encouragement: Literal["restrained", "balanced", "frequent"] = "balanced"
+    instructions: str = Field(default="", max_length=4000)
     boundaries: list[str] = Field(default_factory=list, max_length=20)
+
+    @field_validator("instructions")
+    @classmethod
+    def bounded_instructions(cls, value):
+        return value.strip()
 
     @field_validator("boundaries")
     @classmethod

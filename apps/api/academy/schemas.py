@@ -1,6 +1,8 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .standards_schemas import CurriculumInput
+from .school_curriculum_schemas import SchoolCurriculumInput, SchoolMetadata
+from .teacher_schemas import TeacherPicture
 
 
 class Strict(BaseModel):
@@ -91,6 +93,18 @@ class SchoolInput(Strict):
     name: str = Field(min_length=1, max_length=200)
     description: str = Field(default="", max_length=10000)
     core_resource_id: str | None = Field(default=None, min_length=1, max_length=200)
+    custom_metadata: list[SchoolMetadata] = Field(default_factory=list, max_length=30)
+    logo: TeacherPicture | None = None
+    curriculum: SchoolCurriculumInput = Field(default_factory=SchoolCurriculumInput)
+    expected_version: int | None = Field(default=None, ge=1, strict=True)
+
+    @field_validator("custom_metadata")
+    @classmethod
+    def unique_metadata(cls, value):
+        keys = [item.key.casefold() for item in value]
+        if len(keys) != len(set(keys)):
+            raise ValueError("School metadata keys must be unique")
+        return value
 
 
 class MembershipInput(Strict):

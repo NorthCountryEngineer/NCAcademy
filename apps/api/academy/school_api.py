@@ -6,6 +6,9 @@ from sqlalchemy import select
 from .db import Record, RecordScope, Audit, audit_dict, canonical, uid, now
 from .permissions import global_admin, school_role, require_school, scope_id, bind_scope, membership_id, normalized_role
 from .schemas import SchoolInput, MembershipInput, AgentPlacementInput, ResourceInput, AssignmentInput, ReviewInput
+from .teacher_schemas import normalized_picture
+from .school_curriculum_schemas import SchoolCurriculumInput
+from .family_accounts import record_school_membership_change
 
 
 def register_school_api(app, database, auth, settings, actor, staged_change, validate_binding, audit_actor):
@@ -32,7 +35,13 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
         role = school_role(db, identity, row.id, settings)
         human = identity.get("principal_kind", "human") == "human"
         manage = role in {"admin", "school"} and human
-        return {"id": row.id, **row.value, "role": role, "effective_role": role, "capabilities": {"manage_school": manage, "manage_members": manage, "manage_agents": manage, "manage_resources": role in {"admin", "school", "teacher"}, "create_course": role in {"admin", "school", "teacher"}, "approve_changes": manage, "manage_connections": manage}}
+        value = {"version": 1, "curriculum_revision": 1, "custom_metadata": [], "logo": None, "curriculum": SchoolCurriculumInput().model_dump(), **row.value}
+        return {"id": row.id, **value, "role": role, "effective_role": role, "capabilities": {"manage_school": manage, "manage_members": manage, "manage_agents": manage, "manage_resources": role in {"admin", "school", "teacher"}, "create_course": role in {"admin", "school", "teacher"}, "approve_changes": manage, "manage_connections": manage}}
+
+    def school_audit(db, identity, operation, row):
+        value = row.value
+        logo = value.get("logo")
+        audit_actor(db, identity, operation, {"school_id": row.id, "name": value["name"], "description": value.get("description", ""), "core_resource_id": value.get("core_resource_id"), "version": value.get("version", 1), "curriculum_revision": value.get("curriculum_revision", 1), "curriculum": value.get("curriculum"), "custom_metadata_sha256": hashlib.sha256(canonical(value.get("custom_metadata", [])).encode()).hexdigest(), "logo_sha256": logo.get("sha256") if logo else None})
 
     def course_access(db, identity, course_id, school_id, write=False):
         course = find(db, identity, course_id, "course")
@@ -55,10 +64,14 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
         if not global_admin(identity):
             raise HTTPException(403, "Administrator permission required")
         with database.write() as db:
-            row = Record(id=uid(), tenant_id=identity["tenant_id"], kind="school", data=canonical(body.model_dump()))
+            if body.expected_version is not None:
+                raise HTTPException(422, "A new school has no expected version")
+            value = body.model_dump(exclude={"expected_version"})
+            value["logo"] = normalized_picture(body.logo.data_base64) if body.logo else None
+            row = Record(id=uid(), tenant_id=identity["tenant_id"], kind="school", data=canonical({**value, "version": 1, "curriculum_revision": 1}))
             db.add(row)
             db.flush()
-            audit_actor(db, identity, "school.created", {"school_id": row.id, **row.value})
+            school_audit(db, identity, "school.created", row)
             return school_dict(db, row, identity)
 
     @app.put("/api/schools/{school_id}")
@@ -66,13 +79,22 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
         with database.write() as db:
             require_school(db, identity, school_id, settings, {"admin", "school"}, human=True)
             row = find(db, identity, school_id, "school")
+            if body.expected_version is not None and body.expected_version != row.value.get("version", 1):
+                raise HTTPException(409, "School changed; reload before saving")
             core_resource_id = body.core_resource_id if "core_resource_id" in body.model_fields_set else row.value.get("core_resource_id")
             if core_resource_id != row.value.get("core_resource_id") and not global_admin(identity):
                 raise HTTPException(403, "Only Admin assigns Core resource references")
             if core_resource_id != row.value.get("core_resource_id") and any(p.value.get("active") for p in records(db, identity, "agent_placement", school_id)):
                 raise HTTPException(409, "Deactivate agent placements before changing the school Core resource")
-            row.set({**body.model_dump(), "core_resource_id": core_resource_id, **({"external_audit_required": True} if row.value.get("external_audit_required") else {})})
-            audit_actor(db, identity, "school.updated", {"school_id": school_id, **row.value})
+            value = {**row.value, **body.model_dump(exclude={"expected_version", "logo", "curriculum", "custom_metadata"}), "core_resource_id": core_resource_id}
+            for field in ("logo", "curriculum", "custom_metadata"):
+                if field in body.model_fields_set:
+                    value[field] = normalized_picture(body.logo.data_base64) if field == "logo" and body.logo else body.model_dump()[field]
+            old_curriculum = row.value.get("curriculum", SchoolCurriculumInput().model_dump())
+            value["curriculum_revision"] = row.value.get("curriculum_revision", 1) + int(value.get("curriculum", old_curriculum) != old_curriculum)
+            value["version"] = row.value.get("version", 1) + 1
+            row.set(value)
+            school_audit(db, identity, "school.updated", row)
             return school_dict(db, row, identity)
 
     @app.get("/api/schools/{school_id}/members")
@@ -90,6 +112,11 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
         with database.write() as db:
             require_school(db, identity, school_id, settings, {"admin", "school"}, human=True)
             user = find(db, identity, principal_id, "user")
+            if user.value.get("auth_provider") == "academy":
+                if not global_admin(identity):
+                    raise HTTPException(403, "Administrator permission required for local family enrollment")
+                if user.value.get("role") != "student" or body.role != "student":
+                    raise HTTPException(422, "Local family accounts cannot receive staff or parent school memberships")
             current = db.get(Record, membership_id(school_id, principal_id))
             if (body.role == "school" or current and current.value.get("role") == "school") and not global_admin(identity):
                 raise HTTPException(403, "Only Admin grants or changes School administrators")
@@ -102,6 +129,7 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                 current = Record(id=membership_id(school_id, principal_id), tenant_id=identity["tenant_id"], kind="school_membership", parent_id=school_id, owner_id=principal_id, data=canonical(value))
                 db.add(current)
             audit_actor(db, identity, "school.membership_updated", {"school_id": school_id, "principal_id": principal_id, **value})
+            record_school_membership_change(db, auth, identity, principal_id, school_id, body.active, audit_actor)
             return {"principal_id": principal_id, "name": user.value["name"], "principal_kind": "human", **value}
 
     @app.delete("/api/schools/{school_id}/members/{principal_id}")
@@ -113,8 +141,12 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                 raise HTTPException(404, "Membership not found")
             if row.value.get("role") == "school" and not global_admin(identity):
                 raise HTTPException(403, "Only Admin changes School administrators")
+            user = db.get(Record, principal_id)
+            if user and user.value.get("auth_provider") == "academy" and not global_admin(identity):
+                raise HTTPException(403, "Administrator permission required for local family enrollment")
             row.set({**row.value, "active": False})
             audit_actor(db, identity, "school.membership_revoked", {"school_id": school_id, "principal_id": principal_id})
+            record_school_membership_change(db, auth, identity, principal_id, school_id, False, audit_actor)
             return {"active": False}
 
     def placement_dict(row):
@@ -363,6 +395,8 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                 from .standards import build_course_corpus
                 if target.value.get("curriculum") or "curriculum" in content.model_fields_set:
                     build_course_corpus(db, identity, target, sid, audit_actor)
+                from .chat_groups import ensure_class_group
+                ensure_class_group(db, identity, target, sid, audit_actor)
             elif operation in {"assignment.create", "assignment.update"}:
                 content = AssignmentInput.model_validate(value["payload"])
                 validate_binding(db, content.tutor_policy.model_dump(), identity, sid)

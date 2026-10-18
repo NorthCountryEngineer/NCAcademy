@@ -20,8 +20,16 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Requirements and deferred decisions](docs/requirements.md)
 - [Architecture](docs/architecture.md)
 - [School roles, resources and agent teachers](docs/permissions.md)
+- [School setup, curriculum and knowledge workflows](docs/school-onboarding.md)
 - [Teacher onboarding and standards corpora](docs/teachers-and-standards.md)
 - [Student-curated multimedia lessons](docs/student-curated-lessons.md)
+- [Student learning preferences and feedback](docs/student-learning-preferences.md)
+- [Local student/parent accounts, PII encryption and testing](docs/family-accounts.md)
+- [Conversational Homework Help](docs/homework-help.md)
+- [Google Classroom assignment companion](docs/google-classroom.md)
+- [School and class groups with NCE Core Chat](docs/group-chat.md)
+- [Optional ElevenLabs teacher voices](docs/homework-voice.md)
+- [Persistent S3-compatible session archive](docs/session-archive.md)
 - [YouTube lessons and the school audit agent](docs/external-media-review.md)
 - [API and data contracts](docs/api.md)
 - [Model interfaces and instructional controls](docs/model-controls.md)
@@ -34,22 +42,35 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Verification and production acceptance](docs/verification.md)
 - [Changelog](docs/CHANGELOG.md)
 
-The dedicated `amplify-academy-fargate` recipe deploys the Amplify frontend, Fargate API and private PostgreSQL database. Core identity uses `https://core.nnytech.ai`; the canonical callback is `https://ncacademy.app/api/auth/core/callback`. The school-permissions baseline was released on October 18, 2026 at source `c15d5068121bdb18e778976198430249c38c1098`. This revision adds teacher onboarding, standards corpora, private multimedia lessons and external-media review. Its manifest pins a separately verified immutable private ECR image; release uses Core’s normal exact-commit CI and migration process. See [deployment](docs/deployment.md) for release inputs and verification.
+The dedicated `amplify-academy-fargate` recipe deploys the Amplify frontend, Fargate API and private PostgreSQL database. Core identity uses `https://core.nnytech.ai`; the canonical callback is `https://ncacademy.app/api/auth/core/callback`. Teacher onboarding, standards corpora, private multimedia lessons and external-media review were released on October 18, 2026 at source `78b48d6ba0e874ff7e76576119ff5e020f3627e0`. This subsequent source revision adds student learning preferences, feedback, conversational Homework Help, optional restricted ElevenLabs voice and a separate session archive worker. Its image reference deliberately remains unresolved until a matching image is verified; release uses Core’s normal exact-commit CI and migration process. See [deployment](docs/deployment.md) for release inputs and verification.
 
 Human School/Admin users can create human or AI teacher profiles with a portrait, biography and common metadata. AI profiles add a structured teaching approach. One profile can be assigned to many classes, with independent grade/year/standards context. Class corpora are automatically assembled from reviewed standards/source packages and class resources, then explicitly reviewed. Creating or approving a profile records teaching configuration; Core identities, grants and actual class teaching authority remain separate. See the [onboarding guide](docs/teachers-and-standards.md).
+
+School creation continues into a resumable setup workspace for logo/custom metadata, a state/custom/no-curriculum choice, grade/year course planning, the teaching team and visible knowledge-build runs. The reviewed-source curriculum agent prepares draft class plans; a human explicitly creates selected classes and approves their course corpora and teacher configurations. New York earth/space science joins the partial environmental-science adapter. Custom curriculum ingestion remains deferred. See [school setup](docs/school-onboarding.md).
+
+Groups adds Core-backed class conversations and school discovery. Current enrollment automatically includes students in their required class group. Administrators, teachers and currently authorized class teaching agents can create groups; students can join eligible open groups or request/invited membership. Agent messages require human School/Admin approval. Core stores messages through the application's identity while immutable NCAcademy receipts retain each actual author. Live chat is independently disabled until the existing Core installation's package/grants and API-only runtime inputs are explicitly configured. See [group chat](docs/group-chat.md).
+
+Students can connect their own Google Classroom account to a local class, read published assignments and keep NCAcademy Homework Help alongside them. Native work and submission open in Google Classroom. Imported Google content stays in the private transient assignment reader; help uses the student's own question and approved local course context. The integration defaults off pending dedicated Google OAuth and trusted backend configuration. See [Google Classroom](docs/google-classroom.md).
 
 Course Lesson Q&A runs automatically within a human-approved behavior/corpus/model policy, with shared daily UTC quotas and complete restricted session replay. Assignments, lesson materials and feedback retain human publication approval. The starter NY 2026–2027 high-school environmental-science mapping is partial and supplies 13 mapped standard records and four public teaching summaries. Other states/subjects/years require reviewed adapter packages.
 
 Students can also request private curated lessons from a task description or assignment photos when the teacher's approved policy permits it. Lessons combine cited reading, supported interactive diagrams, optional browser read-aloud and recorded reflections. Photos are normalized/encrypted and visible only to the enrolled student or current authorized reviewers. Models select approved source/media IDs; no generated assignment response is released. See [student-curated lessons](docs/student-curated-lessons.md).
 
-Initial access is restricted to the owner with both Core `admin` and `academy-use` permissions. Live models remain disabled and no student grants are issued until audit retention and access controls are verified. The API uses a restricted database login and has no AWS task role. Independent retained exports and KMS-signed checkpoints are operator-run; this release has no automatic checkpoint worker.
+Students complete a nine-question learning-preference intake before new tutoring activity. Preferences remain editable; structured feedback on their own interactions adjusts bounded presentation weights for that student and teacher. Accuracy reports enter the audit evidence for review. Preferences cannot change approved teaching content, factual claims, publication requirements or model authority. See [student learning preferences](docs/student-learning-preferences.md).
+
+Homework Help provides a private conversation that identifies an enrolled course, clarifies ambiguous questions and brings in its approved AI teacher. Students can describe a task or attach homework photos, follow references to their course/assignments and give feedback. The teacher continues the existing approved-source lesson boundary. Optional voice creates a reviewable transcript or reads an exact released reply; students choose a school-approved stock voice per teacher. No personal clone is offered. Current ElevenLabs default voices have account eligibility and retirement limits; see [voice setup](docs/homework-voice.md).
+
+Initial access is restricted to the owner with both Core `admin` and `academy-use` permissions. Live models remain disabled and no student grants are issued until audit retention and access controls are verified. The API uses a restricted database login and has no AWS task role. A separate encrypted, signed S3-compatible archive worker and private Kubernetes storage package are prepared independently of the API. They require operator configuration and verified retention, monitoring and restore before student admission; source packaging does not establish a running archive. Existing operator-run exports and KMS-signed checkpoints remain supported. See [session archiving](docs/session-archive.md).
 
 ## Verification
+
+Human application Admins can create platform-local student and parent accounts, replace passwords, assign schools/classes and retain grade/year and lifecycle history. Students and parents sign in with a username/password without a Core identity. Parents require an enrolled child and receive a limited progress view. A separate PII key encrypts private profiles, educational payloads and related audit evidence; production family access fails closed without it. Local family accounts cannot link Google Classroom or use Core Chat/resources. See [account administration, encryption and test instructions](docs/family-accounts.md).
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r apps/api/requirements-test.lock.txt
-PYTHONPATH=apps/api .venv/bin/python -m pytest apps/api/tests scripts/tests -q
+.venv/bin/python -m pip install -r apps/archive/requirements.lock.txt
+PYTHONPATH=apps/api:apps/archive .venv/bin/python -m pytest apps/api/tests apps/archive/tests scripts/tests -q
 cd apps/web
 npm ci --no-audit --no-fund
 npm test

@@ -66,10 +66,85 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
         headers = {"Origin": settings.app_url, "X-CSRF-Token": response.json()["csrf_token"]}
         assert client.post("/api/courses", json={"title": "Synthetic restricted-role course"}, headers=headers).status_code == 201
         assert client.get("/api/admin/audit/export").status_code == 200
+        # Exercise PostgreSQL JSON ->> eligibility and required-class ordering
+        # under the actual restricted runtime login. Core is explicitly mocked;
+        # the student has a separate cookie jar and gains no native membership.
+        from conftest import login
+        from test_chat_groups import FakeCoreChat
+        from academy.permissions import default_school_id
+        runtime_settings.core_chat_enabled = True
+        runtime_settings.core_issuer = "https://core.example.test"
+        runtime_settings.core_chat_installation_id = "33333333-3333-4333-8333-333333333333"
+        mocked_chat = FakeCoreChat(application)
+        application.state.core_chat_transport = mocked_chat
+        school_id = default_school_id(runtime_settings.tenant_id)
+        created_groups = []
+        for visibility, policy in (("school", "open"), ("private", "invite")):
+            created = client.post("/api/chat/groups", json={"school_id": school_id, "title": "Synthetic PostgreSQL " + visibility,
+                "visibility": visibility, "join_policy": policy, "idempotency_key": "postgres-group-" + uuid4().hex}, headers=headers)
+            assert created.status_code == 201, created.text
+            created_groups.append(created.json())
+        student = TestClient(application, base_url=settings.app_url)
+        try:
+            student_headers = login(student)
+            bootstrapped = student.post("/api/chat/bootstrap", json={"school_id": school_id}, headers=student_headers)
+            assert bootstrapped.status_code == 200, bootstrapped.text
+            directory = student.get("/api/chat/groups", params={"school_id": school_id, "discover": True})
+            assert directory.status_code == 200, directory.text
+            groups = directory.json()["groups"]
+            assert groups[0]["required"] and groups[0]["course_id"] == "demo-course"
+            assert {course["id"] for course in directory.json()["courses"]} == {"demo-course"}
+            assert created_groups[0]["id"] in {group["id"] for group in groups}
+            assert created_groups[1]["id"] not in {group["id"] for group in groups}
+            joined = student.post("/api/chat/groups/" + created_groups[0]["id"] + "/join", json={}, headers=student_headers)
+            assert joined.status_code == 200 and joined.json()["membership"] == "active"
+            joined_directory = student.get("/api/chat/groups", params={"school_id": school_id}).json()["groups"]
+            assert created_groups[0]["id"] in {group["id"] for group in joined_directory}
+            path = "/api/chat/groups/" + groups[0]["id"] + "/messages"
+            delivered = student.post(path, json={"text": "Synthetic PostgreSQL class discussion.",
+                "idempotency_key": "postgres-message-" + uuid4().hex}, headers=student_headers)
+            assert delivered.status_code == 200 and delivered.json()["status"] == "delivered", delivered.text
+            history = student.get(path)
+            assert history.status_code == 200 and len(history.json()["messages"]) == 1, history.text
+            assert history.json()["messages"][0]["text"] == "Synthetic PostgreSQL class discussion."
+            assert history.json()["messages"][0]["author"]["id"] == "demo-student"
+            assert len(mocked_chat.sends) == 1
+        finally:
+            student.close()
+            runtime_settings.core_chat_enabled = False
+        # New local accounts exercise the real PostgreSQL restricted role,
+        # application-layer encryption and enrollment without any Core call.
+        private_work = "Synthetic PostgreSQL private learning evidence."
+        private_name = "Synthetic PostgreSQL Family Learner"
+        private_password = "Synthetic PostgreSQL family password!"
+        family = client.post("/api/admin/family-accounts", json={"kind": "student", "username": "pg-learner-" + uuid4().hex[:8], "password": private_password, "name": private_name, "must_change_password": False, "school_id": school_id, "academic_year": "2026-2027", "grade": "10", "course_ids": ["demo-course"]}, headers=headers)
+        assert family.status_code == 201, family.text
+        local_student = TestClient(application, base_url=settings.app_url)
+        try:
+            signed_in = local_student.post("/api/auth/password", json={"username": family.json()["username"], "password": private_password}, headers={"Origin": settings.app_url})
+            assert signed_in.status_code == 200, signed_in.text
+            local_headers = {"Origin": settings.app_url, "X-CSRF-Token": signed_in.json()["csrf_token"]}
+            saved = local_student.put("/api/assignments/demo-assignment/draft", json={"content": private_work}, headers=local_headers)
+            assert saved.status_code == 200, saved.text
+            submitted = local_student.post("/api/assignments/demo-assignment/submit", json={"content": private_work}, headers=local_headers)
+            assert submitted.status_code == 201, submitted.text
+            assert local_student.get("/api/assignments/demo-assignment").json()["draft"]["content"] == private_work
+            assert local_student.get("/api/chat/groups").status_code == 403
+            with application.state.database.factory() as db:
+                raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
+                assert all(secret not in raw for secret in (private_name, private_password, private_work, family.json()["username"]))
+            assert client.get("/api/audit/verify").json()["valid"] is True
+        finally:
+            local_student.close()
         assert client.post("/api/auth/logout", headers=headers).status_code == 200
     engine = create_engine(runtime_url, hide_parameters=True)
     try:
-        for kind in ("turn", "lesson_turn", "external_review_job"):
+        with engine.begin() as connection:
+            connection.execute(text("SET LOCAL enable_seqscan=off"))
+            for field,index_name in (("idempotency_key","academy_voice_key"),("budget_day","academy_voice_day"),("status","academy_voice_status")):
+                plan = connection.execute(text(f"EXPLAIN SELECT id FROM records WHERE kind='voice_operation' AND tenant_id='local-academy' AND owner_id='synthetic-student' AND CAST(CAST(data AS JSON)->>'{field}' AS VARCHAR)='synthetic-value'")).all()
+                assert any(index_name in str(row) for row in plan), plan
+        for kind in ("classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"):
             identifier = "pending-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"status":"pending"}'})
@@ -80,7 +155,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})

@@ -26,6 +26,8 @@ def checked_user(db, tenant, user_id, *, allow_disabled=False):
     user = db.get(Record, user_id)
     if not user or user.tenant_id != tenant or user.kind != "user":
         raise IdentityConflict("identity_target_unavailable")
+    if user.value.get("auth_provider") == "academy":
+        raise IdentityConflict("platform_local_identity_cannot_bind_core")
     if not allow_disabled and user.value.get("disabled"):
         raise IdentityConflict("identity_target_disabled")
     return user
@@ -57,8 +59,8 @@ def resolve_user(db, tenant, issuer, subject, name):
     if user:
         user = checked_user(db, tenant, user_id)
     else:
-        existing_users = set(db.scalars(select(Record.id).where(
-            Record.tenant_id == tenant, Record.kind == "user")))
+        existing_users = {row.id for row in db.scalars(select(Record).where(
+            Record.tenant_id == tenant, Record.kind == "user")) if row.value.get("auth_provider") != "academy"}
         current_owners = set(db.scalars(select(CoreIdentityBinding.user_id).where(
             CoreIdentityBinding.tenant_id == tenant, CoreIdentityBinding.issuer == issuer)))
         if not existing_users <= current_owners:

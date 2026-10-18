@@ -1,9 +1,18 @@
 """Explicit schema admission; never run migrations during login/readiness."""
 from sqlalchemy import text
 from .config import Settings
-from .db import Base, Database, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
+from .db import Base, Database, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
 from .database_roles import configure_runtime_role, runtime_credentials
 from .permissions import migrate_school_scopes
+
+
+def install_activity_indexes(connection, dialect):
+    # Keep large encrypted operation payloads out of historical metadata scans.
+    connection.execute(text("CREATE INDEX IF NOT EXISTS academy_record_owner_created ON records (tenant_id,kind,owner_id,created_at)"))
+    connection.execute(text("CREATE INDEX IF NOT EXISTS academy_record_parent_created ON records (tenant_id,kind,parent_id,created_at)"))
+    for name, field in (("key", "idempotency_key"), ("day", "budget_day"), ("status", "status")):
+        expression = f"json_extract(data,'$.{field}')" if dialect == "sqlite" else f"CAST(CAST(data AS JSON)->>'{field}' AS VARCHAR)"
+        connection.execute(text(f"CREATE INDEX IF NOT EXISTS academy_voice_{name} ON records (tenant_id,owner_id,({expression})) WHERE kind='voice_operation'"))
 
 
 def migrate(settings=None):
@@ -14,6 +23,7 @@ def migrate(settings=None):
     protected = ",".join("'" + kind + "'" for kind in sorted(IMMUTABLE_RECORD_KINDS))
     sealed_jobs = ",".join("'" + kind + "'" for kind in sorted(SEALED_JOB_KINDS))
     with database.engine.begin() as connection:
+        install_activity_indexes(connection, database.engine.dialect.name)
         if database.engine.dialect.name == "sqlite":
             for operation in ("UPDATE", "DELETE"):
                 connection.execute(text(f"CREATE TRIGGER IF NOT EXISTS immutable_audit_{operation.lower()} BEFORE {operation} ON audit_events BEGIN SELECT RAISE(ABORT, 'Audit events are append-only'); END"))
@@ -57,6 +67,30 @@ def migrate(settings=None):
         if not db.get(Record, review_marker_id):
             db.add(Record(id=review_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 4, "immutable_external_reviews": True})))
             audit(db, settings.tenant_id, "deployment-migration", "schema.external_reviews_initialized", {"version": 4, "historical_records_preserved": True})
+        learning_marker_id = learning_preferences_schema_id(settings.tenant_id)
+        if not db.get(Record, learning_marker_id):
+            db.add(Record(id=learning_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 5, "immutable_student_preferences_feedback": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.student_preferences_initialized", {"version": 5, "historical_records_preserved": True})
+        homework_marker_id = homework_voice_schema_id(settings.tenant_id)
+        if not db.get(Record, homework_marker_id):
+            db.add(Record(id=homework_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 6, "immutable_homework_voice_evidence": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.homework_voice_initialized", {"version": 6, "historical_records_preserved": True})
+        curriculum_marker_id = school_curriculum_schema_id(settings.tenant_id)
+        if not db.get(Record, curriculum_marker_id):
+            db.add(Record(id=curriculum_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 7, "immutable_school_curriculum_workflows": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.school_curriculum_initialized", {"version": 7, "historical_records_preserved": True})
+        chat_marker_id = chat_schema_id(settings.tenant_id)
+        if not db.get(Record, chat_marker_id):
+            db.add(Record(id=chat_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 8, "immutable_core_chat_evidence": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.core_chat_initialized", {"version": 8, "historical_records_preserved": True})
+        classroom_marker_id = classroom_schema_id(settings.tenant_id)
+        if not db.get(Record, classroom_marker_id):
+            db.add(Record(id=classroom_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 9, "protected_classroom_operations": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.google_classroom_initialized", {"version": 9, "historical_records_preserved": True})
+        family_marker_id = family_schema_id(settings.tenant_id)
+        if not db.get(Record, family_marker_id):
+            db.add(Record(id=family_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 10, "encrypted_local_family_accounts": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.local_family_initialized", {"version": 10, "historical_records_preserved": True})
     database.engine.dispose()
 
 

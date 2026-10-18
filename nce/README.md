@@ -2,6 +2,10 @@
 
 This directory defines NCAcademy's fixed deployment recipe for NCE Core. Core changes are reviewed in an isolated checkout; the active NCE Core and Proposal Studio checkouts are preserved. See [deployment requirements](../docs/deployment.md) for current release status and admission requirements.
 
+The [Google Classroom companion](../docs/google-classroom.md) adds a separate default-off student OAuth integration. The current recipe has no independent Google flag/client/secret injection; live activation requires a reviewed trusted API-only extension and dedicated Google application setup. No manifest value can silently enable it or supply OAuth secrets. Schema 9 and the existing container recipes are included for the exact-source release; no active Core checkout or cloud configuration is changed by this package.
+
+The later [Core Chat contract](../docs/core-chat-contract.md) pins the reviewed upstream API separately. Chat uses an application-owned room and local school/class membership; it needs no native participant or agent credential delegation. Enabling it requires an explicit package/installation capability upgrade and an independent API-only chat runtime-secret path. The existing agent-only recipe flag does not provide human chat enablement. This source includes the adapter and baseline evidence, not a silently applied Core recipe/grant change.
+
 ## Inspected contract and supplied change
 
 Core baseline: `b2c4172fbe500a7d9744a8d6246b8a5bdf3026c9`. The original `amplify-fargate` manifest requires both an API image and a browser image. Its trusted template fixes `studio.runtime` API/worker/migration commands, API readiness on port 8000 and browser health on port 8010. Application manifests cannot override these commands, ports, templates or IAM roles. Core accepts arbitrary application identifiers but its original trusted CI policies cover only existing Core and Proposal Studio repositories. An unchanged Proposal Studio recipe cannot start NCAcademy correctly.

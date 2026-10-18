@@ -27,10 +27,15 @@ def client(app):
         yield browser
 
 
-def login(client, user="demo-student"):
+def login(client, user="demo-student", *, complete_intake=True):
     response = client.post("/api/auth/local", json={"user_id": user}, headers={"Origin": "http://localhost:8090"})
     assert response.status_code == 200, response.text
-    return {"Origin": "http://localhost:8090", "X-CSRF-Token": response.json()["csrf_token"]}
+    headers = {"Origin": "http://localhost:8090", "X-CSRF-Token": response.json()["csrf_token"]}
+    if complete_intake and response.json().get("learning_preferences", {}).get("status") == "required":
+        from academy.learning_preferences import NEUTRAL
+        saved = client.put("/api/me/learning-preferences", json={"answers": NEUTRAL, "expected_version": response.json()["learning_preferences"]["version"]}, headers=headers)
+        assert saved.status_code == 200, saved.text
+    return headers
 
 
 def draft(client, headers):

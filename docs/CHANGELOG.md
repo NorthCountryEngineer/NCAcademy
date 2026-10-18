@@ -1,5 +1,53 @@
 # Changelog
 
+## Local student and parent accounts — October 18, 2026
+
+- Added human Admin account/profile creation, password replacement, versioned school/class enrollment, explicit grade/year/lifecycle transitions and retained progress snapshots. Parents are optional, require an enrolled local child and receive a limited own-family progress dashboard.
+- Added platform-only username/password sign-in, encrypted salted scrypt verifiers, temporary-password change, session rotation/revocation, database attempt limits and bounded expensive hashing. Local accounts cannot receive staff roles or bind/sync with Core or Google.
+- Added a separate purpose-bound AES-256-GCM PII key for private profiles, credentials, educational payloads and related audit evidence. Ciphertext remains the original hashed audit evidence; authorized replay exposes a separate private projection. Added schema 10 immutable encrypted family events and raw-store/tamper/authority tests plus encryption/recovery/test documentation.
+- Prepared matching source locally. A dedicated API-only production PII secret input, schema-10 migration, matching immutable image and normal deployment acceptance remain required; no real student account, secret injection, push or deployment is implied.
+
+## Voice activation deferred — October 18, 2026
+
+- Recorded the owner's decision to defer live voice setup and credential lookup while retaining the configuration, voice selector, recording/transcript review, exact-reply playback hooks and mocked tests. This documentation-only update changes no runtime or production configuration.
+
+## Google Classroom companion source revision — October 18, 2026
+
+- Added a per-class student workspace with private Google OAuth connection, current active-course linking, published assignment reader, native Google Classroom links and compact NCAcademy Homework Help alongside it. No whole-site iframe or published Classroom add-on is claimed.
+- Added a fixed-endpoint read-only transport, minimal scopes, login-bound one-use OAuth state/PKCE, encrypted personal credentials/mappings, current school/class/Google enrollment checks and release-time revision checks. No Google content is automatically sent to models, corpora, generic session replay or the archive.
+- Added safe operation evidence, explicit refresh/reconnect handling and local erasure before remote revocation, including owner cleanup after enrollment loss. Schema 9 protects receipts while preserving previous records and audit history.
+- Prepared disabled-by-default configuration and documented Google's OAuth/admin prerequisites and the independent trusted Core runtime configuration required for activation. Local mocked verification creates no Google account connection, cloud change, push or deployment.
+
+## NCE Core Chat groups source revision — October 18, 2026
+
+- Added school discovery, open/request/invited group membership and group creation for human administrators/teachers and currently assigned Core teaching agents. Required class groups derive student membership directly from current enrollment; removal revokes reads, sends and receipt access.
+- Integrated Core conversation/message APIs through the NCAcademy installation, with exact local author/delivery receipts, bounded plain text/replies, cursor polling and immutable membership evidence. Unknown upstream messages are withheld. Agent publications require current human School/Admin approval and renewed original-agent authority checks.
+- Added durable create/send markers, explicit original-key message recovery and fail-closed uncertain room creation. The web never adopts a room based on title/topic, adds native Core participants or automatically replays uncertain operations.
+- Added schema 8 immutable chat evidence, sealed attempts and additive migration/readiness without rewriting historical records. Chat enablement is independent of live models/agent admission and requires an explicit existing Core package/installation and trusted API runtime configuration upgrade. Local tests use mocked Core; no push or deployment is implied.
+
+## School curriculum and onboarding source revision — October 18, 2026
+
+- Added a resumable school setup workspace with normalized logo, custom metadata, versioned state/custom/no-curriculum configuration and the shared human/AI teacher onboarding form. AI profiles support bounded advisory teaching instructions and may remain unassigned base personas.
+- Added a deterministic reviewed-source curriculum planning agent, immutable draft plans, exact grade/subject/year course selections and transactional idempotent course/corpus materialization. School reconfiguration preserves existing classes and historical plan evidence.
+- Added a reviewed partial New York high-school earth/space-science package alongside environmental science. Grade scheduling is local; state standards versions, source-review dates and academic-year applicability are recorded independently.
+- Added visible school knowledge-workflow receipts for class-corpus preparation and teacher assignment, with actual sources/gaps, snapshot references and human-review links. Setup grants no Core authority, enables no live models and publishes no generated student materials.
+- Added schema 7 immutable workflow protections and readiness, preserving prior evidence. Custom curriculum import remains a declared extension point; no live crawling, provider call, public push or production deployment is implied by local staging.
+
+## Homework Help and optional voice source revision — October 18, 2026
+
+- Added student-owned conversations with enrolled-course triage/clarification, approved AI teacher handoff, private homework photos, bounded same-persona follow-up context and server coursework references. It reuses the existing approved-source lesson lifecycle and learning-feedback controls.
+- Added immutable message/outcome records, explicit same-key recovery before lesson admission, shared tutoring limits and independent daily Homework storage allowances. School/Admin review discovers pre-triage conversations; teachers retain class-only evidence.
+- Added school ElevenLabs configuration in the existing integration UX, per-student teacher voice choice, explicit microphone/transcript review and protected exact-released-text read-aloud. Fixed verified stock IDs exclude owner/private clones; documented provider eligibility and December 31, 2026 retirement limit the current catalog.
+- Added schema 6 protection/readiness and archive refusal of accidental audio bytes/ciphertext. Recordings remain memory-only; transcripts and exact visible/voice processing evidence enter the durable audit chain. No live speech/model calls, push or deployment is implied by source preparation.
+
+## Student learning preferences and session archive source revision — October 18, 2026
+
+- Added a nine-question first-student-visit intake, neutral choices, editable settings and reset. New tutoring admissions require completed intake at the API as well as in the browser.
+- Added own-interaction accuracy/helpfulness feedback and explicit style targets in assignment chat, Lesson Q&A and private curated lessons. Personal, bounded teacher-specific adaptation retains immutable revisions and exact interaction weight snapshots; accuracy concerns remain review evidence.
+- Added schema 5 immutable preference/feedback protection and current-schema readiness without rewriting historical identities, submissions, terminal turns or audit bytes. Preference changes revalidate around send/release; existing idempotency and uncertain-send controls remain in force.
+- Packaged a separate encrypted, signed S3-compatible session archive worker, private Kubernetes SeaweedFS option, restricted reader/writer examples and independently trusted recovery workflow. It adds no archive credentials or AWS role to the API. Deployment, retention, backup and monitoring require independent acceptance.
+- Based this source preparation on released `78b48d6ba0e874ff7e76576119ff5e020f3627e0`. The new manifest intentionally has no deployable image pin until a matching API image is built and verified. No publication or cloud deployment is implied by these changes.
+
 ## External media review source revision — October 18, 2026
 
 - Added class YouTube lessons and supplied external teaching copies, strict canonical video identities, pinned bounded public metadata transport and click-to-load privacy-enhanced players. Raw iframe HTML, playlist/timestamp URLs, transcript scraping and pre-click third-party media loads are excluded.

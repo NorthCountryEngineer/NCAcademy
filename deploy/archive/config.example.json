@@ -1,0 +1,10 @@
+{
+  "tenant_id": "REPLACE-WITH-CORE-ORGANIZATION-ID",
+  "endpoint": "https://academy-audit-s3.ncacademy-audit.svc.cluster.local:8334",
+  "allowed_origins": ["https://academy-audit-s3.ncacademy-audit.svc.cluster.local:8334"],
+  "bucket": "ncacademy-audit",
+  "prefix": "REPLACE-WITH-ncacademy-SLASH-SHA256-OF-TENANT-ID",
+  "ca_bundle": "/archive-tls/ca.crt",
+  "retention_days": 365,
+  "batch_size": 100
+}

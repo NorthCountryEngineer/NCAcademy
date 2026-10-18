@@ -33,7 +33,8 @@ def validate(root: Path = ROOT, release: bool = False) -> dict:
     if len(permissions) != 4:
         raise ValueError('Duplicate application permissions.')
     required = ('apps/api/Dockerfile', 'apps/api/requirements.lock.txt', 'apps/web/Dockerfile',
-                'apps/web/package-lock.json', 'compose.yaml', 'nce/core-onboarding.patch', 'nce/core-patch-baseline.json')
+                'apps/web/package-lock.json', 'apps/archive/Dockerfile', 'apps/archive/requirements.lock.txt',
+                'deploy/archive/kubernetes.example.yaml', 'compose.yaml', 'nce/core-onboarding.patch', 'nce/core-patch-baseline.json')
     for path in required:
         if not (root / path).is_file() or (root / path).is_symlink():
             raise ValueError('Missing regular package input: ' + path)

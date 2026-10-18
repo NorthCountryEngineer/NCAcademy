@@ -1,0 +1,230 @@
+# Private single-node storage pilot. The production API remains on Fargate.
+# Replace both image pins, tenant config, private secrets and DB egress before use.
+# See docs/session-archive.md for the required retention/restore/admission checks.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ncacademy-audit
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: archive-no-api-access
+  namespace: ncacademy-audit
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: academy-audit-s3
+  namespace: ncacademy-audit
+spec:
+  type: ClusterIP
+  selector: {app: academy-audit-s3}
+  ports:
+    - {name: s3-tls, port: 8334, targetPort: 8334}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: academy-audit-s3
+  namespace: ncacademy-audit
+spec:
+  serviceName: academy-audit-s3
+  replicas: 1
+  selector:
+    matchLabels: {app: academy-audit-s3}
+  template:
+    metadata:
+      labels: {app: academy-audit-s3}
+    spec:
+      serviceAccountName: archive-no-api-access
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: seaweedfs
+          # Reviewed upstream 4.48 multi-arch manifest, verified locally.
+          image: chrislusf/seaweedfs@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+          args:
+            - server
+            - -ip=127.0.0.1
+            - -ip.bind=0.0.0.0
+            - -dir=/data
+            - -master.volumeSizeLimitMB=1024
+            - -volume.max=8
+            - -volume.minFreeSpace=10
+            - -master.telemetry=false
+            - -filer
+            - -filer.encryptVolumeData=true
+            - -s3
+            - -s3.encryptVolumeData=true
+            - -s3.port.https=8334
+            - -s3.cert.file=/storage-tls/tls.crt
+            - -s3.key.file=/storage-tls/tls.key
+            - -s3.config=/storage-config/s3.json
+            - -s3.iam.readOnly=true
+            - -s3.autoCreateBucket=false
+          ports: [{containerPort: 8334, name: s3-tls}]
+          readinessProbe: {tcpSocket: {port: s3-tls}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {tcpSocket: {port: s3-tls}, initialDelaySeconds: 60, periodSeconds: 30}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "2", memory: 2Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: temporary, mountPath: /tmp}
+            - {name: storage-tls, mountPath: /storage-tls, readOnly: true}
+            - {name: storage-config, mountPath: /storage-config, readOnly: true}
+      volumes:
+        - {name: temporary, emptyDir: {sizeLimit: 128Mi}}
+        - name: storage-tls
+          secret: {secretName: archive-storage-tls, defaultMode: 0440}
+        - name: storage-config
+          secret: {secretName: archive-storage-identities, defaultMode: 0440}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        # Select an encrypted, retained StorageClass; this sample uses the
+        # cluster default and does not assert that it is encrypted or backed up.
+        accessModes: [ReadWriteOnce]
+        resources: {requests: {storage: 20Gi}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: academy-audit-worker-state
+  namespace: ncacademy-audit
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 1Gi}}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: academy-audit-export
+  namespace: ncacademy-audit
+spec:
+  # Keep suspended until private TLS, DB reader, conditional writes, retention,
+  # independent backup and restore verification have all been accepted.
+  suspend: true
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels: {app: academy-audit-export}
+        spec:
+          serviceAccountName: archive-no-api-access
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            seccompProfile: {type: RuntimeDefault}
+          containers:
+            - name: export
+              image: REPLACE_WITH_REVIEWED_ARCHIVE_WORKER_AT_SHA256_DIGEST
+              args:
+                - export
+                - --config=/config/config.json
+                - --credentials=/writer/credentials.json
+                - --encryption-key=/archive-keys/encryption.bin
+                - --public-key=/archive-keys/signing-public.bin
+                - --signing-key=/archive-keys/signing-private.bin
+                - --database-url-file=/database/url.txt
+                - --cursor=/state/cursor.json
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              resources:
+                requests: {cpu: 50m, memory: 128Mi}
+                limits: {cpu: "1", memory: 512Mi}
+              volumeMounts:
+                - {name: state, mountPath: /state}
+                - {name: config, mountPath: /config, readOnly: true}
+                - {name: writer, mountPath: /writer, readOnly: true}
+                - {name: keys, mountPath: /archive-keys, readOnly: true}
+                - {name: database, mountPath: /database, readOnly: true}
+                - {name: tls, mountPath: /archive-tls, readOnly: true}
+          volumes:
+            - {name: state, persistentVolumeClaim: {claimName: academy-audit-worker-state}}
+            - name: config
+              configMap: {name: academy-audit-export-config}
+            - name: writer
+              secret: {secretName: academy-audit-writer, defaultMode: 0440}
+            - name: keys
+              secret: {secretName: academy-audit-keys, defaultMode: 0440}
+            - name: database
+              secret: {secretName: academy-audit-database-reader, defaultMode: 0440}
+            - name: tls
+              configMap: {name: academy-audit-trusted-ca}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: ncacademy-audit
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: worker-to-private-storage
+  namespace: ncacademy-audit
+spec:
+  podSelector:
+    matchLabels: {app: academy-audit-s3}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app: academy-audit-export}
+      ports: [{protocol: TCP, port: 8334}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: worker-private-egress
+  namespace: ncacademy-audit
+spec:
+  podSelector:
+    matchLabels: {app: academy-audit-export}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: {app: academy-audit-s3}
+      ports: [{protocol: TCP, port: 8334}]
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+          podSelector:
+            matchLabels: {k8s-app: kube-dns}
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+    - to:
+        # Deliberately non-routable documentation address. Replace with exact
+        # private RDS connectivity under the operator's reviewed network plan.
+        - ipBlock: {cidr: 192.0.2.10/32}
+      ports: [{protocol: TCP, port: 5432}]

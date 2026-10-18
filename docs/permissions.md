@@ -1,5 +1,7 @@
 # Schools, roles and agent teachers
 
+Platform-local students and optional parents now have separate username/password accounts administered by a current human global Admin. They do not receive Core identities or capabilities. Local Student access is limited to current school/class membership; local Parent access is limited to its own profile and eligible linked students' aggregate progress. Parent accounts cannot be enrolled as students or granted staff roles. Existing Core Admin authority includes creation, replacement passwords, enrollment and lifecycle history; it is not inferred from email or first-login order. See [local accounts and PII protection](family-accounts.md).
+
 The API enforces four application roles: **Admin**, **School**, **Teacher** and **Student**. A School role means an administrator of specific schools. A school is a resource and membership boundary inside the configured Core organization, analogous to a company workspace. It is not a new Core organization or a shared login.
 
 ## Authority and scope

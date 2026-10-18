@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the real loopback Compose API with synthetic coursework only.
+"""Exercise a real loopback development API with synthetic coursework only.
 
 Refuses Core/production authentication and any non-loopback target. Never calls a
 model or reads configuration/secrets. Leaves labeled synthetic records for review.
@@ -61,6 +61,12 @@ def run(origin):
     student.login(student_ids[0])
     admin.login(admin_id)
     assert admin.call('/admin/settings')['live_models_enabled'] is False
+    preferences = student.call('/me/learning-preferences')
+    preferences = student.call('/me/learning-preferences', {
+        'expected_version': preferences['version'],
+        'answers': {question['id']: 2 for question in preferences['questions']}
+    }, 'PUT')
+    assert preferences['status'] == 'complete' and len(preferences['questions']) == 9
     label = 'Local verification ' + datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     course = instructor.call('/courses', {'title':label, 'description':'Synthetic local workflow verification.'}, 'POST', 201)
     cid = course['id']
@@ -87,6 +93,12 @@ def run(origin):
     assert released['status'] == 'released' and released['approved_text'] == hint
     again = student.call('/assignments/' + aid + '/tutor', payload, 'POST')
     assert again['id'] == released['id'], 'Idempotent request created another turn'
+    assert student.call('/me/feedback?turn_id=' + released['id']) is None
+    rating = {'turn_id':released['id'], 'accuracy':2, 'helpfulness':4, 'style_preferences':{'encouragement':4}}
+    rated = student.call('/me/feedback', rating, 'POST')
+    assert rated['review_required'] is True and 50 < rated['effective_weights']['encouragement'] <= 70
+    assert student.call('/me/feedback', rating, 'POST')['id'] == rated['id']
+    assert student.call('/me/feedback?turn_id=' + released['id'])['id'] == rated['id']
     limited = student.call('/assignments/' + aid + '/tutor', {'message':'Another hint?', 'idempotency_key':uuid4().hex}, 'POST')
     assert limited['status'] == 'blocked'
     submitted = student.call('/assignments/' + aid + '/submit', {'content':work}, 'POST', 201)
@@ -109,14 +121,15 @@ def run(origin):
     assert any(t.get('draft_snapshot') == work for t in replay['turns'])
     assert any(e['event_type'] == 'student.submitted' for e in replay['events'])
     assert any(e['event_type'] == 'audit.session_viewed' for e in replay['events'])
+    assert any(e['event_type'] == 'student.agent_feedback' for e in replay['events'])
     student.call('/audit/sessions/' + session['session_id'], expect=403)
     export = admin.call('/admin/audit/export')
     checkpoint = {'tenant_id':export['tenant_id'], **export['head']}
     verified = verify(export, checkpoint)
     assert verified['independently_anchored']
-    return {'status':'passed', 'storage':'real Compose PostgreSQL', 'course_id':cid, 'assignment_id':aid,
+    return {'status':'passed', 'storage':'application database; engine verified separately', 'course_id':cid, 'assignment_id':aid,
             'audit_events_verified':verified['sequence'], 'live_model_calls':0,
-            'checks':['enrollment isolation','unreleased hint privacy','attempt gate','approved hint release','idempotency','turn limit','submission snapshots','role boundaries','instructor feedback','session evidence','full audit chain']}
+            'checks':['nine-question student intake','enrollment isolation','unreleased hint privacy','attempt gate','approved hint release','idempotency','bounded student feedback','accuracy review flag','turn limit','submission snapshots','role boundaries','instructor feedback','session evidence','full audit chain']}
 
 
 if __name__ == '__main__':
