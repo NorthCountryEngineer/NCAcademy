@@ -55,6 +55,15 @@ class Login(Base):
     expires: Mapped[int] = mapped_column(Integer)
 
 
+class CoreIdentityBinding(Base):
+    __tablename__ = "core_identity_bindings"
+    __table_args__ = (UniqueConstraint("tenant_id", "issuer", "user_id"),)
+    tenant_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    issuer: Mapped[str] = mapped_column(String(500), primary_key=True)
+    subject: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(64), index=True)
+
+
 class Flow(Base):
     __tablename__ = "oauth_flows"
     state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -99,7 +108,7 @@ class Database:
         self.lock = threading.RLock()
 
     @contextmanager
-    def write(self):
+    def write(self, *, maintenance=False):
         # SQLite's write admission is cross-process; PostgreSQL additionally uses
         # transaction advisory locks so every event and related domain write is atomic.
         with self.lock, self.factory() as db:
@@ -107,6 +116,11 @@ class Database:
                 if self.engine.dialect.name == "sqlite":
                     db.execute(text("BEGIN IMMEDIATE"))
                 else:
+                    if maintenance:
+                        db.execute(text("SET TRANSACTION ISOLATION LEVEL READ COMMITTED"))
+                        db.execute(text("SET LOCAL search_path = public"))
+                        db.execute(text("SET LOCAL lock_timeout = '5s'"))
+                        db.execute(text("SET LOCAL statement_timeout = '30s'"))
                     db.execute(text("SELECT pg_advisory_xact_lock(514672980124)"))
                 yield db
                 db.commit()

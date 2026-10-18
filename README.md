@@ -23,6 +23,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Model interfaces and instructional controls](docs/model-controls.md)
 - [Session evidence and audit controls](docs/audit.md)
 - [Deployment requirements and release order](docs/deployment.md)
+- [Core issuer migration and stable application identities](docs/core-issuer-migration.md)
 - [NCE Core onboarding package and patch](nce/README.md)
 - [Operations and recovery](docs/operations.md)
 - [Source review and packaging](docs/source-review.md)

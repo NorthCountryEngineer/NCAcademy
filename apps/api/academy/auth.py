@@ -17,6 +17,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 
 from .db import Flow, Login, Record, audit, canonical
+from .core_identity import IdentityConflict, resolve_user, subject_owner
 
 COOKIE = "academy_session"
 FLOW_COOKIE = "academy_core_flow"
@@ -144,6 +145,13 @@ class Auth:
             user = db.get(Record, snapshot[0])
             if not current or (current.user_id, current.tenant_id, current.token_cipher, current.csrf) != snapshot or current.expires <= time.time() or current.tenant_id != self.settings.tenant_id or not user or user.tenant_id != current.tenant_id or user.kind != "user":
                 raise HTTPException(401, "Session changed; sign in again")
+            if self.settings.auth_mode == "core":
+                try:
+                    bound = subject_owner(db, self.settings.tenant_id, self.settings.core_issuer, tokens["subject"])
+                    if bound.id != user.id:
+                        raise IdentityConflict("session_identity_binding_changed")
+                except IdentityConflict:
+                    raise HTTPException(401, "Sign in with Core again.") from None
             data = user.value
             if data.get("disabled"):
                 raise HTTPException(403, "Membership disabled")
@@ -243,15 +251,13 @@ class Auth:
             if not isinstance(tokens.get("access_token"), str) or not isinstance(tokens.get("refresh_token"), str) or tokens.get("token_type", "").lower() != "bearer":
                 raise HTTPException(401, "Incomplete Core tokens")
             claims = self.introspect(tokens["access_token"], profile["sub"])
-            user_id = hashlib.sha256((self.settings.core_issuer + "#" + claims["sub"]).encode()).hexdigest()
             sid = secrets.token_urlsafe(48)
             with self.database.write() as db:
-                user = db.get(Record, user_id)
-                if not user:
-                    user = Record(id=user_id, tenant_id=self.settings.tenant_id, kind="user", data=canonical({"name": str(profile.get("name") or "Core member")[:200], "role": "student", "teaching": False}))
-                    db.add(user)
-                if user.tenant_id != self.settings.tenant_id or user.value.get("disabled"):
-                    raise HTTPException(403, "Local membership unavailable")
+                try:
+                    user = resolve_user(db, self.settings.tenant_id, self.settings.core_issuer, claims["sub"], profile.get("name"))
+                except IdentityConflict:
+                    raise HTTPException(403, "Core sign-in is unavailable. Contact an administrator.") from None
+                user_id = user.id
                 db.add(Login(id=sid, user_id=user_id, tenant_id=self.settings.tenant_id, csrf=secrets.token_urlsafe(32), token_cipher=self.seal({"access_token": tokens["access_token"], "refresh_token": tokens["refresh_token"], "subject": claims["sub"], "expires": claims["exp"]}), expires=min(int(time.time()) + 28800, claims["exp"])))
                 audit(db, self.settings.tenant_id, user_id, "auth.core_login", {})
             response = RedirectResponse(self.settings.app_url + "/", status_code=303)

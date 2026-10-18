@@ -11,7 +11,7 @@ from sqlalchemy import select, text
 
 from .auth import Auth
 from .config import Settings
-from .db import Database, Record, Audit, AuditHead, Login, audit, audit_dict, audit_material, canonical, now, uid
+from .db import Database, Record, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid
 from .schemas import CourseInput, AssignmentInput, EnrollmentInput, ContentInput, ReviewInput, TutorInput, ConnectionInput
 from . import provider
 
@@ -172,6 +172,7 @@ def create_app(settings=None):
                 if not head:
                     raise ValueError()
                 db.execute(select(Record.id).limit(1))
+                db.execute(select(CoreIdentityBinding.subject).limit(1))
             return {"status": "ready", "service": "ncacademy"}
         except Exception:
             return JSONResponse({"status": "migration_required"}, status_code=503)

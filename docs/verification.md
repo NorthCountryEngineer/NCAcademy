@@ -33,3 +33,9 @@ The offline verifier detects changed contents, foreign tenant heads and deleted 
 - Keep `ALLOW_LIVE_MODELS=false`. A later provider acceptance requires approved endpoint/model/key/processing terms and an explicit bounded live-call budget; mocked tests do not validate a provider's live protocol.
 
 This record does not assert public deployment completion, educational/privacy certification, independent authorship or a provider's zero-retention posture.
+
+## Prepared issuer-binding upgrade
+
+The isolated authority-binding patch passed 87 API/script tests with one optional PostgreSQL integration skip, plus source-package validation. Tests include signature-validated mocked fresh/legacy/migrated login, both-issuer configuration rollback, immutable owner/coursework and audit preservation, complete inventory and tenant rejection, duplicate identities, first-apply cleanup, idempotent replay and injected transaction rollback. Runtime/Core/model transports remained mocked. An independent reviewer additionally passed 20 synthetic PostgreSQL 16.15 checks covering schema/grants, operator/runtime separation, alias backfill, preserved ownership/audit, collisions, foreign tenants and transaction rollback, then three targeted PostgreSQL checks after the final premature-issuer guard. Production DNS, release/image/CI and sign-in acceptance remain pending.
+
+The reviewed identity upgrade was built as an ARM64 API image with the locked dependencies and pinned by immutable ECR digest in the source manifest. Its application modules compile in the resulting nonroot image and match the reviewed source bytes. This verifies image construction; production schema/backfill, issuer and application sign-in acceptance remain separate operator steps.

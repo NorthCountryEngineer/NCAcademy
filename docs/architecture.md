@@ -7,6 +7,9 @@ flowchart LR
     Browser[Student or instructor browser] --> Web[React / same-origin API proxy]
     Web --> API[NCAcademy API]
     API --> Core[NCE Core identity and live permission checks]
+    API --> Identity[Exact tenant / issuer / subject binding]
+    Identity --> Owner[Stable application user ID]
+    Owner --> DB
     API --> DB[(NCAcademy PostgreSQL)]
     API --> Policy[Assignment policy and approved hint bank]
     Policy --> Gateway[Bounded model selector / live off by default]
@@ -21,6 +24,10 @@ flowchart LR
 ## Course and ownership boundaries
 
 Core organization is the tenant boundary. Instructors/admins manage course membership and assignments. Students can read only enrolled coursework and their own work/session records. Being an administrator does not make a student-owned submission editable. Submission snapshots preserve the actual work submitted; later draft edits cannot rewrite history.
+
+`core_identity_bindings` resolves the verified Core tenant, issuer and subject to a stable application user record. A unique tenant/issuer/user constraint prevents two Core subjects from sharing one owner within an authority. Login and live session checks reject foreign-tenant, non-user, disabled or mismatched targets. A same-issuer legacy hash can be adopted during sign-in. Moving the authority origin requires an explicit operator backfill; email and names never link identities. Both reviewed issuer aliases can point to the same existing user, allowing configuration rollback without changing coursework or historical audit IDs. The API can select/insert bindings but cannot update/delete them; no public API accepts binding mutations. See [issuer migration](core-issuer-migration.md).
+
+Before creating a completely new local user, every existing tenant user must already have a binding under the configured issuer. A configuration-only authority change therefore fails closed until the operator backfill. An exact same-issuer legacy owner can still be adopted, and an empty tenant can admit its first valid Core user. During a legacy upgrade, bind existing owners before admitting additional users.
 
 ## Assistance boundary
 

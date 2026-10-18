@@ -48,6 +48,8 @@ Schema creation is explicit and versioned for the initial release. Future schema
 
 ## Rollback
 
+An issuer-origin change additionally requires the [identity-preserving Core migration](core-issuer-migration.md). Apply the additive binding schema and reviewed subject backfill before changing trusted issuer configuration. Preserve both authority aliases and stable owner IDs; DNS changes alone do not migrate identity trust.
+
 Retain the previous healthy API digest, frontend artifact, application/Core revisions, public registration binding, matching database backup and stable vault bootstrap. Stop admission and drain bounded calls before schema changes. Never replay a provider request whose send marker was committed.
 
 Roll back only to an image compatible with the current schema and audit format. Otherwise restore the matching database into an isolated service and verify it against the independent archive head before changing traffic. A pre-release backup cannot erase later audit obligations; reconcile retained evidence before admitting users. Do not restore a version that exposes freeform model output or disables course/tenant checks.

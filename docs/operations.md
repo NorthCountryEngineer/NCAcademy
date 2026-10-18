@@ -42,6 +42,8 @@ Exercise changed event content and deleted-tail detection against the retained h
 
 ## Monitoring and recovery
 
+Core hostname changes use the [operator issuer migration](core-issuer-migration.md). Export authoritative subject UUIDs, review a no-write plan, stop admission and apply aliases with the reviewed digest. Never create another local user or rewrite coursework/audit ownership to compensate for an issuer change.
+
 Monitor API readiness, Core introspection failures, expired sign-ins, denied assistance, unresolved sends, database storage/backup status and independently retained checkpoint age. Readiness verifies application storage/schema; it does not establish provider availability or current Core permissions. Avoid health probes that consume model tokens.
 
 Back up PostgreSQL and retain its matching encryption bootstrap separately. Encrypt backups and restrict restore/export access. Test restore on a new isolated database using synthetic records and verify the externally trusted audit head before production acceptance. A lost encryption bootstrap makes stored credentials/tokens unavailable; replacing it is not a transparent rotation.

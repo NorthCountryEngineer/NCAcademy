@@ -32,19 +32,20 @@ def core(tmp_path):
     claims = {"iss": settings.core_issuer, "sub": subject, "aud": "urn:core:service:" + settings.core_service_id, "client_id": settings.core_browser_client_id, "organization_id": settings.core_organization_id, "service_id": settings.core_service_id, "deployment_id": settings.core_deployment_id, "environment": "production", "scope": "openid profile authorization", "token_type": "Bearer", "exp": int(time.time()) + 3600}
     def fake(path, data=None, confidential=False):
         state["calls"].append((path, data, confidential))
+        current_claims = {**claims, "iss": settings.core_issuer}
         if state["outage"]:
             raise HTTPException(503, "Mock authority unavailable")
         if path == "/.well-known/openid-configuration":
             return {"issuer": settings.core_issuer, "authorization_endpoint": settings.core_issuer + "/oauth/authorize/", "token_endpoint": settings.core_issuer + "/oauth/token/", "jwks_uri": settings.core_issuer + "/oauth/jwks/"}
         if path == "/oauth/token/":
             assert data["grant_type"] == "authorization_code"
-            profile = {**claims, "aud": settings.core_browser_client_id, "iat": int(time.time()), "nonce": state["nonce"], "name": "Synthetic Core learner"}
+            profile = {**current_claims, "aud": settings.core_browser_client_id, "iat": int(time.time()), "nonce": state["nonce"], "name": "Synthetic Core learner"}
             return {"access_token": "synthetic-access-token", "refresh_token": "synthetic-refresh-token", "token_type": "Bearer", "id_token": jwt.encode(profile, key, algorithm="RS256", headers={"kid": "unit-test-key"})}
         if path == "/oauth/jwks/":
             return {"keys": [jwk]}
         if path == "/oauth/introspect/":
             assert confidential is True and data == {"token": "synthetic-access-token"}
-            return {**claims, "active": state["active"], "permissions": state["permissions"], **state["overrides"]}
+            return {**current_claims, "active": state["active"], "permissions": state["permissions"], **state["overrides"]}
         if path == "/oauth/revoke/":
             return {}
         raise AssertionError("Unexpected authority endpoint")

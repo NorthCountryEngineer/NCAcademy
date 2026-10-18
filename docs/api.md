@@ -1,5 +1,7 @@
 # API and data contracts
 
+Verified Core identities resolve through an explicit tenant/issuer/subject binding to stable local owner IDs. Login and current-session checks validate the bound target's tenant, user kind, enabled state and subject. Authority migration has no public API; use the [operator backfill](core-issuer-migration.md). Runtime binding privileges permit SELECT/INSERT and forbid UPDATE/DELETE/TRUNCATE.
+
 The machine-readable [OpenAPI reference](reference/openapi.json) captures the current typed request schemas. The API lives under `/api`; browser requests use the same origin and server-side session cookie. Mutations require both the canonical `Origin` and the per-session `X-CSRF-Token`. Error bodies omit submitted values so credential-validation failures do not echo secrets.
 
 | Surface | Authority and purpose |
