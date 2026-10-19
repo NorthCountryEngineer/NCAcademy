@@ -1,0 +1,2593 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "US-NY",
+  "academic_year": "2026-2027",
+  "reviewed_at": "2026-10-18",
+  "sources": [
+    {
+      "id": "ny-applied-general-school-requirements",
+      "title": "General School Requirements Related to Standards and Instruction, Section 100.2",
+      "url": "https://www.nysed.gov/standards-instruction/general-school-requirements-related-standards-and-instruction-section-1002",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Current official instructional-requirements summary reviewed October 18, 2026",
+      "notes": "Includes citizenship and DASA-related instruction, highway/traffic and fire/life safety, humane animal treatment in public elementary schools, conservation in public schools and other instructional overlays. Applicability differs by provision and school type. This summary is not the full official regulatory text.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-standards-curriculum-distinction",
+      "title": "About the P-12 Learning Standards",
+      "url": "https://www.nysed.gov/standards-instruction/about-p-12-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current official page reviewed October 18, 2026",
+      "notes": "State learning standards describe expected knowledge and skills; schools develop and adopt their own aligned curricula, instructional materials and sequences.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-health-facs-1996",
+      "title": "Learning Standards for Health, Physical Education, and Family and Consumer Sciences",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/healthpefacslearningstandards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "1996 health and family and consumer sciences standards",
+      "notes": "Canonical document linked by the current Health Education page. This catalog uses its health and FACS coverage. Its physical education section has been superseded by the separate 2020 PE standards.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-health-guidance",
+      "title": "Health Guidance and Resources",
+      "url": "https://www.nysed.gov/standards-instruction/health-guidance-resources",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page; health curriculum guidance identified as updated April 25, 2014",
+      "notes": "The linked skills-based health curriculum guidance is not a mandate. Later required instruction and local review must supplement the older standards and guidance.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-pk-2021",
+      "title": "New York State Prekindergarten Learning Standards: A Resource for School Success",
+      "url": "https://www.nysed.gov/sites/default/files/programs/early-learning/pk-standards-resource-web-revised-2021.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Revised 2021",
+      "notes": "The current PE page directs prekindergarten physical development and health to this integrated early-learning resource, rather than assigning K-12 PE outcomes to PK.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-health-mental-2018",
+      "title": "May 2018 Regents Joint Committee Report on Health Education",
+      "url": "https://www.regents.nysed.gov/report/may-2018/professional-practice-p-12-education",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "May 2018 adoption; effective July 1, 2018",
+      "notes": "Reports permanent adoption of health education regulatory amendments relating to mental health. It is an implementation overlay, not a new comprehensive 2026 health standards set.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-erins-law",
+      "title": "Erin's Law",
+      "url": "https://www.nysed.gov/standards-instruction/erins-law",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "2019 law; current grade-band implementation resources",
+      "notes": "Public-school abuse and exploitation prevention instruction covers K-8. Suggested resource bands are K-2, 3-4, 5-6 and 7-8; curriculum remains a local decision.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cardiac-health-2026",
+      "title": "Heart Health Month: Supporting Cardiovascular Health Through Instruction",
+      "url": "https://www.nysed.gov/memo/standards-instruction/heart-health-month-supporting-cardiovascular-health-through-instruction",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "February 2026 memorandum",
+      "notes": "Explains senior-high hands-only CPR and AED instruction and cardiac-health awareness. Chat-based conceptual help cannot replace required practical instruction or emergency response.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-pe-2020",
+      "title": "New York State Physical Education Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/new-york-physical-education-learning-standards-2020.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2020",
+      "notes": "Current PE standards linked from the official PE page. K-8 outcomes are grade-specific; high school uses Level 1 and Level 2. Only academic knowledge support is represented here.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-pe-map-2020",
+      "title": "New York State Physical Education Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/new-york-state-physical-education-learning-standards-at-a-glance-2020.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2020 grade-level outcomes map",
+      "notes": "Shows the K-8 and HS Level 1/2 progression and directs PK to the separate early-learning standards. Strategies and tactics outcomes begin in grade 3, not in K-2.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-pe-implementation",
+      "title": "Physical Education Guidance and Resources",
+      "url": "https://www.nysed.gov/standards-instruction/physical-education-guidance-resources",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "2020 standards implementation roadmap; full implementation fall 2023 onward",
+      "notes": "Confirms the 2020 standards are in full implementation for 2026-2027; the combined 1996 document is not the current PE baseline.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-finance-faq-2026",
+      "title": "Personal Finance Education FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/personal-finance-education-faq",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "March 2026 permanent adoption; effective March 25, 2026",
+      "notes": "Middle and high school band implementation begins 2026-2027; K-4 begins 2027-2028. Instruction is due by band end, not every grade. This is not a standalone credit or diploma requirement, and NYSED is not creating new personal finance standards.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-finance-objectives-2026",
+      "title": "Personal Finance Topics and Grade-Band Learning Objectives",
+      "url": "https://www.nysed.gov/standards-instruction/personal-finance-topics-grade-bands",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "March 2026 learning objectives; K-4, 5-8 and 9-12",
+      "notes": "Five equally important topic areas support the instructional requirement. The published order does not prescribe local sequence. Objectives are distinct from an adopted standards set and use hypothetical financial situations to protect student privacy.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-finance-objectives-pdf-2026",
+      "title": "NYSED Personal Finance Education Learning Objectives",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ny-personal-finance-learning-objectives_march-2026.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "March 2026",
+      "notes": "Official grade-band objectives resource. This catalog records scope only and does not transcribe every objective or relabel them as state learning standards.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cdos",
+      "title": "Career Development and Occupational Studies",
+      "url": "https://www.nysed.gov/standards-instruction/career-development-and-occupational-studies",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Current NYSED CDOS standards listing and elementary/intermediate/commencement resources",
+      "notes": "Links the CDOS standards and their companion resource guide. Career development, integrated learning and universal foundation skills apply broadly; career-major technical content is specialized.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cdos-resource-guide",
+      "title": "Career Development and Occupational Studies Resource Guide with Core Curriculum",
+      "url": "https://www.nysed.gov/sites/default/files/programs/career-technical-education/career-development-and-occupational-studies-resource-guide.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current linked CDOS companion resource guide",
+      "notes": "Provides elementary, intermediate and commencement core content and sample activities. Sample classroom activities are adaptable examples, not a compulsory statewide lesson sequence.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-middle-cte",
+      "title": "New York State Middle Level CTE Requirement",
+      "url": "https://www.nysed.gov/career-technical-education/new-york-state-middle-level-cte-requirement",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current middle-level theme and content modules",
+      "notes": "Six cross-content themes and content modules guide local instruction. The page lists seven current content groups, including computer science; some introductory prose still says six.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-middle-cte-faq",
+      "title": "New York State Middle Level CTE Requirement FAQ",
+      "url": "https://www.nysed.gov/career-technical-education/new-york-state-middle-level-cte-requirement-faq",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Current FAQ including 2022 addition of computer science",
+      "notes": "The 1.75-unit requirement applies in grades 5-8, with instruction able to begin in grade 5 under appropriate certification. Schools choose content areas; there is no required minimum number of different areas. General health education is distinct from CTE health sciences.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-facs-standards",
+      "title": "Family and Consumer Sciences Learning Standards",
+      "url": "https://www.nysed.gov/career-technical-education/facs-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current NYSED state and national standards guidance",
+      "notes": "Identifies state FACS standards, national standards and the middle-level module framework. Commencement courses are locally selected and may serve mixed grades and abilities.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-facs-offerings",
+      "title": "Family and Consumer Sciences Course Offerings",
+      "url": "https://www.nysed.gov/career-technical-education/facs-course-offerings",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current intermediate grades 5-8 and commencement grades 9-12 guidance",
+      "notes": "The listed core and elective resources are expressly nonregulatory guidance. Schools determine offerings and sequence; practical facilities and qualified supervision remain necessary.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cfm-2022",
+      "title": "New York State Career and Financial Management Curricular Framework",
+      "url": "https://www.nysed.gov/sites/default/files/programs/career-technical-education/new-york-state-career-and-financial-management-curricular-framework.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Updated November 2022",
+      "notes": "Career and financial management framework for CTE. Its role in approved CTE programs is separate from the new K-12 personal finance instructional requirement.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cfm-implementation",
+      "title": "Career and Financial Management Curricular Framework: Background",
+      "url": "https://www.nysed.gov/career-technical-education/news/career-and-financial-management-curricular-framework",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "July 23, 2018 page with November 2022 framework update",
+      "notes": "One-half unit of CFM is required within NYSED-approved CTE programs and can be standalone or embedded; it is not a universal standalone high-school course. Grade 8 acceleration is possible.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-cte-program-content",
+      "title": "Career and Technical Education Program Content",
+      "url": "https://www.nysed.gov/career-technical-education/program-content",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current secondary NYSED-approved CTE program guidance",
+      "notes": "Programs align with CDOS, appropriate state standards and industry standards, with appropriately certified faculty and practical components. A theory catalog does not create an approved CTE program or credential.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-business-standards",
+      "title": "Business and Marketing Learning Standards",
+      "url": "https://www.nysed.gov/career-technical-education/business-and-marketing-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current CDOS and national standards guidance",
+      "notes": "Connects business and marketing to CDOS, including specialized business/information-systems content. Referenced national standards are not automatically new NYS academic standards or unrestricted source material.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-business-faq",
+      "title": "Business and Marketing FAQ",
+      "url": "https://www.nysed.gov/career-technical-education/business-and-marketing-faq",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current official FAQ reviewed October 18, 2026",
+      "notes": "Business curriculum and course choices are local. Topics include accounting/finance, management, marketing, entrepreneurship and professional communication. Academic-credit substitutions require local approval and applicable regulatory criteria.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-agriculture",
+      "title": "Agriculture Learning Standards",
+      "url": "https://www.nysed.gov/career-technical-education/agriculture-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current NYSED agriculture and AFNR guidance",
+      "notes": "NYSED states New York has no agriculture-specific academic standards. AFNR and career-cluster resources guide locally adapted programs, alongside classroom, supervised experience and leadership components.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-health-sciences",
+      "title": "Health Sciences Learning Standards",
+      "url": "https://www.nysed.gov/career-technical-education/health-sciences-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current NYSED CDOS and health-science core guidance",
+      "notes": "NCHSE Health Science Standards are acceptable for developing the health-sciences core. This occupational field is distinct from general health education and includes supervised practical requirements.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-trade-career-areas",
+      "title": "Student Career Areas in Trade and Technical Education",
+      "url": "https://www.nysed.gov/career-technical-education/student-career-areas-trade-and-technical-education",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current NYSED career-area overview",
+      "notes": "Describes construction, transportation, manufacturing, visual/communication arts, human/public services and information technology. Listed occupations are examples, not required courses or permission for unsupervised practical instruction.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-arts-implementation-2017",
+      "title": "New York State Learning Standards for the Arts Implementation Guide",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/2017-implementation-guide_update_final.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "2017 arts standards implementation guide, current linked edition",
+      "notes": "Five disciplines use creating, presenting/performing/producing, responding and connecting. PK-8 indicators are grade-specific; high school uses Proficient, Accomplished and Advanced levels rather than fixed grades 9, 10, 11 and 12.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-visual-arts-2017",
+      "title": "New York State Visual Arts Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-visual-arts-at-a-glance-final-8-2-2017-high-res-v2.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017",
+      "notes": "Canonical visual arts standards linked by the current Arts page. This subject covers art literacy, interpretation, design thinking and historical/cultural connections; it is not a complete studio curriculum.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-music-2017",
+      "title": "New York State Music Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-music-at-a-glance-final-8.2.2017-high-res-v2.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017",
+      "notes": "General music covers PK-8. Other strands include composition/theory, harmonizing instruments, technology and traditional/emerging ensembles. This catalog retains theory, listening and historical knowledge rather than ensemble or instrumental performance instruction.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-media-arts-2017",
+      "title": "New York State Media Arts Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-media-arts-at-a-glance-final-8-13-2017-high-res.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017",
+      "notes": "Canonical media arts standards linked by the current Arts page. Conceptual tutoring can support interpretation, planning, ethics and critique without producing the student's assessed media work.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-theatre-2017",
+      "title": "New York State Theater Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-theater-at-a-glance-final-8-2-2017-high-res.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017",
+      "notes": "Canonical theater standards linked by the current Arts page. The catalog represents dramatic literacy and contextual/design analysis, not acting proficiency or a replacement for rehearsal.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-dance-2017",
+      "title": "New York State Dance Learning Standards at a Glance",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-dance-at-a-glance-final-8-2-2017-high-res-2.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017",
+      "notes": "Canonical dance standards linked by the current Arts page. The catalog covers vocabulary, composition concepts, interpretation and context; physical technique and performance require qualified supervision.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-applied-hiv-aids-guidance-2025",
+      "title": "NYSED Guidance for HIV/AIDS Prevention Education",
+      "url": "https://www.nysed.gov/sites/default/files/programs/student-support-services/hiv-aids-guidance.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "May 2025 cover; revised April 2025 body",
+      "notes": "Age-appropriate AIDS instruction is part of K–6 sequential health and required 7–8 and 9–12 health courses. Broader comprehensive sexuality education remains locally selected; school procedures govern the limited prevention-method exemption.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "38dcfaa7bdd5a4277094c5d40736b4c54951f099dd34fc3974f01c5c3a2b69ca",
+      "byte_length": 667931
+    }
+  ],
+  "subjects": [
+    {
+      "code": "health_education",
+      "name": "Health Education",
+      "category": "health_and_wellness",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-pk-2021",
+          "version": "Revised 2021 PK standards",
+          "grades": [
+            -1
+          ],
+          "notes": "PK health and physical development use the integrated early-learning resource."
+        },
+        {
+          "source_id": "ny-applied-health-facs-1996",
+          "version": "1996 health standards",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Elementary, intermediate and commencement expectations; schools choose the grade sequence and approved content."
+        },
+        {
+          "source_id": "ny-applied-health-mental-2018",
+          "version": "Effective July 1, 2018",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Mental health is part of health education; implementation is not limited to the older 1996 wording."
+        },
+        {
+          "source_id": "ny-applied-erins-law",
+          "version": "2019 law and current suggested benchmarks",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "Use age-appropriate, school-approved abuse-prevention material and the actual local sequence."
+        },
+        {
+          "source_id": "ny-applied-hiv-aids-guidance-2025",
+          "version": "HIV/AIDS prevention guidance, revised April 2025, May 2025 cover",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "An age-appropriate required-topic overlay within health; school selects curriculum and manages any applicable prevention-method parent exemption. Not a separate annual course."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Everyday healthy habits",
+            "Recognizing trusted helpers",
+            "Basic body awareness and safety"
+          ],
+          "source_ids": [
+            "ny-applied-pk-2021"
+          ]
+        },
+        {
+          "grades": [
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Personal care, food and activity habits",
+            "Naming feelings and asking for help",
+            "Safe relationships and personal boundaries",
+            "Simple health and safety decisions"
+          ],
+          "source_ids": [
+            "ny-applied-health-facs-1996",
+            "ny-applied-health-guidance",
+            "ny-applied-erins-law"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4
+          ],
+          "topics": [
+            "Reliable helpers and health information",
+            "Nutrition and physical wellness",
+            "Emotions, communication and conflict choices",
+            "Injury, bullying and abuse prevention"
+          ],
+          "source_ids": [
+            "ny-applied-health-facs-1996",
+            "ny-applied-health-guidance",
+            "ny-applied-erins-law"
+          ]
+        },
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Changing bodies and age-appropriate family-life concepts",
+            "Mental health literacy and coping skills",
+            "Substance-use and injury prevention",
+            "Healthy relationships, boundaries and online safety",
+            "Evaluating health influences and setting goals"
+          ],
+          "source_ids": [
+            "ny-applied-health-facs-1996",
+            "ny-applied-health-guidance",
+            "ny-applied-health-mental-2018",
+            "ny-applied-erins-law"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Health decisions and credible evidence",
+            "Nutrition, activity and disease prevention",
+            "Mental wellness, communication and help seeking",
+            "Substance-use prevention and safer environments",
+            "School-approved family-life and sexual-health knowledge",
+            "Cardiac-emergency and AED awareness concepts"
+          ],
+          "source_ids": [
+            "ny-applied-health-facs-1996",
+            "ny-applied-health-guidance",
+            "ny-applied-health-mental-2018",
+            "ny-applied-cardiac-health-2026"
+          ]
+        },
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Age-appropriate HIV/AIDS knowledge, prevention and stigma reduction within school-approved health instruction"
+          ],
+          "source_ids": [
+            "ny-applied-hiv-aids-guidance-2025"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain approved health concepts and vocabulary",
+        "Practice communication, decision-making and goal-setting scenarios",
+        "Help evaluate the reliability of health information"
+      ],
+      "limitations": [
+        "Focus groups are planning summaries, not a mandated grade-by-grade syllabus.",
+        "Use the school's approved, developmentally appropriate health curriculum, including later required instruction.",
+        "Tutoring does not diagnose or provide individualized medical or mental health treatment.",
+        "Knowledge support does not replace practical CPR instruction, professional care or school safeguarding procedures.",
+        "School-approved age-appropriate HIV/AIDS materials and applicable prevention-method parent exemptions remain school decisions; this catalog does not implement consent/exemption management or imply a universal comprehensive-sexuality syllabus."
+      ],
+      "source_ids": [
+        "ny-applied-pk-2021",
+        "ny-applied-health-facs-1996",
+        "ny-applied-health-guidance",
+        "ny-applied-health-mental-2018",
+        "ny-applied-erins-law",
+        "ny-applied-cardiac-health-2026",
+        "ny-applied-hiv-aids-guidance-2025"
+      ]
+    },
+    {
+      "code": "physical_education_knowledge",
+      "name": "Physical Education Knowledge",
+      "category": "health_and_wellness",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-pk-2021",
+          "version": "Revised 2021 PK standards",
+          "grades": [
+            -1
+          ],
+          "notes": "PK physical development and health are separate from the K-12 PE outcomes."
+        },
+        {
+          "source_id": "ny-applied-pe-2020",
+          "version": "2020",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "K-8 indicators are grade-specific. HS Level 1 and Level 2 require local placement and must not be equated automatically to particular grades."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Body and space vocabulary",
+            "Safe movement and healthy activity habits"
+          ],
+          "source_ids": [
+            "ny-applied-pk-2021"
+          ]
+        },
+        {
+          "grades": [
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Movement and body-space concepts",
+            "Cooperation, safety and taking turns",
+            "Benefits of active play"
+          ],
+          "source_ids": [
+            "ny-applied-pe-2020",
+            "ny-applied-pe-map-2020"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Movement concepts and simple game strategies",
+            "Fitness components and wellness habits",
+            "Personal responsibility and activity choices"
+          ],
+          "source_ids": [
+            "ny-applied-pe-2020",
+            "ny-applied-pe-map-2020"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Game strategies, tactics and communication",
+            "Fitness planning and health-enhancing behaviors",
+            "Social responsibility and community activity resources"
+          ],
+          "source_ids": [
+            "ny-applied-pe-2020",
+            "ny-applied-pe-map-2020"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Movement principles and strategic analysis",
+            "Lifelong fitness and wellness planning",
+            "Responsible participation and self-management",
+            "Activity-related careers and community resources"
+          ],
+          "source_ids": [
+            "ny-applied-pe-2020",
+            "ny-applied-pe-map-2020"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain rules, concepts, fitness vocabulary and planning",
+        "Discuss activity choices, social responsibility and wellness",
+        "Support written PE assignments and conceptual reflection"
+      ],
+      "limitations": [
+        "This is academic support for PE, not a substitute for physical participation or required PE credit.",
+        "No claim of motor-skill, sport, exercise-technique or fitness-performance assessment.",
+        "The 1996 combined health/PE/FACS document is not the current PE standard set.",
+        "Follow the school's actual grade or high-school proficiency placement and qualified supervision."
+      ],
+      "source_ids": [
+        "ny-applied-pk-2021",
+        "ny-applied-pe-2020",
+        "ny-applied-pe-map-2020",
+        "ny-applied-pe-implementation"
+      ]
+    },
+    {
+      "code": "family_consumer_sciences",
+      "name": "Family and Consumer Sciences",
+      "category": "applied_learning",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-health-facs-1996",
+          "version": "1996 FACS standards",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Elementary, intermediate and commencement expectations can be integrated locally; they do not prescribe a separate FACS course in every grade."
+        },
+        {
+          "source_id": "ny-applied-middle-cte",
+          "version": "Current middle-level modules",
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "FACS is one possible lens for middle-level CTE; schools determine their module mix."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "topics": [
+            "Personal and family needs",
+            "Everyday consumer choices",
+            "Time, money and shared resources",
+            "Healthy and safe living environments"
+          ],
+          "source_ids": [
+            "ny-applied-health-facs-1996"
+          ]
+        },
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Growth, relationships and life readiness",
+            "Nutrition, wellness and food systems",
+            "Apparel, textiles and living spaces",
+            "Consumer literacy and resource management"
+          ],
+          "source_ids": [
+            "ny-applied-middle-cte",
+            "ny-applied-facs-standards"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Human development and family studies",
+            "Food, nutrition and consumer decisions",
+            "Housing, textiles and design",
+            "Independent living and related careers"
+          ],
+          "source_ids": [
+            "ny-applied-facs-standards",
+            "ny-applied-facs-offerings"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain FACS concepts and applied reading or mathematics",
+        "Support consumer decisions using hypothetical scenarios",
+        "Prepare for school-selected course knowledge and reflective tasks"
+      ],
+      "limitations": [
+        "School syllabus and course offerings determine scope and order; national guidance is not automatically a NYS mandate.",
+        "Cooking, food handling, sewing, equipment use and care activities require suitable facilities and qualified supervision.",
+        "Conceptual tutoring does not certify practical skill or award course credit."
+      ],
+      "source_ids": [
+        "ny-applied-health-facs-1996",
+        "ny-applied-facs-standards",
+        "ny-applied-facs-offerings",
+        "ny-applied-middle-cte"
+      ]
+    },
+    {
+      "code": "personal_finance",
+      "name": "Personal Finance",
+      "category": "applied_learning",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-finance-objectives-2026",
+          "version": "March 2026 grade-band learning objectives",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "These are instructional learning objectives, not a newly adopted NYS standards set. Schools choose sequence within each band."
+        },
+        {
+          "source_id": "ny-applied-finance-faq-2026",
+          "version": "Effective March 25, 2026; phased instruction",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Grades 5-8 and 9-12 begin implementation in 2026-2027; K-4 begins in 2027-2028, with earlier local instruction permitted."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "topics": [
+            "Money, needs, wants and everyday choices",
+            "Borrowing, lending and responsibility",
+            "Work and earning",
+            "Simple financial risks",
+            "Saving goals and introductory investing concepts"
+          ],
+          "source_ids": [
+            "ny-applied-finance-objectives-2026",
+            "ny-applied-finance-objectives-pdf-2026"
+          ]
+        },
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Hypothetical budgets and payment methods",
+            "Credit costs and repayment choices",
+            "Gross pay, net pay and taxes",
+            "Insurance, warranties and identity protection",
+            "Interest, investment types and diversification"
+          ],
+          "source_ids": [
+            "ny-applied-finance-objectives-2026",
+            "ny-applied-finance-objectives-pdf-2026"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Budgeting, housing costs and consumer decisions",
+            "Loans, credit reports and education financing",
+            "Pay, benefits, labor markets and hypothetical tax forms",
+            "Insurance, fraud and consumer protection",
+            "Banking, retirement accounts and investment risk"
+          ],
+          "source_ids": [
+            "ny-applied-finance-objectives-2026",
+            "ny-applied-finance-objectives-pdf-2026"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain the five personal-finance topic areas",
+        "Guide calculations and reasoning with fictitious financial examples",
+        "Support locally embedded instruction or an approved local course"
+      ],
+      "limitations": [
+        "The 2026 requirement is end-of-band instruction, not instruction in every grade or a standalone graduation credit.",
+        "K-4 coverage is available for planning or early local adoption in 2026-2027; its required phase begins in 2027-2028.",
+        "Incoming grade 5 and grade 9 cohorts in 2026-2027 must receive instruction by band end; initial-year exiting students may not have completed it.",
+        "Use fictional income, tax and account data; do not request family financial records or individualized investment advice.",
+        "The catalog does not determine credit, diploma eligibility or financial-product recommendations."
+      ],
+      "source_ids": [
+        "ny-applied-finance-faq-2026",
+        "ny-applied-finance-objectives-2026",
+        "ny-applied-finance-objectives-pdf-2026"
+      ]
+    },
+    {
+      "code": "career_development",
+      "name": "Career Development and Occupational Studies",
+      "category": "career_technical",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-cdos",
+          "version": "Current CDOS elementary, intermediate and commencement standards",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Career development, integrated learning and universal foundation skills support all learners; specialized career-major expectations require an actual program."
+        },
+        {
+          "source_id": "ny-applied-cfm-2022",
+          "version": "November 2022 CFM framework",
+          "grades": [
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "CFM may support approved CTE programs and locally selected courses; grade 8 is an acceleration option, not a universal placement."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "topics": [
+            "Interests, strengths and community jobs",
+            "How school skills connect to everyday work",
+            "Cooperation, responsibility and communication"
+          ],
+          "source_ids": [
+            "ny-applied-cdos",
+            "ny-applied-cdos-resource-guide"
+          ]
+        },
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Exploring career fields and pathways",
+            "Connecting academic and workplace problems",
+            "Information, technology and resource use",
+            "Personal, social and employability skills"
+          ],
+          "source_ids": [
+            "ny-applied-cdos",
+            "ny-applied-cdos-resource-guide",
+            "ny-applied-middle-cte"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Career planning and postsecondary options",
+            "Workplace communication and professional habits",
+            "Applied academic and systems reasoning",
+            "Managing information and resources",
+            "Career and financial management concepts"
+          ],
+          "source_ids": [
+            "ny-applied-cdos",
+            "ny-applied-cdos-resource-guide",
+            "ny-applied-cfm-2022"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain career vocabulary and pathway research methods",
+        "Help students reflect on strengths and plan their own next steps",
+        "Support workplace scenarios and applied academic reasoning"
+      ],
+      "limitations": [
+        "Follow the school's actual career plan, syllabus and program expectations.",
+        "Tutoring does not establish a CDOS credential, technical endorsement, work-readiness certification or supervised work hours.",
+        "Students author their own career materials and reflections; occupational practice and placements require school supervision."
+      ],
+      "source_ids": [
+        "ny-applied-cdos",
+        "ny-applied-cdos-resource-guide",
+        "ny-applied-cfm-2022",
+        "ny-applied-cfm-implementation",
+        "ny-applied-cte-program-content"
+      ]
+    },
+    {
+      "code": "visual_arts_studies",
+      "name": "Visual Arts and Art History",
+      "category": "arts",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-visual-arts-2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "PK-8 indicators are individual-grade expectations; HS Proficient, Accomplished and Advanced levels are not fixed school years. Topic groups below are catalog summaries."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Noticing pictures, shapes and materials",
+            "Talking about visual meaning",
+            "Art in familiar communities"
+          ],
+          "source_ids": [
+            "ny-applied-visual-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Elements, design choices and visual vocabulary",
+            "Comparing artworks and interpretations",
+            "Cultural and historical connections"
+          ],
+          "source_ids": [
+            "ny-applied-visual-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Visual analysis and critical response",
+            "Creative investigation and design reasoning",
+            "Context, audience and artistic meaning"
+          ],
+          "source_ids": [
+            "ny-applied-visual-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Art history and contextual interpretation",
+            "Aesthetics, criticism and evidence",
+            "Design inquiry, curation and artistic intent"
+          ],
+          "source_ids": [
+            "ny-applied-visual-arts-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain visual-art vocabulary and art-historical context",
+        "Guide observation, interpretation and critique",
+        "Discuss planning choices without making the student's assessed work"
+      ],
+      "limitations": [
+        "Use the school's syllabus, selected works and actual HS proficiency level.",
+        "This knowledge scope does not replace studio practice, portfolio assessment, art-credit requirements or supervised material use.",
+        "External images and media require source review and appropriate rights before student presentation."
+      ],
+      "source_ids": [
+        "ny-applied-visual-arts-2017",
+        "ny-applied-arts-implementation-2017"
+      ]
+    },
+    {
+      "code": "music_studies",
+      "name": "Music Literacy, Theory and History",
+      "category": "arts",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-music-2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "General music is PK-8; HS classroom music includes composition/theory and technology. Other strands have their own levels; the catalog excludes ensemble and instrumental performance as core tutoring."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Sound, beat, pattern and contrast",
+            "Listening and expressing musical ideas",
+            "Music in daily life and culture"
+          ],
+          "source_ids": [
+            "ny-applied-music-2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Rhythm, notation and musical elements",
+            "Form, expression and listening response",
+            "Musical traditions and purposes"
+          ],
+          "source_ids": [
+            "ny-applied-music-2017"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Musical structure and interpretation",
+            "Composition concepts and analysis",
+            "Style, context and evaluation"
+          ],
+          "source_ids": [
+            "ny-applied-music-2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Music theory and compositional reasoning",
+            "Historical and cultural study",
+            "Critical listening and interpretation",
+            "Music technology concepts"
+          ],
+          "source_ids": [
+            "ny-applied-music-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain notation, theory, form and musical vocabulary",
+        "Support listening analysis and historical research",
+        "Guide students' own musical reasoning and critique"
+      ],
+      "limitations": [
+        "Use the school's approved syllabus, chosen strand and actual proficiency level.",
+        "Band, choir, instrumental technique, rehearsal and performance certification are outside core tutoring scope.",
+        "Tutoring does not compose assessed student work or establish performance proficiency or course credit.",
+        "Audio and video examples require reviewed sources and appropriate rights."
+      ],
+      "source_ids": [
+        "ny-applied-music-2017",
+        "ny-applied-arts-implementation-2017"
+      ]
+    },
+    {
+      "code": "media_arts",
+      "name": "Media Arts Studies",
+      "category": "arts",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-media-arts-2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "PK-8 grade indicators and HS Proficient/Accomplished/Advanced levels; grouped topics here are coverage summaries, not a replacement sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Recognizing media forms and messages",
+            "Sharing and discussing visual ideas",
+            "Noticing sound, image and sequence"
+          ],
+          "source_ids": [
+            "ny-applied-media-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Story, audience and media choices",
+            "Planning and evaluating media ideas",
+            "Connections between media and communities"
+          ],
+          "source_ids": [
+            "ny-applied-media-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Media language and interpretation",
+            "Storyboards and production planning concepts",
+            "Intent, context and critique"
+          ],
+          "source_ids": [
+            "ny-applied-media-arts-2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Media aesthetics and artistic communication",
+            "Design, production and revision reasoning",
+            "Cultural context, ethics and critical analysis"
+          ],
+          "source_ids": [
+            "ny-applied-media-arts-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain media-art concepts and production vocabulary",
+        "Guide analysis, planning and reflective critique",
+        "Help compare source, audience and artistic choices"
+      ],
+      "limitations": [
+        "Use the school's syllabus, tools and actual proficiency placement.",
+        "Students produce their own assessed media; tutoring does not certify production skills or replace supervised practical work.",
+        "External media must pass the application's school review and rights checks before use."
+      ],
+      "source_ids": [
+        "ny-applied-media-arts-2017",
+        "ny-applied-arts-implementation-2017"
+      ]
+    },
+    {
+      "code": "theatre_studies",
+      "name": "Theatre Studies",
+      "category": "arts",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-theatre-2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "PK-8 grade indicators and three HS proficiency levels; placement follows the school's course, not an assumed age-to-level mapping."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Story, character and imaginary situations",
+            "Describing theatrical experiences",
+            "Theatre in familiar settings"
+          ],
+          "source_ids": [
+            "ny-applied-theatre-2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Plot, character and dramatic choices",
+            "Stage and design vocabulary",
+            "Audience response and cultural connections"
+          ],
+          "source_ids": [
+            "ny-applied-theatre-2017"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Script interpretation and dramatic structure",
+            "Character motivation and context",
+            "Design reasoning and critique"
+          ],
+          "source_ids": [
+            "ny-applied-theatre-2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Theatre history and cultural context",
+            "Dramatic literature and critical analysis",
+            "Directorial and technical design concepts"
+          ],
+          "source_ids": [
+            "ny-applied-theatre-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain dramatic vocabulary, structure and context",
+        "Guide script reading and evidence-based interpretation",
+        "Discuss design and criticism without writing assessed work"
+      ],
+      "limitations": [
+        "Use the school's approved texts, syllabus and proficiency placement.",
+        "Acting, rehearsal, stagecraft practice and equipment use require qualified supervision.",
+        "Conceptual tutoring does not establish performance proficiency or replace practical course assessment."
+      ],
+      "source_ids": [
+        "ny-applied-theatre-2017",
+        "ny-applied-arts-implementation-2017"
+      ]
+    },
+    {
+      "code": "dance_studies",
+      "name": "Dance Studies",
+      "category": "arts",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-dance-2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "PK-8 individual-grade indicators and HS Proficient, Accomplished and Advanced levels; this subject covers knowledge rather than physical technique."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Shape, space, time and movement words",
+            "Noticing rhythm and expressive choices",
+            "Talking about dance experiences"
+          ],
+          "source_ids": [
+            "ny-applied-dance-2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Patterns, sequence and dance elements",
+            "Interpreting movement ideas",
+            "Dance traditions and community context"
+          ],
+          "source_ids": [
+            "ny-applied-dance-2017"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Choreographic concepts and structure",
+            "Rhythm, space and energy analysis",
+            "Interpretation and informed response"
+          ],
+          "source_ids": [
+            "ny-applied-dance-2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Dance history, culture and aesthetics",
+            "Choreographic reasoning and critique",
+            "Movement interpretation and artistic intent"
+          ],
+          "source_ids": [
+            "ny-applied-dance-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain dance vocabulary, history and composition concepts",
+        "Guide observation, interpretation and critique",
+        "Support written or conceptual course work"
+      ],
+      "limitations": [
+        "Use the school's approved syllabus, reviewed examples and actual proficiency level.",
+        "Physical dance technique, conditioning, partner work and performance assessment require qualified supervision.",
+        "This subject does not claim to replace participation or demonstrate practical dance proficiency."
+      ],
+      "source_ids": [
+        "ny-applied-dance-2017",
+        "ny-applied-arts-implementation-2017"
+      ]
+    },
+    {
+      "code": "middle_level_cte",
+      "name": "Middle-Level Career and Technical Studies",
+      "category": "career_technical",
+      "grades": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-middle-cte",
+          "version": "Current theme and content module framework",
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "Local programs combine common themes with selected CTE content areas; every content area need not be a separate required course."
+        },
+        {
+          "source_id": "ny-applied-middle-cte-faq",
+          "version": "2017 flexibility; computer science added in 2022",
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "Grades 5-8 collectively carry the 1.75-unit middle-level requirement, with appropriate certified teaching."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Career and community exploration",
+            "Communication and interpersonal relationships",
+            "Financial and consumer literacy",
+            "Health, safety and wellness",
+            "Problem solving and innovation",
+            "Sustainability through locally selected CTE fields"
+          ],
+          "source_ids": [
+            "ny-applied-middle-cte",
+            "ny-applied-middle-cte-faq"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain concepts from the school's selected CTE modules",
+        "Connect academic skills to career scenarios",
+        "Help reason about project plans and reflect on learning"
+      ],
+      "limitations": [
+        "Use the school's actual module selection, syllabus and grade sequence.",
+        "Seven possible content areas include agriculture, business/marketing, computing, FACS, health sciences, technology and trade/technical; all seven are not compulsory separate courses.",
+        "Theory help does not replace certified CTE instruction, safe laboratories, supervised practical work or the required units of study.",
+        "Computing, engineering and technology have separate catalog subjects; this entry records the shared middle-level framework."
+      ],
+      "source_ids": [
+        "ny-applied-middle-cte",
+        "ny-applied-middle-cte-faq",
+        "ny-applied-cdos"
+      ]
+    },
+    {
+      "code": "business_marketing",
+      "name": "Business and Marketing Studies",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-business-standards",
+          "version": "Current NYSED CDOS and national guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "School-selected business courses align to applicable CDOS and program standards; this is not a mandatory statewide course sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Business organizations and management",
+            "Markets, consumers and marketing decisions",
+            "Professional communication and information use",
+            "Ethics, financial and operational reasoning"
+          ],
+          "source_ids": [
+            "ny-applied-business-standards",
+            "ny-applied-business-faq"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain business and marketing vocabulary",
+        "Guide case analysis and applied calculations",
+        "Support the student's own planning and professional communication"
+      ],
+      "limitations": [
+        "Local elective: follow the school's approved syllabus, prerequisites and available course offerings.",
+        "School approval and regulatory criteria govern credit substitutions and approved CTE program status.",
+        "Tutoring does not replace supervised business projects, workplace experiences or assessed student authorship."
+      ],
+      "source_ids": [
+        "ny-applied-business-standards",
+        "ny-applied-business-faq",
+        "ny-applied-cte-program-content"
+      ]
+    },
+    {
+      "code": "accounting",
+      "name": "Accounting and Business Finance",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-business-standards",
+          "version": "Current NYSED business standards guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "An elective specialization under business/finance; detailed coverage and external standards depend on the local course."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Financial records and accounting vocabulary",
+            "Transactions and statement interpretation",
+            "Business calculations and financial decisions",
+            "Ethics and accuracy in financial information"
+          ],
+          "source_ids": [
+            "ny-applied-business-standards",
+            "ny-applied-business-faq"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain locally assigned accounting methods",
+        "Guide worked reasoning using fictional records",
+        "Help students find and understand calculation or classification errors"
+      ],
+      "limitations": [
+        "Local elective: use the school's syllabus, accounting conventions and prerequisites.",
+        "Accounting is not automatically a required mathematics course or approved credit substitution.",
+        "Use fictional records; tutoring does not provide professional financial advice, certify bookkeeping or replace supervised coursework."
+      ],
+      "source_ids": [
+        "ny-applied-business-standards",
+        "ny-applied-business-faq",
+        "ny-applied-cte-program-content"
+      ]
+    },
+    {
+      "code": "entrepreneurship",
+      "name": "Entrepreneurship",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-business-faq",
+          "version": "Current locally developed business-course guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Entrepreneurship is a possible business or FACS-linked offering, with locally determined depth and sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Needs, opportunities and business ideas",
+            "Customers, value and market evidence",
+            "Costs, revenue and responsible risk",
+            "Business planning, communication and reflection"
+          ],
+          "source_ids": [
+            "ny-applied-business-faq",
+            "ny-applied-facs-offerings",
+            "ny-applied-cfm-2022"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain enterprise concepts and model hypothetical choices",
+        "Guide students' own market reasoning and plan revisions",
+        "Support calculations and critique without writing the project"
+      ],
+      "limitations": [
+        "Local elective: use the school's approved syllabus, project rules and prerequisites.",
+        "This scope is not a statewide required course or authority to start financial accounts, transact or contact external parties.",
+        "Practical enterprise projects require teacher supervision; students author their own assessed work."
+      ],
+      "source_ids": [
+        "ny-applied-business-faq",
+        "ny-applied-business-standards",
+        "ny-applied-facs-offerings",
+        "ny-applied-cfm-2022"
+      ]
+    },
+    {
+      "code": "agriculture_food_systems",
+      "name": "Agriculture, Food and Natural Resource Studies",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-agriculture",
+          "version": "Current AFNR and career-cluster guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "NYSED identifies no agriculture-specific NYS academic standards; local programs may use national AFNR guidance alongside applicable state standards."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Plant, animal and food-system concepts",
+            "Agribusiness and agricultural communication",
+            "Biotechnology and environmental relationships",
+            "Natural resources, stewardship and sustainability"
+          ],
+          "source_ids": [
+            "ny-applied-agriculture",
+            "ny-applied-cte-program-content"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain concepts from the school's agriculture program",
+        "Connect agricultural questions to science and quantitative reasoning",
+        "Support analysis of food systems, resources and careers"
+      ],
+      "limitations": [
+        "Local elective: use the school's syllabus, selected AFNR pathway and prerequisites.",
+        "National AFNR guidance must not be labelled as a separate adopted NYS agriculture academic standards set.",
+        "Animal care, fieldwork, food production, biotechnology laboratories and equipment require qualified supervision.",
+        "Theory support does not establish practical competence, occupational certification or supervised work hours."
+      ],
+      "source_ids": [
+        "ny-applied-agriculture",
+        "ny-applied-cdos",
+        "ny-applied-cte-program-content"
+      ]
+    },
+    {
+      "code": "health_sciences",
+      "name": "Health Sciences Career Studies",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-health-sciences",
+          "version": "Current CDOS and acceptable NCHSE core guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "A local health-sciences program selects and aligns its academic and technical core; this is not general health education."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Health-career pathways and terminology",
+            "Communication, ethics and client interaction",
+            "Safety and health-system concepts",
+            "Academic foundations for locally selected health-science theory"
+          ],
+          "source_ids": [
+            "ny-applied-health-sciences",
+            "ny-applied-middle-cte",
+            "ny-applied-cte-program-content"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain approved career and health-science concepts",
+        "Support reading, vocabulary and hypothetical case reasoning",
+        "Help prepare for knowledge components of a school-selected course"
+      ],
+      "limitations": [
+        "Local elective: follow the school's approved syllabus, prerequisites and program standards.",
+        "Health-sciences CTE is distinct from the required general health education course.",
+        "Tutoring does not provide clinical advice or certify patient-care, laboratory or emergency-treatment competence.",
+        "Clinical placements and hands-on skills require appropriate qualified supervision and cannot be replaced by chat."
+      ],
+      "source_ids": [
+        "ny-applied-health-sciences",
+        "ny-applied-cte-program-content",
+        "ny-applied-middle-cte-faq"
+      ]
+    },
+    {
+      "code": "child_human_development",
+      "name": "Child Development and Human Development",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-facs-offerings",
+          "version": "Current FACS commencement course guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Possible local offerings include lifespan studies, child/adolescent development, parenting, early childhood, gerontology and human-service careers."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Development across the lifespan",
+            "Relationships, families and caregiving concepts",
+            "Child and adolescent development perspectives",
+            "Human-service roles and responsible care"
+          ],
+          "source_ids": [
+            "ny-applied-facs-offerings",
+            "ny-applied-facs-standards"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain approved developmental and family-study concepts",
+        "Guide comparison of ideas using the course's sources",
+        "Support hypothetical observations and student-authored reflection"
+      ],
+      "limitations": [
+        "Local elective: use the school's syllabus and selected course focus; these are not mandatory separate courses in every high-school year.",
+        "This scope does not diagnose development, provide individualized psychological care or replace qualified child-care instruction.",
+        "Observations, placements and direct caregiving require school-approved supervision and privacy protection."
+      ],
+      "source_ids": [
+        "ny-applied-facs-offerings",
+        "ny-applied-facs-standards",
+        "ny-applied-health-facs-1996"
+      ]
+    },
+    {
+      "code": "nutrition_food_science",
+      "name": "Nutrition and Food Science",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-facs-offerings",
+          "version": "Current FACS food and nutrition course guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Food science, food preparation/nutrition, wellness and food-related pathways are locally selected course options, not a fixed statewide sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Food, nutrients and wellness concepts",
+            "Food science and production reasoning",
+            "Consumer information and food choices",
+            "Food systems, culture and related careers"
+          ],
+          "source_ids": [
+            "ny-applied-facs-offerings",
+            "ny-applied-facs-standards"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain school-approved nutrition and food-science concepts",
+        "Guide label reading and hypothetical planning calculations",
+        "Support analysis of food systems and laboratory concepts"
+      ],
+      "limitations": [
+        "Local elective: follow the school's syllabus, prerequisites and laboratory procedures.",
+        "Food preparation, preservation, allergen management and equipment use require qualified supervision.",
+        "Tutoring does not prescribe diets, manage medical conditions or certify food-handling competence."
+      ],
+      "source_ids": [
+        "ny-applied-facs-offerings",
+        "ny-applied-facs-standards",
+        "ny-applied-cte-program-content"
+      ]
+    },
+    {
+      "code": "housing_textiles_design",
+      "name": "Housing, Textiles and Consumer Design",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-facs-offerings",
+          "version": "Current FACS clothing/textiles and housing/environment guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Schools may select clothing, fashion, interiors, home furnishings or related design courses and define their own sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Living spaces, needs and resource choices",
+            "Textile and material properties",
+            "Design, function and consumer reasoning",
+            "Housing, apparel and sustainability connections"
+          ],
+          "source_ids": [
+            "ny-applied-facs-offerings",
+            "ny-applied-facs-standards"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain consumer, material and design concepts",
+        "Support measurement, planning and reasoned critique",
+        "Connect design choices to needs, costs and environmental context"
+      ],
+      "limitations": [
+        "Local elective: use the school's syllabus, selected design field and prerequisites.",
+        "Sewing, cutting, construction, tool use and practical installations require qualified supervision.",
+        "Tutoring does not produce assessed designs, establish trade competence or substitute for a practical portfolio."
+      ],
+      "source_ids": [
+        "ny-applied-facs-offerings",
+        "ny-applied-facs-standards",
+        "ny-applied-health-facs-1996"
+      ]
+    },
+    {
+      "code": "trade_technical_studies",
+      "name": "Trade and Technical Career Studies",
+      "category": "career_technical",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-applied-trade-career-areas",
+          "version": "Current NYSED trade and technical career overview",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Local programs select a career area and its applicable state and industry standards; the overview is not a universal trade curriculum."
+        },
+        {
+          "source_id": "ny-applied-cte-program-content",
+          "version": "Current secondary CTE program guidance",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Approved programs require more than conceptual content, including qualified faculty and applicable practical requirements."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Career pathways and technical vocabulary",
+            "Measurement and quantitative reasoning",
+            "Safety principles and responsible planning",
+            "Reading technical information in a selected trade",
+            "Workplace systems, quality and employability"
+          ],
+          "source_ids": [
+            "ny-applied-trade-career-areas",
+            "ny-applied-middle-cte",
+            "ny-applied-cte-program-content"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Explain concepts from a school-approved trade syllabus",
+        "Support technical reading, units, measurement and hypothetical calculations",
+        "Help reason about safety and work planning without directing physical operations"
+      ],
+      "limitations": [
+        "Local elective: require the school's specific trade syllabus, prerequisites and approved technical references.",
+        "This broad entry does not imply every occupation or certification standard has been ingested.",
+        "No unsupervised machinery operation, electrical work, construction, vehicle repair, cosmetology procedures, clinical work or other practical skill certification.",
+        "Qualified supervision, laboratories, workplace placements and industry assessment remain the school's responsibility.",
+        "Engineering, technology and computing are represented by separate catalog subjects rather than duplicated here."
+      ],
+      "source_ids": [
+        "ny-applied-trade-career-areas",
+        "ny-applied-cdos",
+        "ny-applied-middle-cte",
+        "ny-applied-cte-program-content"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "ny-applied-personal-finance-regulation-2026",
+      "title": "Personal finance instruction permanently adopted",
+      "applies_from": "2026-03-25",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny-applied-finance-faq-2026"
+      ],
+      "finding": "The March 2026 amendment became permanently effective March 25, 2026. It creates a phased instructional requirement, not a new standalone diploma credit or new state learning standards set."
+    },
+    {
+      "id": "ny-applied-personal-finance-middle-high-2026",
+      "title": "Middle and high school personal finance phase begins",
+      "applies_from": "2026-2027",
+      "grades": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny-applied-finance-faq-2026",
+        "ny-applied-finance-objectives-2026"
+      ],
+      "finding": "Implementation starts in the 5-8 and 9-12 bands in 2026-2027. Incoming grade 5 and grade 9 students must receive instruction by the end of those bands; students exiting a band during the initial year may not yet have received it. Schools choose delivery within each band."
+    },
+    {
+      "id": "ny-applied-personal-finance-elementary-2027",
+      "title": "Elementary personal finance phase follows",
+      "applies_from": "2027-2028",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "source_ids": [
+        "ny-applied-finance-faq-2026",
+        "ny-applied-finance-objectives-2026"
+      ],
+      "finding": "Required K-4 implementation begins in 2027-2028. Catalog coverage in 2026-2027 supports planning or earlier local instruction and must not be presented as an already effective requirement in every elementary grade."
+    },
+    {
+      "id": "ny-applied-pe-current-2020-full-implementation",
+      "title": "2020 PE standards are the current full-implementation baseline",
+      "applies_from": "2023-2024",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny-applied-pe-2020",
+        "ny-applied-pe-implementation"
+      ],
+      "finding": "NYSED identifies full implementation from fall 2023 onward. For 2026-2027, use the 2020 PE standards rather than the PE portion of the combined 1996 health/PE/FACS document."
+    },
+    {
+      "id": "ny-applied-middle-cte-computing-2022",
+      "title": "Middle-level CTE includes computer science",
+      "applies_from": "2022",
+      "grades": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "source_ids": [
+        "ny-applied-middle-cte-faq",
+        "ny-applied-middle-cte"
+      ],
+      "finding": "The official FAQ says computer science was added as a seventh CTE content area in 2022. Retain all seven current areas despite older prose referring to six; school-selected areas and appropriate certification still control local delivery."
+    }
+  ],
+  "review_notes": [
+    {
+      "id": "ny-applied-cross-curricular-required-instruction",
+      "source_ids": [
+        "ny-applied-general-school-requirements"
+      ],
+      "finding": "School planning must include applicable highway/traffic safety, fire and arson prevention, injury/life safety and emergency-reporting education; citizenship, civility, anti-bullying/discrimination and safe Internet use; humane treatment of animals/birds in public elementary schools; and natural-resource conservation in public schools. These are cross-curricular instructional overlays, not newly invented standalone required courses. Drills, emergency practice and supervision remain outside chat-only tutoring."
+    },
+    {
+      "id": "ny-applied-scope-only",
+      "source_ids": [
+        "ny-applied-standards-curriculum-distinction"
+      ],
+      "finding": "This is a reviewed coverage and provenance catalog using original topic summaries. It is not a complete standards transcription, a state-issued curriculum, a human-approved teaching corpus or evidence that lessons are ready for student use."
+    },
+    {
+      "id": "ny-applied-source-review-level",
+      "source_ids": [
+        "ny-applied-health-facs-1996",
+        "ny-applied-pe-2020",
+        "ny-applied-arts-implementation-2017",
+        "ny-applied-cdos",
+        "ny-applied-finance-objectives-pdf-2026"
+      ],
+      "finding": "Source review establishes official provenance and applicable scope. PDF links were verified through current NYSED pages and available official search excerpts; full indicator extraction and exact-byte review are not claimed, so no fabricated content hashes or official indicator IDs are supplied."
+    },
+    {
+      "id": "ny-applied-placement-is-local",
+      "source_ids": [
+        "ny-applied-arts-implementation-2017",
+        "ny-applied-pe-map-2020",
+        "ny-applied-facs-offerings",
+        "ny-applied-middle-cte-faq"
+      ],
+      "finding": "Every listed grade is eligible catalog coverage, not a mandate to teach a separate course in that year. PK-8 arts indicators and K-8 PE indicators retain their original grade structure; broader focus groupings summarize planning scope. HS arts proficiency levels and PE Level 1/2 require school placement, not an invented grade-to-level mapping."
+    },
+    {
+      "id": "ny-applied-finance-guidance-not-standards",
+      "source_ids": [
+        "ny-applied-finance-faq-2026",
+        "ny-applied-finance-objectives-2026",
+        "ny-applied-cfm-implementation"
+      ],
+      "finding": "Personal finance's March 2026 objectives guide a phased K-12 instructional requirement. They are distinct from adopted standards and from the half-unit CFM content required inside NYSED-approved CTE programs. Neither establishes a universal standalone personal-finance graduation credit."
+    },
+    {
+      "id": "ny-applied-no-performance-substitution",
+      "source_ids": [
+        "ny-applied-arts-implementation-2017",
+        "ny-applied-pe-2020",
+        "ny-applied-cte-program-content",
+        "ny-applied-cardiac-health-2026"
+      ],
+      "finding": "Only explanation, theory, analysis and student-authored reasoning are represented. Band/instrument performance, sport and dance technique, studio proficiency, CPR practice, clinical work, machinery operation and supervised occupational skills cannot be completed or certified by this tutoring catalog."
+    },
+    {
+      "id": "ny-applied-external-national-resources",
+      "source_ids": [
+        "ny-applied-agriculture",
+        "ny-applied-business-standards",
+        "ny-applied-health-sciences",
+        "ny-applied-cte-program-content"
+      ],
+      "finding": "National, industry and career-cluster references support local CTE design but are not automatically adopted NYS academic standards. Further source/rights review and school-specific syllabus alignment are required before ingestion or student-visible teaching."
+    },
+    {
+      "id": "ny-applied-health-overlays",
+      "source_ids": [
+        "ny-applied-health-facs-1996",
+        "ny-applied-health-guidance",
+        "ny-applied-health-mental-2018",
+        "ny-applied-erins-law",
+        "ny-applied-cardiac-health-2026"
+      ],
+      "finding": "The health baseline must be read with later required instruction and current local health policy. The source catalog covers selected important overlays and is not an exhaustive legal-compliance checklist or a new 2026 health standards adoption."
+    },
+    {
+      "id": "ny-applied-aids-required-health-overlay",
+      "source_ids": [
+        "ny-applied-hiv-aids-guidance-2025"
+      ],
+      "finding": "Current NYSED guidance identifies AIDS instruction within K–6 sequential health and required health courses at grades 7–8 and 9–12. Apply age-appropriate school-selected curriculum and school-managed prevention-method exemption procedures; broader comprehensive sexuality education is locally chosen."
+    }
+  ]
+}

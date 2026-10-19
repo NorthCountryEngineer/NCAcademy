@@ -1,5 +1,7 @@
 # New York school curriculum source review
 
+This page describes the **partial Earth and Space Sciences teaching package**. The later [all-subject New York review](ny-curriculum-2026-review.md) extends planning coverage to Pre-K–12; it does not expand this package into a complete teaching library.
+
 The school onboarding planner can select the reviewed `US-NY` / `earth_space_science` package for the **2026–2027** academic year and locally place a class in any of grades **9–12**. The package contains **14 selected alignment records and five original public teaching summaries**. It is a partial starting corpus, not a complete New York curriculum, a full Earth and Space Sciences course map or a Regents-preparation course. The environmental-science package remains independently available.
 
 NYSED assigns curriculum design to local districts. Its high-school course map supports course alignment without prescribing an instructional sequence. School grade placement is therefore a local plan; selecting grade 9, 10, 11 or 12 does not claim that NYSED mandates that course in that year. [NYSED Science FAQ](https://www.nysed.gov/standards-instruction/science-faq), [official Earth and Space Sciences course map](https://www.nysed.gov/sites/default/files/programs/standards-instruction/ess.pdf).

@@ -1,5 +1,13 @@
 # Changelog
 
+## New York curriculum scope review — October 18, 2026
+
+- Added four reviewed 2026–2027 domain catalogs covering Pre-K through grade 12, core academic subjects, languages and language support, computing, health/finance, academic arts and career studies. Local electives, state bands, proficiency levels and practical limitations remain explicit.
+- Added broad subject selection and reference-topic planning alongside the existing partial science teaching packages. Reference-only snapshots retain source evidence and missing alignment/material gaps; teaching approval and student-output controls remain unchanged.
+- Added Pre-K context, a searchable grouped subject picker, larger bounded school plans and continued 100-course publication batches.
+- Documented 2026 examination transitions, finance/climate phase dates, World Languages and WIDA changes, secure science materials, accessibility and pending graduation proposals. Added a reproducible grade/topic CSV and source register. This local revision makes no production or provider call.
+- Reset the release image input to the normal unresolved source-preparation marker; the deployed baseline image cannot serve these new backend bundles. Affected corpus snapshots require refresh and human review. No new schema migration is needed.
+
 ## Local student and parent accounts — October 18, 2026
 
 - Added human Admin account/profile creation, password replacement, versioned school/class enrollment, explicit grade/year/lifecycle transitions and retained progress snapshots. Parents are optional, require an enrolled local child and receive a limited own-family progress dashboard.

@@ -25,8 +25,8 @@ class SchoolCurriculumInput(Strict):
     mode: Literal["state", "custom", "none"] = "none"
     state: str = Field(default="US-NY", pattern=r"^US-[A-Z]{2}$")
     academic_year: str = Field(default="2026-2027", pattern=r"^20[0-9]{2}-20[0-9]{2}$")
-    grades: list[Annotated[StrictInt, Field(ge=0, le=12)]] = Field(default_factory=list, max_length=13)
-    subjects: list[str] = Field(default_factory=list, max_length=20)
+    grades: list[Annotated[StrictInt, Field(ge=-1, le=12)]] = Field(default_factory=list, max_length=14)
+    subjects: list[str] = Field(default_factory=list, max_length=80)
     custom_name: str = Field(default="", max_length=200)
     custom_description: str = Field(default="", max_length=10000)
 
@@ -50,8 +50,8 @@ class SchoolCurriculumInput(Strict):
         start, end = map(int, self.academic_year.split("-"))
         if end != start + 1:
             raise ValueError("Academic year must span consecutive years")
-        if len(self.grades) * len(self.subjects) > 100:
-            raise ValueError("Select at most 100 grade and subject combinations")
+        if len(self.grades) * len(self.subjects) > 1120:
+            raise ValueError("Select at most 1120 grade and subject combinations")
         if self.mode == "state" and (not self.grades or not self.subjects):
             raise ValueError("State curriculum requires grade years and subjects")
         if self.mode == "custom" and not self.custom_name.strip():

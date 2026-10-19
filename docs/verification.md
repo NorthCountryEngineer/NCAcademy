@@ -1,5 +1,29 @@
 # Verification record
 
+## New York curriculum review source verification
+
+The complete API/archive/script suite passed **1,356 tests**; **two opt-in PostgreSQL privilege cases were skipped** because this run did not supply their isolated PostgreSQL fixture. This revision introduces no database schema or grant change. The 118 focused source/curriculum cases are included in the full result. All **237 frontend tests**, TypeScript and the production build passed. The existing dependency deprecation and frontend bundle-size advisories remain nonblocking.
+
+The review covers **67 subject pathways and 470 applicable grade/subject combinations** across Pre-K–12, with **88 source records**. Independent source checks reached all 87 unique official URLs; the added HIV/AIDS PDF was downloaded and hashed. Thirty-four source records have exact-byte receipts; the remainder explicitly identify official page reviews. The generated CSV and register pass their reproducibility check, and local documentation links resolve.
+
+Synthetic tests verify exact state/year/grade/version applicability, source URL/ID/hash metadata, expiry and ambiguity refusal, all 470 plans, eight partial science plans, Pre-K bounds and the unchanged 100-course publication limit. Framework plans carry topics rather than fabricated standard identifiers. A scope-only corpus remains unverified and cannot be approved even when local material is attached. Source edits invalidate affected plans and corpus approvals. Catalog authorization, class creation and existing application regressions remain covered without live model calls or real student data.
+
+The normal API Dockerfile built the local image `ncacademy-api:ny-curriculum-review-20261018`. Its isolated nonroot, read-only execution with networking disabled loaded all four bundles and built the expected 470 plans, including 462 framework-only plans. All **55 API source/data file hashes** match the current workspace. The first deliberately offline build had an uncached network-specific dependency layer; the normal build then succeeded using its cached dependency/certificate layers. This is local container acceptance, not production database or cloud acceptance.
+
+Receipts and the source archive are under ignored `build/ny-curriculum-review/`. The deployment manifest uses the documented unresolved image marker: source validation passes and release validation refuses it until a matching private immutable image is supplied. No push, production migration, deployment, credential change or live provider call was performed. Affected course corpora need refresh and human review when this revision is released.
+
+To repeat the source checks with the locked API/archive/test dependencies installed:
+
+```sh
+PYTHONPATH=apps/api:apps/archive ALLOW_LIVE_MODELS=false python -m pytest apps/api/tests apps/archive/tests scripts/tests -q
+npm test --prefix apps/web -- --run
+npm run build --prefix apps/web
+python scripts/review_ny_curriculum.py --check
+python scripts/package_source.py --output build/ny-curriculum-review/NCAcademy-source.tar.gz
+```
+
+Regenerate the CSV/register with `python scripts/review_ny_curriculum.py` after a reviewed bundle edit. CI also checks those reports. See the [curriculum review](ny-curriculum-2026-review.md) for standards editions, subject scope, transition dates and teaching prerequisites.
+
 ## Local student and parent account source verification
 
 The combined backend/archive/script suite passed **1,315 unique tests**: 1,313 cases in four disjoint groups and the two opt-in PostgreSQL cases on a fresh isolated native PostgreSQL 14 fixture. Their placeholder skips in the ordinary groups were resolved by those actual PostgreSQL runs. The fixture was stopped and removed. The restricted runtime role verified local account creation, username/password admission, class access, encrypted student work and audit payloads, complete-chain verification and immutable family-event SQL triggers. Existing role, tenant, source-publication, provider, Google, group and archive tests remain covered. A regression run caught a missing voice scalar-path allowlist entry; the corrected affected group and remaining groups passed. No live voice setup resumed.

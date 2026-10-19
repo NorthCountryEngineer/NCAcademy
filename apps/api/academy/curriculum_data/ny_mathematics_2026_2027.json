@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "US-NY",
+  "academic_year": "2026-2027",
+  "reviewed_at": "2026-10-18",
+  "sources": [
+    {
+      "id": "ny-math-ngls-2017",
+      "title": "New York State Next Generation Mathematics Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-next-generation-mathematics-p-12-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2017, updated June 2019",
+      "notes": "Grade-specific PK–8 expectations; Algebra I, Geometry, Algebra II and additional Plus standards at high school. Plus standards do not constitute a course.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "1bc23fd7e8793c22ba2d398be43411f570b043e4a4da930662c22b81cd5def95",
+      "byte_length": 3736579
+    },
+    {
+      "id": "ny-math-timeline-2023",
+      "title": "Next Generation Mathematics Instruction and Assessment Implementation Timeline",
+      "url": "https://www.nysed.gov/sites/default/files/next-gen-mathematics-instruction-assessment-timeline.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Revised January 2023",
+      "notes": "Use this revised timeline instead of the obsolete April 2020 timeline.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "a11c2cc36253fc7ea17bc379e5196efbd3fc76df0191d6a282dff5b46f0e31d3",
+      "byte_length": 113929
+    },
+    {
+      "id": "ny-math-current-guidance",
+      "title": "Mathematics Guidance and Resources",
+      "url": "https://www.nysed.gov/standards-instruction/mathematics-guidance-resources",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Confirms the 2024, 2025 and 2026 Regents transitions. Suggested time allocations and roadmaps are optional guidance.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-math-current-index",
+      "title": "Mathematics",
+      "url": "https://www.nysed.gov/standards-instruction/mathematics",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Standards inform locally designed curriculum. Legacy 2011 Algebra II examination ended January 2026.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-math-algebra-ii-assessment",
+      "title": "Algebra II",
+      "url": "https://www.nysed.gov/state-assessment/algebra-ii",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Links the current Next Generation assessment resources separately from legacy 2011 resources.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny-math-middle-level",
+      "title": "Middle Level Education",
+      "url": "https://www.nysed.gov/standards-instruction/middle-level-education",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Includes the opportunity for accelerated high-school mathematics at grade 8. Content level and student enrollment grade must remain distinct.",
+      "verification": "official_page_review"
+    }
+  ],
+  "subjects": [
+    {
+      "code": "mathematics",
+      "name": "Mathematics",
+      "category": "mathematics",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "Preserve the distinct state expectations for each grade."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Counting small collections and comparing amounts",
+            "Matching shapes and describing location",
+            "Sorting and informal measurement"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            0
+          ],
+          "topics": [
+            "Representing and comparing quantities",
+            "Joining and separating with objects",
+            "Composing shapes and comparing measurements"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            1
+          ],
+          "topics": [
+            "Addition and subtraction strategies",
+            "Tens and ones",
+            "Measuring length and describing shapes"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            2
+          ],
+          "topics": [
+            "Place value and whole-number operations",
+            "Standard measurement and data displays",
+            "Shape attributes and equal shares"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            3
+          ],
+          "topics": [
+            "Multiplication and division reasoning",
+            "Fractions as numbers",
+            "Area, perimeter and measurement data"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            4
+          ],
+          "topics": [
+            "Multi-digit arithmetic",
+            "Fraction equivalence and operations",
+            "Decimals, angles and shape relationships"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            5
+          ],
+          "topics": [
+            "Fraction calculations and decimal arithmetic",
+            "Place value and numerical patterns",
+            "Volume, coordinates and data"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            6
+          ],
+          "topics": [
+            "Rates and ratios",
+            "Rational numbers and fraction division",
+            "Expressions and equations",
+            "Area, volume, statistics and simple probability"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            7
+          ],
+          "topics": [
+            "Proportional reasoning and percentages",
+            "Signed-number arithmetic and equations",
+            "Scale, geometric measures, sampling and compound probability"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        },
+        {
+          "grades": [
+            8
+          ],
+          "topics": [
+            "Linear equations, systems and functions",
+            "Exponents, roots and irrational numbers",
+            "Transformations, similarity and right-triangle reasoning",
+            "Bivariate data and models"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "These topic summaries are a scope review, not a complete per-standard alignment or teaching library.",
+        "Use adult-supported play and concrete materials in Pre-K; provide accessible representations and language scaffolds.",
+        "Cover all grade expectations, including topics outside the summary; assessment timing does not prescribe instructional sequence."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "algebra_1",
+      "name": "Algebra I",
+      "category": "mathematics",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Linear and quadratic equations and inequalities",
+            "Function representations and exponential change",
+            "Polynomial structure and descriptive data"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Course placement depends on prerequisites and school sequence; grades 9–12 are not a prescribed order.",
+        "Accelerated students may enroll before grade 9; school enrollment grade is separate from high-school content alignment.",
+        "A complete standard mapping, school sequence, reviewed instructional material and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "geometry",
+      "name": "Geometry",
+      "category": "mathematics",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Transformations, congruence, similarity and proof",
+            "Right triangles, trigonometry and circles",
+            "Coordinate arguments and geometric measurement"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Course placement depends on prerequisites and school sequence; grades 9–12 are not a prescribed order.",
+        "Accelerated students may enroll before grade 9; school enrollment grade is separate from high-school content alignment.",
+        "A complete standard mapping, school sequence, reviewed instructional material and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "algebra_2",
+      "name": "Algebra II",
+      "category": "mathematics",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Polynomial, rational and radical relationships",
+            "Exponential, logarithmic and trigonometric functions",
+            "Complex numbers, probability and statistical inference"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Course placement depends on prerequisites and school sequence; grades 9–12 are not a prescribed order.",
+        "Accelerated students may enroll before grade 9; school enrollment grade is separate from high-school content alignment.",
+        "A complete standard mapping, school sequence, reviewed instructional material and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "precalculus",
+      "name": "Precalculus",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Function families and trigonometric modeling",
+            "Vectors, complex-number representations and conics",
+            "Sequences and preparation for calculus"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Local elective or advanced course; the state Plus standards are supporting preparation, not a complete syllabus for this named course.",
+        "Select a reviewed school syllabus or current authorized AP, IB or college framework before claiming full course alignment.",
+        "School-approved materials, exact alignment and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "calculus",
+      "name": "Calculus",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Limits and change",
+            "Differentiation and applications",
+            "Integration and accumulation"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Local elective or advanced course; the state Plus standards are supporting preparation, not a complete syllabus for this named course.",
+        "Select a reviewed school syllabus or current authorized AP, IB or college framework before claiming full course alignment.",
+        "School-approved materials, exact alignment and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "statistics_probability",
+      "name": "Statistics and Probability",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Study design and data interpretation",
+            "Probability models",
+            "Inference and statistical argument"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Local elective or advanced course; the state Plus standards are supporting preparation, not a complete syllabus for this named course.",
+        "Select a reviewed school syllabus or current authorized AP, IB or college framework before claiming full course alignment.",
+        "School-approved materials, exact alignment and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "discrete_mathematics",
+      "name": "Discrete Mathematics",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Counting and finite structures",
+            "Logic, networks and algorithms",
+            "Discrete models and applications"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Local elective or advanced course; the state Plus standards are supporting preparation, not a complete syllabus for this named course.",
+        "Select a reviewed school syllabus or current authorized AP, IB or college framework before claiming full course alignment.",
+        "School-approved materials, exact alignment and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    },
+    {
+      "code": "applied_mathematics",
+      "name": "Applied Mathematics",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny-math-ngls-2017",
+          "version": "NYS Next Generation Mathematics 2017, June 2019 updates",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school course and enrichment placement is a school decision; grade listing is planning availability, not a mandated annual sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Quantitative models and measurement",
+            "Interpreting data in practical contexts",
+            "Comparing strategies and validating assumptions"
+          ],
+          "source_ids": [
+            "ny-math-ngls-2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanations using visual and concrete representations",
+        "Student-led problem solving and mathematical argument",
+        "Error analysis, modeling and independent practice"
+      ],
+      "limitations": [
+        "Local elective or advanced course; the state Plus standards are supporting preparation, not a complete syllabus for this named course.",
+        "Select a reviewed school syllabus or current authorized AP, IB or college framework before claiming full course alignment.",
+        "School-approved materials, exact alignment and human corpus approval remain required."
+      ],
+      "source_ids": [
+        "ny-math-ngls-2017",
+        "ny-math-current-guidance",
+        "ny-math-timeline-2023"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "ny-math-algebra-ii-2026",
+      "title": "Next Generation Algebra II assessment",
+      "applies_from": "2026-06",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny-math-timeline-2023",
+        "ny-math-current-guidance",
+        "ny-math-algebra-ii-assessment"
+      ],
+      "finding": "Next Generation Algebra II instruction began September 2025 and its first Regents examination was June 2026. The last legacy 2011 Algebra II examination was January 2026. Algebra I and Geometry transitioned in June 2024 and June 2025 respectively."
+    }
+  ],
+  "review_notes": [
+    {
+      "id": "ny-math-plus-is-not-course",
+      "source_ids": [
+        "ny-math-ngls-2017"
+      ],
+      "finding": "Plus standards may supplement high-school courses and prepare students for calculus, advanced statistics or discrete mathematics. They are not a separate course or a complete calculus curriculum."
+    },
+    {
+      "id": "ny-math-obsolete-timeline",
+      "source_ids": [
+        "ny-math-timeline-2023",
+        "ny-math-current-guidance"
+      ],
+      "finding": "An April 2020 implementation timeline remains searchable but has obsolete dates. Use the January 2023 revision and current NYSED guidance."
+    },
+    {
+      "id": "ny-math-practices",
+      "source_ids": [
+        "ny-math-ngls-2017"
+      ],
+      "finding": "Mathematical reasoning, modeling, precise communication, tools and structural thinking run through every grade and course. Tutoring should elicit student reasoning rather than complete assessed work."
+    },
+    {
+      "id": "ny-math-accelerated-enrollment",
+      "source_ids": [
+        "ny-math-middle-level"
+      ],
+      "finding": "Schools may offer high-school mathematics before grade 9. The catalog grade scope describes content planning; it does not restrict a younger student from enrollment in a school-authorized advanced course."
+    }
+  ]
+}

@@ -127,8 +127,10 @@ def test_catalog_descriptor_groups_subjects_and_preserves_exact_package_applicab
     new = synthetic_package("2027-2028", "synthetic-v2", "2026-10-18", grades=[10])
     monkeypatch.setattr(standards, "load_catalogs", lambda: [old, new, deepcopy(old)])
     descriptor = catalog_descriptor()
-    assert len(descriptor["states"]) == 1 and len(descriptor["states"][0]["subjects"]) == 1
-    subject = descriptor["states"][0]["subjects"][0]
+    assert len(descriptor["states"]) == 1
+    matching = [item for item in descriptor["states"][0]["subjects"] if item["code"] == "environmental_science"]
+    assert len(matching) == 1
+    subject = matching[0]
     assert subject["grades"] == [9, 10]
     assert subject["academic_years"] == ["2027-2028", "2026-2027"]
     assert subject["standards_version"] == "synthetic-v2"

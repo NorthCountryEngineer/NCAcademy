@@ -1,0 +1,2230 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "US-NY",
+  "academic_year": "2026-2027",
+  "reviewed_at": "2026-10-18",
+  "sources": [
+    {
+      "id": "ny_stem_science_p12",
+      "title": "New York State P–12 Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/p-12-science-learning-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+      "notes": "Current official standard; PK–5 grade expectations, middle/high school bands and engineering. Scope review does not supply a complete instructional corpus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "673499b3a712830b56117d4cfd69cf53bc23bd7f37a123f1a030924f07527670",
+      "byte_length": 2174261
+    },
+    {
+      "id": "ny_stem_science_p2",
+      "title": "Prekindergarten–Grade 2 Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/p-2-science-learning-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+      "notes": "Official grade or band extract of NYSP12SLS. New York additions and assessment boundaries must be preserved.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "ece62b5af035db7067baae225e8d8536f64c47930a2eb65bce15e35469e5a94a",
+      "byte_length": 458105
+    },
+    {
+      "id": "ny_stem_science_35",
+      "title": "Grades 3–5 Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/3-5-science-learning-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+      "notes": "Official grade or band extract of NYSP12SLS. New York additions and assessment boundaries must be preserved.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "8484795f32d4040a472925cf484fe6e34f13bb29ea3e6d9c9cd2c1eb39ede313",
+      "byte_length": 509404
+    },
+    {
+      "id": "ny_stem_science_ms",
+      "title": "Middle School Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ms-science-learning-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+      "notes": "Official grade or band extract of NYSP12SLS. New York additions and assessment boundaries must be preserved.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "df1ecc67075dca4395da27d6eb796ca776a2ee2bb78329f96566f830d0f84b5f",
+      "byte_length": 735972
+    },
+    {
+      "id": "ny_stem_science_hs",
+      "title": "High School Science Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/hs-science-learning-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+      "notes": "Official grade or band extract of NYSP12SLS. New York additions and assessment boundaries must be preserved.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "0f3d02ec4a52051ed6e92c3c7ce98991615f29d84e8fdc4b349c7fd8a9f74e55",
+      "byte_length": 749309
+    },
+    {
+      "id": "ny_stem_course_biology",
+      "title": "Science High School Course Map: Life Science: Biology",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/biology.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current NYSED course map; no edition date stated",
+      "notes": "Maps high-school performance expectations to this Regents course. It does not prescribe course order, grade placement or a local syllabus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "5a114ca9f20a744156e8bab57847e533e3556df51805a742f37587429ac0f3b1",
+      "byte_length": 463566
+    },
+    {
+      "id": "ny_stem_course_ess",
+      "title": "Science High School Course Map: Earth and Space Sciences",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ess.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current NYSED course map; no edition date stated",
+      "notes": "Maps high-school performance expectations to this Regents course. It does not prescribe course order, grade placement or a local syllabus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "d90f5a178a93edde41c8abae625939c97332e1d5bd83a807833c08ff69ad4a62",
+      "byte_length": 487141
+    },
+    {
+      "id": "ny_stem_course_chemistry",
+      "title": "Science High School Course Map: Physical Science: Chemistry",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/chemistry.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Revised November 20, 2019",
+      "notes": "Maps high-school performance expectations to this Regents course. It does not prescribe course order, grade placement or a local syllabus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "3064e031e3fd46d7dabf2ebebb0322606986b7633843f457ccc2a5b65a34823a",
+      "byte_length": 382051
+    },
+    {
+      "id": "ny_stem_course_physics",
+      "title": "Science High School Course Map: Physical Science: Physics",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/physics.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "Current NYSED course map; no edition date stated",
+      "notes": "Maps high-school performance expectations to this Regents course. It does not prescribe course order, grade placement or a local syllabus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "e52a8709a7a1de6c00aae469e6a613e2658e78c0b30a1798f6423891ef54ec8f",
+      "byte_length": 475019
+    },
+    {
+      "id": "ny_stem_science_timeline",
+      "title": "Science Standards Development, Adoption and Implementation Timeline",
+      "url": "https://www.nysed.gov/sites/default/files/programs/curriculum-instruction/science-timeline.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Revised April 2021",
+      "notes": "Distinguishes standards adoption, instructional phase-in and first administration of new assessments.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "654edf31822705d1d54b6974da384a00f18f4f87c086c7b9329a109d53b9182b",
+      "byte_length": 572883
+    },
+    {
+      "id": "ny_stem_science_assessment",
+      "title": "High School Sciences: Assessment Resources",
+      "url": "https://www.nysed.gov/state-assessment/high-school-sciences",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Current official exam/resource index; links the September 2026 Investigations FAQ.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "225c4898dbce92a002b688abe12f708d2fdf9f2e30bbc6ead9fa3c9116fcabc8",
+      "byte_length": 60297
+    },
+    {
+      "id": "ny_stem_investigation_faq",
+      "title": "Frequently Asked Questions Related to Investigations for Regents Examinations in Science",
+      "url": "https://www.nysed.gov/sites/default/files/programs/state-assessment/faq-regents-science-investigations-updated-9-26.pdf",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Updated September 2026",
+      "notes": "Public guidance about secure required Investigations; the secure Investigation documents themselves were not retrieved or bundled.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "7d97fd8ec0661b7e56fbcd49e75784aaad5f172ed1af2e1a44d0cc9bae5a5eb2",
+      "byte_length": 341690
+    },
+    {
+      "id": "ny_stem_science_guidance",
+      "title": "Science Guidance and Resources",
+      "url": "https://www.nysed.gov/standards-instruction/science-guidance-resources",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Explains January 2023 laboratory regulation: hands-on and simulated/virtual combinations, 1,200 minutes and satisfactory reports.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "362d45e523fc34987a507721ec94a1ed9b452c659ba38df32619cb8cf1401948",
+      "byte_length": 79471
+    },
+    {
+      "id": "ny_stem_science_faq",
+      "title": "Science FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/science-faq",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Confirms new and legacy exam overlap: old Earth/Living Environment end June 2026; old Chemistry/Physics end June 2027.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_stem_csdf",
+      "title": "Computer Science and Digital Fluency Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/computer-science-digital-fluency-standards-k-12.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "December 2020",
+      "notes": "Five concepts; exact bands K–1, 2–3, 4–6, 7–8 and 9–12. Curriculum delivery is locally decided.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "a77f1c81026039925c7639cfa59a716c3de666f15613aa66e712a5b85fdd9b31",
+      "byte_length": 604435
+    },
+    {
+      "id": "ny_stem_csdf_faq",
+      "title": "Computer Science and Digital Fluency FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/computer-science-digital-literacy-faq",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Full implementation September 1, 2024; band endpoints and integrated/standalone delivery flexibility.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "08577e83b75185fa831feee37c84a9bbdfe8aba0240b128c495565f19dfe9070",
+      "byte_length": 78411
+    },
+    {
+      "id": "ny_stem_technology",
+      "title": "Technology Education Learning Standards",
+      "url": "https://www.nysed.gov/career-technical-education/technology-education-learning-standards",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Current NYSED MST technology index reviewed October 18, 2026",
+      "notes": "Links MST Standards 1, 2, 5, 6 and 7 for technology; newer mathematics/science standards are referenced separately. Optional STEL supplements state standards.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "fa45e5ac81c1e855dda330f16d323309671d55ac914664991f166df3740fc035",
+      "byte_length": 73220
+    },
+    {
+      "id": "ny_stem_mst5",
+      "title": "MST Standard 5: Technology",
+      "url": "https://www.nysed.gov/sites/default/files/programs/career-technical-education/learning-standards-for-math-science-and-technology-standard-5.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Current NYSED-linked MST document; elementary, intermediate and commencement levels",
+      "notes": "Technology design, tools/processes, computing, systems, history, impacts and management; level labels do not prescribe a new yearly sequence.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "9e585e80bdffd866c2145df5eb05b857d53a68e5e4061a2a44801536571096f7",
+      "byte_length": 277815
+    },
+    {
+      "id": "ny_stem_climate",
+      "title": "Climate Education Instructional Requirement",
+      "url": "https://www.nysed.gov/standards-instruction/climate-education",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Permanently effective March 25, 2026",
+      "notes": "New climate requirement phases in after 2026–27: grades 5–12 in 2027–28; K–4 in 2028–29.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "5cca1b49aa2cb8da9ba751031e2cefdb6c404b3fb6a2b0bcb4175935e05bfb92",
+      "byte_length": 58507
+    },
+    {
+      "id": "ny_stem_climate_memo",
+      "title": "Personal Finance Education and Climate Education Implementation Memorandum",
+      "url": "https://www.nysed.gov/sites/default/files/standards-instruction/memo/signed-100.2-pfclimate-education-memo-march-2026-2.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "March 24, 2026",
+      "notes": "States different phase-in dates, grade bands, local delivery choices and verification requirements. Early implementation is permitted.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "8bae4a0ddc3803debbb85c6ddfdf7c1780345f6b82bd6a85cf25a38a65e47ded",
+      "byte_length": 344386
+    },
+    {
+      "id": "ny_stem_climate_topics",
+      "title": "Climate Education Topics and Grade Bands",
+      "url": "https://www.nysed.gov/standards-instruction/climate-education-topics-grade-bands",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Identifies causes, consequences and responses to climate change. Detailed state grade-band objectives are still forthcoming on the reviewed page.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "3688f3e40af3b01a7f54edc00f8736813f99b56f2ebf902b5425dd72b0ca65cf",
+      "byte_length": 54490
+    }
+  ],
+  "subjects": [
+    {
+      "code": "elementary_science",
+      "name": "Elementary science",
+      "category": "science",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_p2",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "notes": "PK, K, 1 and 2 are distinct; engineering also uses K–2 expectations."
+        },
+        {
+          "source_id": "ny_stem_science_35",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "notes": "Distinct grade expectations plus 3–5 engineering."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Sorting solids and liquids",
+            "Pushes, pulls and relative speed",
+            "Vibration and sound",
+            "Living things, body parts and survival needs",
+            "Young and parent resemblance",
+            "Sky, seasons and weather observations",
+            "Sunlight, warmth and shadows"
+          ],
+          "source_ids": [
+            "ny_stem_science_p2"
+          ]
+        },
+        {
+          "grades": [
+            0
+          ],
+          "topics": [
+            "Observable material properties",
+            "Pushes, pulls and motion",
+            "Organism needs, habitats and environmental effects",
+            "Weather patterns and sunlight",
+            "People and environmental protection",
+            "Simple solutions and design tests"
+          ],
+          "source_ids": [
+            "ny_stem_science_p2"
+          ]
+        },
+        {
+          "grades": [
+            1
+          ],
+          "topics": [
+            "Light, sound and communication",
+            "Plant and animal structures and senses",
+            "Parent and offspring similarities",
+            "Daily and seasonal sky patterns",
+            "Simple engineering comparisons"
+          ],
+          "source_ids": [
+            "ny_stem_science_p2"
+          ]
+        },
+        {
+          "grades": [
+            2
+          ],
+          "topics": [
+            "Materials and reversible or lasting changes",
+            "Plant growth, pollination and seed movement",
+            "Habitats and diversity",
+            "Erosion and changing land",
+            "Land and water representations",
+            "Design, build and compare solutions"
+          ],
+          "source_ids": [
+            "ny_stem_science_p2"
+          ]
+        },
+        {
+          "grades": [
+            3
+          ],
+          "topics": [
+            "Forces, motion, electricity and magnets",
+            "Fossils, survival and changing environments",
+            "Organism groups and life cycles",
+            "Inherited and environmental traits",
+            "Weather, climate, water cycling and hazards",
+            "Fair tests and design improvements"
+          ],
+          "source_ids": [
+            "ny_stem_science_35"
+          ]
+        },
+        {
+          "grades": [
+            4
+          ],
+          "topics": [
+            "Energy transfer, conversion and conservation",
+            "Wave patterns and information",
+            "Organism structures and information processing",
+            "Rock and fossil evidence of landscape change",
+            "Weathering, erosion, mapping and hazards",
+            "Resources and evidence-based designs"
+          ],
+          "source_ids": [
+            "ny_stem_science_35"
+          ]
+        },
+        {
+          "grades": [
+            5
+          ],
+          "topics": [
+            "Particles, material properties and mass conservation",
+            "Mixtures and chemical changes",
+            "Plants, food webs and ecosystem cycling",
+            "Earth spheres and water distribution",
+            "Gravity, stars and solar-system patterns",
+            "Comparing and improving engineering designs"
+          ],
+          "source_ids": [
+            "ny_stem_science_35"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Observation and scientific questions",
+        "Models, diagrams and data interpretation",
+        "Evidence-based explanations",
+        "Age-appropriate design reasoning"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "PK uses adult-supported play and observation; do not assume independent reading or chat.",
+        "Physical activities and safety require appropriate adult supervision."
+      ],
+      "source_ids": [
+        "ny_stem_science_p2",
+        "ny_stem_science_35",
+        "ny_stem_science_p12"
+      ]
+    },
+    {
+      "code": "middle_school_science",
+      "name": "Middle school science",
+      "category": "science",
+      "grades": [
+        6,
+        7,
+        8
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_ms",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "notes": "State expectations cover the whole 6–8 band; school selects the yearly sequence."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Particles and material properties",
+            "Chemical changes and conservation",
+            "Motion, forces and interactions",
+            "Energy movement and transformation",
+            "Waves, light and information",
+            "Cells, organs and organism systems",
+            "Photosynthesis, respiration and ecosystem cycling",
+            "Ecological relationships",
+            "Growth, reproduction and heredity",
+            "Selection, adaptation and biological evidence",
+            "Astronomy and solar-system patterns",
+            "Geologic history and Earth processes",
+            "Weather and climate systems",
+            "Human effects, resources and sustainability",
+            "Engineering design and evaluation"
+          ],
+          "source_ids": [
+            "ny_stem_science_ms"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Conceptual explanations and quantitative reasoning",
+        "Scientific models and evidence",
+        "Investigation planning and data interpretation",
+        "Connections between physical, life and Earth sciences"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "Grade 6, 7 and 8 each receive access to the band; topic availability does not establish a statewide yearly sequence.",
+        "The grade 8 state test does not replace instruction in grades 6 and 7."
+      ],
+      "source_ids": [
+        "ny_stem_science_ms",
+        "ny_stem_science_p12"
+      ]
+    },
+    {
+      "code": "biology",
+      "name": "Life Science: Biology",
+      "category": "science",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school expectations with course-specific interpretation."
+        },
+        {
+          "source_id": "ny_stem_course_biology",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Official Regents course map; shared expectations require the stated course context."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Cells, organism systems and homeostasis",
+            "Biochemical matter and energy pathways",
+            "Ecosystems, populations and ecological relationships",
+            "DNA, heredity and cell division",
+            "Evolution, biodiversity and environmental interactions"
+          ],
+          "source_ids": [
+            "ny_stem_course_biology",
+            "ny_stem_science_hs"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Biological explanations and models",
+        "Data, evidence and scientific reasoning",
+        "Biological scope of shared carbon-cycle expectations"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "High-school band alignment does not mandate a particular grade, course order or prerequisite sequence.",
+        "Public tutoring cannot certify laboratory completion or school-awarded credit.",
+        "Use the matching current course and assessment resources; shared standard identifiers do not imply identical content in every course."
+      ],
+      "source_ids": [
+        "ny_stem_course_biology",
+        "ny_stem_science_hs",
+        "ny_stem_science_assessment"
+      ]
+    },
+    {
+      "code": "earth_space_science",
+      "name": "Earth and space sciences",
+      "category": "science",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school expectations with course-specific interpretation."
+        },
+        {
+          "source_id": "ny_stem_course_ess",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Official Regents course map; shared expectations require the stated course context."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Solar-system and universe models",
+            "Geologic history and evidence",
+            "Earth interior, plate and surface processes",
+            "Water, atmosphere and interacting Earth systems",
+            "Weather and climate mechanisms",
+            "Resources, hazards and sustainability"
+          ],
+          "source_ids": [
+            "ny_stem_course_ess",
+            "ny_stem_science_hs"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Geoscience data and models",
+        "Maps, diagrams and current reference tables",
+        "Evidence-based Earth and astronomical explanations"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "High-school band alignment does not mandate a particular grade, course order or prerequisite sequence.",
+        "Public tutoring cannot certify laboratory completion or school-awarded credit.",
+        "Use the matching current course and assessment resources; shared standard identifiers do not imply identical content in every course."
+      ],
+      "source_ids": [
+        "ny_stem_course_ess",
+        "ny_stem_science_hs",
+        "ny_stem_science_assessment"
+      ]
+    },
+    {
+      "code": "chemistry",
+      "name": "Physical Science: Chemistry",
+      "category": "science",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school expectations with course-specific interpretation."
+        },
+        {
+          "source_id": "ny_stem_course_chemistry",
+          "version": "Revised November 20, 2019",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Official Regents course map; shared expectations require the stated course context."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Atoms, electrons and periodic patterns",
+            "Bonding and designed material properties",
+            "Gases, solutions and concentration",
+            "Reaction conservation and quantitative relationships",
+            "Chemical energy, rates and equilibrium",
+            "Nuclear processes",
+            "Acid-base behavior and electron-transfer reactions"
+          ],
+          "source_ids": [
+            "ny_stem_course_chemistry",
+            "ny_stem_science_hs"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Particulate and bulk-scale connections",
+        "Quantitative chemical reasoning",
+        "Evidence, diagrams and investigation design"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "High-school band alignment does not mandate a particular grade, course order or prerequisite sequence.",
+        "Public tutoring cannot certify laboratory completion or school-awarded credit.",
+        "New York additions, including gas, solution, acid-base and redox expectations, must not be lost in generic NGSS mappings."
+      ],
+      "source_ids": [
+        "ny_stem_course_chemistry",
+        "ny_stem_science_hs",
+        "ny_stem_science_assessment"
+      ]
+    },
+    {
+      "code": "physics",
+      "name": "Physical Science: Physics",
+      "category": "science",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "High-school expectations with course-specific interpretation."
+        },
+        {
+          "source_id": "ny_stem_course_physics",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Official Regents course map; shared expectations require the stated course context."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Motion, force and momentum",
+            "Gravitation and electric or magnetic interactions",
+            "Energy and thermal processes",
+            "Waves, light and electromagnetic radiation",
+            "Information, communication and energy systems",
+            "Nuclear and astronomical connections within the course map"
+          ],
+          "source_ids": [
+            "ny_stem_course_physics",
+            "ny_stem_science_hs"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Physical models and mathematical reasoning",
+        "Graphs, measurements and evidence",
+        "Engineering applications and tradeoffs"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "High-school band alignment does not mandate a particular grade, course order or prerequisite sequence.",
+        "Public tutoring cannot certify laboratory completion or school-awarded credit.",
+        "Use the matching current course and assessment resources; shared standard identifiers do not imply identical content in every course."
+      ],
+      "source_ids": [
+        "ny_stem_course_physics",
+        "ny_stem_science_hs",
+        "ny_stem_science_assessment"
+      ]
+    },
+    {
+      "code": "environmental_science",
+      "name": "Environmental science",
+      "category": "science",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "A school-defined course can draw from ecosystem, biodiversity, Earth-system, resource, climate and engineering expectations."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Ecological systems and biodiversity",
+            "Carbon, water and nutrient cycling",
+            "Climate evidence and environmental change",
+            "Population, land use and natural resources",
+            "Energy choices, pollution and sustainability",
+            "Evaluating environmental solutions"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_ess",
+            "ny_stem_course_biology"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Environmental data and systems thinking",
+        "Scientific evaluation of claims and alternatives",
+        "Local environmental investigations and computational models"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "No statewide grade-10 Environmental Science syllabus or placement is claimed.",
+        "Schools must approve a local course scope and sequence; the existing environmental teaching adapter remains partial."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_ess",
+        "ny_stem_course_biology"
+      ]
+    },
+    {
+      "code": "computer_science",
+      "name": "Computer science",
+      "category": "computing",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            0,
+            1
+          ],
+          "notes": "The state band is K–1; yearly placement is local."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            2,
+            3
+          ],
+          "notes": "The state band is 2–3; yearly placement is local."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            4,
+            5,
+            6
+          ],
+          "notes": "The state band is 4–6; yearly placement is local."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            7,
+            8
+          ],
+          "notes": "The state band is 7–8; yearly placement is local."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "The state band is 9–12; yearly placement is local."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1
+          ],
+          "topics": [
+            "Concrete sequences and repeated steps",
+            "Simple observations and data displays",
+            "Breaking familiar tasks into parts",
+            "Familiar devices and input/output"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            2,
+            3
+          ],
+          "topics": [
+            "Conditions within task sequences",
+            "Patterns, data representations and debugging",
+            "Software and hardware roles",
+            "Comparing ways to solve a task"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            4,
+            5,
+            6
+          ],
+          "topics": [
+            "Algorithms with repetition and selection",
+            "Programming data and decomposition",
+            "Models and data visualization",
+            "Devices, networks and information transfer"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            7,
+            8
+          ],
+          "topics": [
+            "Reusable procedures and control structures",
+            "Data interpretation and computational models",
+            "Network protocols and system troubleshooting",
+            "Testing, revising and documenting programs"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Program design and abstraction",
+            "Structured data, models and visualizations",
+            "Functions, libraries and control structures",
+            "Network and computing-system evaluation",
+            "Ethics, accessibility and computing careers"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Computational thinking and programming concepts",
+        "Data, modeling and algorithmic reasoning",
+        "Systems, networks and cybersecurity concepts",
+        "Societal and ethical evaluation"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "CSDF has five concepts; computer science and digital fluency are complementary views of the same standard, not separate state standards.",
+        "Full implementation began September 1, 2024; standalone course delivery is optional.",
+        "PK exploration is supported through elementary science and early learning, not invented PK CSDF identifiers."
+      ],
+      "source_ids": [
+        "ny_stem_csdf",
+        "ny_stem_csdf_faq"
+      ]
+    },
+    {
+      "code": "digital_fluency",
+      "name": "Digital fluency and citizenship",
+      "category": "computing",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            0,
+            1
+          ],
+          "notes": "Same CSDF state band; integrated delivery may occur in any appropriate subject."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            2,
+            3
+          ],
+          "notes": "Same CSDF state band; integrated delivery may occur in any appropriate subject."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            4,
+            5,
+            6
+          ],
+          "notes": "Same CSDF state band; integrated delivery may occur in any appropriate subject."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            7,
+            8
+          ],
+          "notes": "Same CSDF state band; integrated delivery may occur in any appropriate subject."
+        },
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Same CSDF state band; integrated delivery may occur in any appropriate subject."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1
+          ],
+          "topics": [
+            "Safe, guided device use",
+            "Simple searches and digital creations",
+            "Private information and trusted adult help",
+            "Respectful digital participation"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            2,
+            3
+          ],
+          "topics": [
+            "Purposeful tool selection",
+            "Organizing and communicating information",
+            "Appropriate sharing and passwords",
+            "Digital rights and responsibilities"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            4,
+            5,
+            6
+          ],
+          "topics": [
+            "Research, source evaluation and collaboration",
+            "Responsible creation, attribution and sharing",
+            "Personal information and digital presence",
+            "Security risks and protective habits"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            7,
+            8
+          ],
+          "topics": [
+            "Evaluating online claims and resources",
+            "Creating and revising collaborative artifacts",
+            "Privacy, security and incident responses",
+            "Ethical and accessible digital participation"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Independent evaluation of digital tools and evidence",
+            "Responsible research, creation and publication",
+            "Security safeguards and response reasoning",
+            "Equity, accessibility, policy and computing impacts"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Digital research and source judgment",
+        "Responsible communication and creation",
+        "Privacy, cybersecurity and citizenship",
+        "Computing impacts and accessibility"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "Digital fluency is broader than software-operation drills.",
+        "Do not infer identical expectations in every year of a state band or turn student preferences into security-policy changes."
+      ],
+      "source_ids": [
+        "ny_stem_csdf",
+        "ny_stem_csdf_faq"
+      ]
+    },
+    {
+      "code": "technology_engineering",
+      "name": "Technology and engineering",
+      "category": "technology",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "cross_curricular",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_technology",
+          "version": "Current NYSED MST technology index reviewed October 18, 2026",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "MST technology standards remain distinct from the newer science and CSDF standards."
+        },
+        {
+          "source_id": "ny_stem_mst5",
+          "version": "Current NYSED-linked MST document; elementary, intermediate and commencement levels",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Elementary, intermediate and commencement levels; local grade sequence required."
+        },
+        {
+          "source_id": "ny_stem_science_p12",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Engineering design appears in K–2, 3–5, middle-school and high-school science bands."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Identifying needs and possible solutions",
+            "Simple models, materials and fair comparisons",
+            "Using evidence to improve a design"
+          ],
+          "source_ids": [
+            "ny_stem_science_p12",
+            "ny_stem_mst5"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Criteria and constraints",
+            "Comparing and testing proposed solutions",
+            "Models, materials, energy and information"
+          ],
+          "source_ids": [
+            "ny_stem_science_p12",
+            "ny_stem_mst5"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "System behavior and engineering tradeoffs",
+            "Models, data, iteration and optimization",
+            "Tools, materials and computer-based design",
+            "Technological effects on people and environments"
+          ],
+          "source_ids": [
+            "ny_stem_science_ms",
+            "ny_stem_mst5"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Complex design problems and evaluation",
+            "Systems, modeling and optimization",
+            "Technology history, impacts and ethics",
+            "Resources, project management and design communication"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_mst5"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Conceptual engineering and systems reasoning",
+        "Design sketches, data and documented iteration",
+        "Technology evaluation and responsible choices"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "Tutoring supports design and analysis; physical construction, tool safety and practical competence require qualified supervision.",
+        "This entry does not certify a CTE pathway or replace required school practical experiences."
+      ],
+      "source_ids": [
+        "ny_stem_technology",
+        "ny_stem_mst5",
+        "ny_stem_science_p12"
+      ]
+    },
+    {
+      "code": "climate_sustainability",
+      "name": "Climate and sustainability",
+      "category": "cross_curricular",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "cross_curricular",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_p12",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Existing science topics support climate learning in 2026–27."
+        },
+        {
+          "source_id": "ny_stem_climate",
+          "version": "Permanently effective March 25, 2026",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Regulation effective March 25, 2026; later instructional phase-in."
+        },
+        {
+          "source_id": "ny_stem_climate_topics",
+          "version": "Current page reviewed October 18, 2026",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Detailed state grade-band objectives remain forthcoming; proposed topic progression is not a state objective list."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "topics": [
+            "Weather observations and seasonal patterns",
+            "Living things, resources and caring for local places",
+            "Age-appropriate climate questions and choices"
+          ],
+          "source_ids": [
+            "ny_stem_science_p12",
+            "ny_stem_climate_topics"
+          ]
+        },
+        {
+          "grades": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Weather versus climate",
+            "Energy, carbon cycling and climate evidence",
+            "Effects on ecosystems and communities",
+            "Comparing mitigation and adaptation choices"
+          ],
+          "source_ids": [
+            "ny_stem_science_p12",
+            "ny_stem_climate_topics"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Climate mechanisms, evidence and uncertainty",
+            "Natural and human system consequences",
+            "Resource, energy and equity tradeoffs",
+            "Evaluating solutions and resilience strategies"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_climate_topics"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based climate explanations",
+        "Interdisciplinary interpretation of causes, effects and responses",
+        "Evaluating proposed actions and tradeoffs"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "The new climate mandate is not yet in its required implementation year for 2026–27.",
+        "Implementation begins 2027–28 for grades 5–8 and 9–12 and 2028–29 for K–4; instruction is due by each band endpoint.",
+        "The climate regulation uses K–4, 5–8 and 9–12 bands, which differ from science and CSDF bands.",
+        "Local instruction may be integrated or standalone; no new complete state course syllabus or published detailed grade-band objective list is claimed."
+      ],
+      "source_ids": [
+        "ny_stem_climate",
+        "ny_stem_climate_memo",
+        "ny_stem_climate_topics",
+        "ny_stem_science_p12"
+      ]
+    },
+    {
+      "code": "astronomy",
+      "name": "Astronomy",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_ess",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Solar systems, stars and galaxies",
+            "Origins, evolution and astronomical evidence",
+            "Gravity, orbits and light-based observations"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_ess"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_ess"
+      ]
+    },
+    {
+      "code": "anatomy_physiology",
+      "name": "Anatomy and physiology",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_biology",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Cells, tissues, organs and body systems",
+            "Homeostasis and physiological interactions",
+            "Structure, function and biological evidence"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_biology"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_biology"
+      ]
+    },
+    {
+      "code": "marine_science",
+      "name": "Marine science",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_ess",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_biology",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Ocean and coastal systems",
+            "Marine ecosystems and biodiversity",
+            "Water chemistry, climate and human effects"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_ess",
+            "ny_stem_course_biology"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_ess",
+        "ny_stem_course_biology"
+      ]
+    },
+    {
+      "code": "forensic_science",
+      "name": "Forensic science",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_biology",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_chemistry",
+          "version": "Revised November 20, 2019",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Interpreting physical and biological evidence",
+            "Measurement, uncertainty and competing explanations",
+            "Chemical and genetic methods in school-approved contexts"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_biology",
+            "ny_stem_course_chemistry"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_biology",
+        "ny_stem_course_chemistry"
+      ]
+    },
+    {
+      "code": "engineering_design",
+      "name": "Engineering design",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_mst5",
+          "version": "Current NYSED-linked MST document; elementary, intermediate and commencement levels",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Defining complex problems and constraints",
+            "Modeling, testing and optimization",
+            "Tradeoffs, ethics and design communication"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_mst5"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_mst5"
+      ]
+    },
+    {
+      "code": "aerospace_energy_systems",
+      "name": "Aerospace and energy systems",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_science_hs",
+          "version": "Adopted December 2016; effective July 1, 2017; connection boxes updated September 2018",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_physics",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_course_ess",
+          "version": "Current NYSED course map; no edition date stated",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        },
+        {
+          "source_id": "ny_stem_mst5",
+          "version": "Current NYSED-linked MST document; elementary, intermediate and commencement levels",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Motion, flight and orbital concepts",
+            "Energy generation, transfer and efficiency",
+            "System design, materials and environmental tradeoffs"
+          ],
+          "source_ids": [
+            "ny_stem_science_hs",
+            "ny_stem_course_physics",
+            "ny_stem_course_ess",
+            "ny_stem_mst5"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_physics",
+        "ny_stem_course_ess",
+        "ny_stem_mst5"
+      ]
+    },
+    {
+      "code": "computer_programming_data_science",
+      "name": "Computer programming and data science",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_stem_csdf",
+          "version": "December 2020",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Supporting state-aligned concepts only; a complete elective syllabus is not supplied."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Program design, decomposition and testing",
+            "Data organization, visualization and modeling",
+            "Algorithms, responsible computing and data limitations"
+          ],
+          "source_ids": [
+            "ny_stem_csdf"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "School-defined conceptual tutoring",
+        "Evidence, models, data and domain vocabulary",
+        "Connections to approved class resources"
+      ],
+      "limitations": [
+        "This is a reviewed tutoring scope and source register, not a complete lesson sequence, exhaustive standards transcription, assessment bank or approved teaching corpus.",
+        "This optional catalog entry is a proposed local elective; no separate NYSED full syllabus, statewide mandate or fixed grade placement is claimed.",
+        "School-approved syllabus, prerequisite checks and instructional resources are required before teaching; AP, IB and dual-enrollment variants require their own current frameworks.",
+        "Tutoring does not authorize unsafe practical work, professional advice or certification."
+      ],
+      "source_ids": [
+        "ny_stem_csdf"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "ny_stem_science_grade5_grade8_assessment",
+      "title": "Grade 5 and grade 8 science assessment cutover",
+      "applies_from": "2024-spring",
+      "grades": [
+        5,
+        8
+      ],
+      "source_ids": [
+        "ny_stem_science_timeline"
+      ],
+      "finding": "New NYSP12SLS elementary/intermediate science tests first administered in spring 2024; science remains represented in every grade, not only assessment years."
+    },
+    {
+      "id": "ny_stem_biology_ess_assessment",
+      "title": "Biology and Earth/Space science assessment cutover",
+      "applies_from": "2025-06",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_stem_science_timeline",
+        "ny_stem_science_faq"
+      ],
+      "finding": "New Life Science: Biology and Earth and Space Sciences Regents exams began June 2025. Legacy Living Environment and Physical Setting/Earth Science ended June 2026."
+    },
+    {
+      "id": "ny_stem_chemistry_physics_assessment",
+      "title": "Chemistry and Physics assessment transition",
+      "applies_from": "2026-06",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_stem_science_timeline",
+        "ny_stem_science_faq",
+        "ny_stem_investigation_faq"
+      ],
+      "finding": "New Physical Science: Chemistry and Physics Regents exams began June 2026. Legacy Physical Setting/Chemistry and Physics continue through June 2027 for matching prior instruction; course/exam/reference-table versions must remain explicit."
+    },
+    {
+      "id": "ny_stem_csdf_full_implementation",
+      "title": "Full CSDF implementation",
+      "applies_from": "2024-09-01",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_stem_csdf_faq"
+      ],
+      "finding": "Full implementation began September 1, 2024. Students must achieve standards by the end of K–1, 2–3, 4–6, 7–8 and 9–12 bands; delivery and annual sequence remain local."
+    },
+    {
+      "id": "ny_stem_climate_regulation_effective",
+      "title": "Climate education regulation permanently effective",
+      "applies_from": "2026-03-25",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_stem_climate",
+        "ny_stem_climate_memo"
+      ],
+      "finding": "Permanent regulation effective March 25, 2026 with later phased instructional requirements. Early implementation is permitted; existing science climate content already applies."
+    },
+    {
+      "id": "ny_stem_climate_middle_high_phase_in",
+      "title": "Climate education phase-in for middle and high school",
+      "applies_from": "2027-2028",
+      "grades": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_stem_climate",
+        "ny_stem_climate_memo"
+      ],
+      "finding": "Beginning in 2027–28, instruction is required within grades 5–8 by the end of grade 8 and grades 9–12 by the end of grade 12; school district/charter verification is required during phase-in."
+    },
+    {
+      "id": "ny_stem_climate_elementary_phase_in",
+      "title": "Climate education phase-in for elementary school",
+      "applies_from": "2028-2029",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "source_ids": [
+        "ny_stem_climate",
+        "ny_stem_climate_memo"
+      ],
+      "finding": "Beginning in 2028–29, instruction is required within K–4 by the end of grade 4; do not substitute a K–5 band or describe this as an already-required 2026–27 sequence."
+    }
+  ],
+  "review_notes": [
+    {
+      "id": "ny_stem_standards_not_annual_curriculum",
+      "source_ids": [
+        "ny_stem_science_p12",
+        "ny_stem_course_biology"
+      ],
+      "finding": "A 2026–27 applicability review is not a new standards edition. State expectations and course maps permit local curricula, instructional methods and sequences."
+    },
+    {
+      "id": "ny_stem_three_dimensional_science",
+      "source_ids": [
+        "ny_stem_science_p12"
+      ],
+      "finding": "Science tutoring should combine disciplinary ideas, scientific/engineering practices and crosscutting reasoning, rather than reducing coverage to isolated factual answers."
+    },
+    {
+      "id": "ny_stem_secure_investigations",
+      "source_ids": [
+        "ny_stem_investigation_faq"
+      ],
+      "finding": "Required Regents Investigation materials are secure school-controlled content. Do not ingest secure teacher materials into public/shared tutoring corpora or expose teacher directions/answers to students. District-limited sharing rules apply; prerecorded Investigation tasks are prohibited."
+    },
+    {
+      "id": "ny_stem_laboratory_experience",
+      "source_ids": [
+        "ny_stem_science_guidance",
+        "ny_stem_investigation_faq"
+      ],
+      "finding": "General Regents laboratory experience may combine hands-on and simulated/virtual activities under the January 2023 rule, with 1,200 minutes and satisfactory documented reports. Required Investigations remain hands-on and must be successfully completed for matching Regents admission. A conversation alone does not certify school lab credit."
+    },
+    {
+      "id": "ny_stem_climate_objectives_pending",
+      "source_ids": [
+        "ny_stem_climate_topics"
+      ],
+      "finding": "The reviewed official topics page still says detailed grade-band objectives are forthcoming. Catalog climate topic progressions are planning suggestions, not invented state objective identifiers."
+    },
+    {
+      "id": "ny_stem_science_additions",
+      "source_ids": [
+        "ny_stem_science_hs",
+        "ny_stem_course_chemistry"
+      ],
+      "finding": "NYS science standards contain state-specific additions. Later full teaching adapters must preserve authentic New York identifiers, course-specific scope, clarification statements and assessment boundaries."
+    },
+    {
+      "id": "ny_stem_corpus_publication_boundary",
+      "source_ids": [
+        "ny_stem_science_p12",
+        "ny_stem_investigation_faq"
+      ],
+      "finding": "Source review and subject representation do not approve teaching materials, teacher behavior or model use. School resources, current corpus snapshots and student-visible content retain separate approval/access controls."
+    }
+  ]
+}

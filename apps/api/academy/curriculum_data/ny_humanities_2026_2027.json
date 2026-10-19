@@ -1,0 +1,2330 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "US-NY",
+  "academic_year": "2026-2027",
+  "reviewed_at": "2026-10-18",
+  "sources": [
+    {
+      "id": "ny_ela_2017",
+      "title": "New York State Next Generation English Language Arts Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/nys-next-generation-ela-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Revised 2017",
+      "notes": "Adopted September 2017. Grade-specific PK through 8; high-school bands 9–10 and 11–12. Source scope reviewed, not a complete teaching-text ingestion.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "ba7babfddc517b070c98a1d984bb085c3f18ebca6ddaaf164ebb358d24778e6e",
+      "byte_length": 546203
+    },
+    {
+      "id": "ny_ela_introduction_2017",
+      "title": "Introduction to the New York State Next Generation English Language Arts Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/curriculum-instruction/introduction-to-the-nys-english-language-arts-standards.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "2017",
+      "notes": "Explains grade and grade-band organization, lifelong literacy practices and PK–5 foundational reading. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_ela_implementation_2023",
+      "title": "Next Generation ELA Instruction and Assessment Implementation Timeline",
+      "url": "https://www.nysed.gov/sites/default/files/next-gen-ela-instruction-assessment-timeline.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Revised January 2023",
+      "notes": "Separates instruction implementation from assessment cutover; first Next Generation ELA Regents June 2026. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_social_studies_k8_2016",
+      "title": "New York State K–8 Social Studies Framework",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/ss-framework-k-8a2.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "March 2016",
+      "notes": "Framework adopted in 2014; K–8 revision March 2016. Contains grade-specific content and practices. Embedded legacy literacy passages must be read alongside later Next Generation literacy standards.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "029c37e4eb45691d7ae724cd6e47e025ce3d4a2d442f61920a3de9960d927e14",
+      "byte_length": 1269954
+    },
+    {
+      "id": "ny_social_studies_912_2017",
+      "title": "New York State Grades 9–12 Social Studies Framework",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/framework-9-12-with-2017-updates.pdf",
+      "publisher": "NYSED",
+      "source_type": "framework",
+      "edition": "February 2017 updates",
+      "notes": "Provides Global History I/II, United States History and Government, Participation in Government and Civics, and Economics, the Enterprise System, and Finance. Local curriculum and materials remain school decisions.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "1ce8f62b76ec1e413c73f45a58e2cf9964fbcbb65b2c5efdbe13dcfc80847faf",
+      "byte_length": 819008
+    },
+    {
+      "id": "ny_social_studies_faq",
+      "title": "Social Studies FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/social-studies-faq",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Confirms framework implementation, local curriculum/material selection, PK–12 instruction, and locally approved AP government/economics equivalency.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_prekindergarten_resource_2021",
+      "title": "Resource Guides for School Success: The Prekindergarten Early Learning Standards",
+      "url": "https://www.nysed.gov/sites/default/files/programs/early-learning/pk-standards-resource-web-revised-2021.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Revised 2021 file",
+      "notes": "Consolidated four-year-old expectations across developmental domains; not a curriculum or assessment. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_world_languages_2021",
+      "title": "New York State Learning Standards for World Languages",
+      "url": "https://www.nysed.gov/sites/default/files/programs/world-languages/nys-learning-standards-for-world-languages-2021.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "2021",
+      "notes": "Adopted March 15, 2021; July 2021 terminology change from LOTE. Modern and classical tracks have different numbering for interpersonal/presentational communication.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "e07bbaf852378aa5cb3b0537b9764f60f9c51e50f7c63ae8352516c59ee9a6d3",
+      "byte_length": 286427
+    },
+    {
+      "id": "ny_world_languages_implementation",
+      "title": "World Languages Implementation Timeline",
+      "url": "https://www.nysed.gov/world-languages/implementation-timeline",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Page updated July 29, 2025",
+      "notes": "Revised standards required by grade 10 September 1, 2026, grade 11 September 2027 and grade 12 September 2028; earlier school adoption permitted. Elementary progression begins with the first offered language year.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_world_languages_themes_2021",
+      "title": "New York State Themes and Topics for World Languages",
+      "url": "https://www.nysed.gov/sites/default/files/programs/world-languages/nys-wl-themes-and-topics-2021.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "2021",
+      "notes": "Modern-language table has four themes and 17 topics, with checkpoint-specific applicability. Classical-language themes are separate. This source guides contexts, not a universal language or grade sequence.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "251e5685f33f1e327cb9146c741021a94d8eb2d3961cd4f735d56f3881861d43",
+      "byte_length": 307385
+    },
+    {
+      "id": "ny_world_languages_themes_page",
+      "title": "World Languages Themes and Topics",
+      "url": "https://www.nysed.gov/world-languages/themes-and-topics",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Page updated July 29, 2025",
+      "notes": "Page contains an inconsistent Checkpoint C topic count; use the actual PDF table and review notes rather than encoding that count.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_world_languages_checkpoint_a_2026",
+      "title": "Checkpoint A Assessment Guidance",
+      "url": "https://www.nysed.gov/world-languages/checkpoint-assessment-guidance",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Page updated March 8, 2026",
+      "notes": "First assessments required to match revised world-language standards were June 2025; modern, classical and ASL guidance are distinct.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_world_languages_checkpoint_b_2026",
+      "title": "Checkpoint B Assessment Guidance",
+      "url": "https://www.nysed.gov/world-languages/checkpoint-b-assessment-guidance",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Page updated April 1, 2026",
+      "notes": "First required revised-standard Checkpoint B assessments June 2027. Current page places ASL with category 3–4, unlike the older category 1–2 target PDF; specialist review needed before assigning ASL targets.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_world_languages_proficiency_cat12_2021",
+      "title": "Proficiency Ranges and Performance Indicators for Modern Languages, Category 1–2",
+      "url": "https://www.nysed.gov/sites/default/files/programs/world-languages/proficiency-ranges-and-performance-indicators-for-modern-languages-cat-1-2_2.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Revised August 20, 2021",
+      "notes": "Older document says ASL targets match category 1–2, conflicting with April 2026 Checkpoint B page. Do not apply its ASL category automatically. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_academic_linguistic_demands_2023",
+      "title": "Academic and Linguistic Demands: Creating Access to Next Generation ELA for Linguistically Diverse Learners",
+      "url": "https://www.nysed.gov/sites/default/files/programs/bilingual-ed/academic-and-linguistic-demands-final-11-7-23-a.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "November 2023 file",
+      "notes": "Current instructional access resource extends the older Bilingual Common Core Progressions and supports grade-level ELA, language development and locally designed ENL/Home Language Arts curricula.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "b8d2923463ad9cc4caf64ab8a2956065f62cc7105441f4e285899f88422be0c3",
+      "byte_length": 3096946
+    },
+    {
+      "id": "ny_enl_bilingual_units_2026",
+      "title": "Units of Study Tables for English as a New Language and Bilingual Education Programs",
+      "url": "https://www.nysed.gov/bilingual-ed/units-study-tables-english-new-language-enl-and-bilingual-education-programs",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Page updated May 14, 2026",
+      "notes": "Links K–8 and 9–12 service tables and identifies ALDs as an access framework. This catalog does not determine statutory service minutes, placement or eligibility.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_multilingual_next_generation_samples",
+      "title": "Classroom Practices for Multilingual Learners and English Language Learners and the Next Generation ELA Learning Standards",
+      "url": "https://www.nysed.gov/bilingual-ed/classroom-practices-mll-ell-and-next-generation-ela-standards",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Page updated September 20, 2021",
+      "notes": "PK–12 instructional examples; multilingual learners work toward the same Next Generation standards with appropriate language support. Examples are not a mandated curriculum.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_wida_transition_2025",
+      "title": "Joining the WIDA Consortium and New English Language Proficiency Assessments",
+      "url": "https://www.nysed.gov/sites/default/files/programs/state-assessment/ny-wida-consortium-elp-assessments.pdf",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "October 8, 2025",
+      "notes": "Final NYSESLAT spring 2026; first ACCESS and Alternate ACCESS spring 2027; screeners replace NYSITELL in fall 2027. Explicitly preserves ALDs and Next Generation ELA instruction.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "500835a00cca139571f3e4fc1ece23478a034268165903596dfeabaea9065c5a",
+      "byte_length": 165973
+    },
+    {
+      "id": "ny_wida_assessment_hub_2026",
+      "title": "WIDA: New York State Assessment Information",
+      "url": "https://www.nysed.gov/state-assessment/wida",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Official hub links the transition memo, New York partner guidance, and 2026–27 ACCESS preparation materials. HTML is a retrieval snapshot, not a teaching corpus.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "d518028e90a9d89d1cee44a14901d886846252ec93168ad23b7c53f6367438b6",
+      "byte_length": 56888
+    },
+    {
+      "id": "ny_nyseslat_manual_2026",
+      "title": "2026 NYSESLAT School Administrator’s Manual",
+      "url": "https://www.nysed.gov/sites/default/files/programs/state-assessment/nyseslat-sam-2026.pdf",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "2026",
+      "notes": "Historical/placement context for 2026–27: describes final NYSESLAT and its five levels. It does not establish a score conversion to WIDA or the 2027 assessment framework. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_disciplinary_literacy_2017",
+      "title": "Next Generation Grades 6–12 Literacy Standards in History/Social Studies, Science and Technical Subjects",
+      "url": "https://www.nysed.gov/sites/default/files/nys-next-generation-literacy-standards-grades-6-12.pdf",
+      "publisher": "NYSED",
+      "source_type": "learning_standards",
+      "edition": "Revised 2017",
+      "notes": "Actual reading/writing tables use bands 6–8, 9–10 and 11–12, despite introductory prose summarizing high school as 9–12. Embedded content literacy does not replace subject knowledge or general ELA.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "56c16f1f20b58f7ccc1ef674f9861b5e03c6456767568fbcb2c276563922c4b0",
+      "byte_length": 295252
+    },
+    {
+      "id": "ny_school_library_faq",
+      "title": "School Library Services FAQ",
+      "url": "https://www.nysed.gov/standards-instruction/school-library-services-faq",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Identifies library/information-skills instruction in grades 7 and 8 and integration with classroom objectives; not a standalone K–12 numbered content standard.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_media_literacy_toolkit_2025",
+      "title": "Media Literacy: A Toolkit for Educators",
+      "url": "https://www.nysed.gov/sites/default/files/media-literacy-toolkit.pdf",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "January 2025",
+      "notes": "State educator toolkit hosted by NYSED; guidance/resource collection, not a new independently numbered statewide subject standard. Official page/index content reviewed; exact file bytes not retained.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_local_curriculum_guidance",
+      "title": "Early Learning Curriculum Guidance",
+      "url": "https://www.nysed.gov/early-learning/curriculum",
+      "publisher": "NYSED",
+      "source_type": "guidance",
+      "edition": "Current page reviewed October 18, 2026",
+      "notes": "Explains the distinction between state learning expectations and locally developed or selected curriculum. This general principle does not establish a full syllabus for any high-school elective.",
+      "verification": "official_page_review"
+    },
+    {
+      "id": "ny_inspires_timeline_2026",
+      "title": "NY Inspires Transformation Timeline",
+      "url": "https://www.nysed.gov/ny-inspires/transformation-timeline",
+      "publisher": "NYSED",
+      "source_type": "implementation",
+      "edition": "Updated September 2026",
+      "notes": "Distinguishes adopted instructional changes from proposed graduation changes; current diploma requirements remain until Board approval.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "dd9e60235a52a4f1fada42e87f49407141d30627b06ab8fd53f01124ccc7f958",
+      "byte_length": 70963
+    },
+    {
+      "id": "ny_alternate_assessment_2026",
+      "title": "New York State Alternate Assessment",
+      "url": "https://www.nysed.gov/state-assessment/new-york-state-alternate-assessment",
+      "publisher": "NYSED",
+      "source_type": "assessment",
+      "edition": "2026–2027 current page",
+      "notes": "Eligible students use DLM for ELA, mathematics and science at reduced depth, breadth and complexity; eligibility and individualized teaching remain school decisions.",
+      "verification": "exact_bytes_review",
+      "content_sha256": "a08bfe11e3ec281b5e2a698a4fdbe691d5e7679f2a172b24f3b2aab7aa3e1f53",
+      "byte_length": 56079
+    }
+  ],
+  "subjects": [
+    {
+      "code": "ela",
+      "name": "English Language Arts",
+      "category": "humanities",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Individual PK–8 grades; shared high-school bands 9–10 and 11–12. Catalog course placement does not create new grade-specific standards."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Oral language and shared stories",
+            "Print and sound awareness",
+            "Drawing and early writing"
+          ],
+          "source_ids": [
+            "ny_ela_2017",
+            "ny_prekindergarten_resource_2021"
+          ]
+        },
+        {
+          "grades": [
+            0
+          ],
+          "topics": [
+            "Letter–sound connections",
+            "Retelling and conversation",
+            "Early sentence writing"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            1
+          ],
+          "topics": [
+            "Word decoding and fluency",
+            "Text details and sequence",
+            "Organized early writing"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            2
+          ],
+          "topics": [
+            "Word analysis and fluent reading",
+            "Comparing text ideas",
+            "Expanding written explanations"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            3
+          ],
+          "topics": [
+            "Evidence from reading",
+            "Paragraph organization",
+            "Vocabulary and conventions"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            4
+          ],
+          "topics": [
+            "Perspective and text structure",
+            "Evidence-based explanations",
+            "Research organization"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            5
+          ],
+          "topics": [
+            "Themes and supported inferences",
+            "Argument and explanation",
+            "Source use and discussion"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            6
+          ],
+          "topics": [
+            "Textual analysis",
+            "Supported claims",
+            "Research and communication"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            7
+          ],
+          "topics": [
+            "Perspective and reasoning",
+            "Comparative reading",
+            "Purposeful revision"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            8
+          ],
+          "topics": [
+            "Evaluating arguments and media",
+            "Analytical writing",
+            "Credible evidence"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10
+          ],
+          "topics": [
+            "Literary and informational analysis",
+            "Argument and research",
+            "Rhetoric and presentation"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            11,
+            12
+          ],
+          "topics": [
+            "Complex texts and perspectives",
+            "Sustained argument and inquiry",
+            "Style and evidence evaluation"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Comprehension and vocabulary coaching",
+        "Foundational reading at the applicable grade",
+        "Student-authored planning, revision and citation",
+        "Listening, discussion and presentation practice"
+      ],
+      "limitations": [
+        "High-school focus is banded rather than a prescribed annual reading list.",
+        "School-selected literature, pacing and assignments require a local syllabus.",
+        "Tutors must not write submitted essays or supply completed assignments."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_ela_introduction_2017",
+        "ny_ela_implementation_2023"
+      ]
+    },
+    {
+      "code": "social_studies",
+      "name": "Social Studies: Early Years through Grade 8",
+      "category": "humanities",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_prekindergarten_resource_2021",
+          "version": "2021 consolidated resource",
+          "grades": [
+            -1
+          ],
+          "notes": "Developmentally appropriate early social studies."
+        },
+        {
+          "source_id": "ny_social_studies_k8_2016",
+          "version": "March 2016",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "notes": "Official grade-specific framework; school selects curriculum and materials."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1
+          ],
+          "topics": [
+            "Self, family and belonging",
+            "Community roles and cooperation",
+            "Early place and time ideas"
+          ],
+          "source_ids": [
+            "ny_prekindergarten_resource_2021"
+          ]
+        },
+        {
+          "grades": [
+            0
+          ],
+          "topics": [
+            "Self and others",
+            "Classroom community and responsibilities",
+            "Needs, places and change"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            1
+          ],
+          "topics": [
+            "Families across time",
+            "Traditions and relationships",
+            "Places and daily choices"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            2
+          ],
+          "topics": [
+            "Comparing communities",
+            "Local geography and civic life",
+            "Goods, services and change"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            3
+          ],
+          "topics": [
+            "Communities around the world",
+            "Culture and geographic patterns",
+            "Interdependence and citizenship"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            4
+          ],
+          "topics": [
+            "New York history and geography",
+            "Local and state government",
+            "Settlement, change and rights"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            5
+          ],
+          "topics": [
+            "Western Hemisphere societies",
+            "Geography and cultural interaction",
+            "Government and economic systems"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            6
+          ],
+          "topics": [
+            "Eastern Hemisphere societies",
+            "Early civilizations and belief systems",
+            "Regional interaction and exchange"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            7
+          ],
+          "topics": [
+            "United States and New York history I",
+            "Pre-Columbian societies through Civil War",
+            "Constitutions, expansion and conflict"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        },
+        {
+          "grades": [
+            8
+          ],
+          "topics": [
+            "United States and New York history II",
+            "Reconstruction through the present",
+            "Industry, rights and global relationships"
+          ],
+          "source_ids": [
+            "ny_social_studies_k8_2016"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Historical evidence and source comparison",
+        "Chronology and causal reasoning",
+        "Maps, geography and economic choices",
+        "Civic reasoning and participation concepts"
+      ],
+      "limitations": [
+        "The framework is not a mandated textbook or complete lesson sequence.",
+        "Sensitive history requires age-appropriate contextualization and reliable sources.",
+        "Use later Next Generation disciplinary literacy alongside embedded legacy literacy references."
+      ],
+      "source_ids": [
+        "ny_prekindergarten_resource_2021",
+        "ny_social_studies_k8_2016",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "global_history_1",
+      "name": "Global History and Geography I",
+      "category": "humanities",
+      "grades": [
+        9
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_social_studies_912_2017",
+          "version": "February 2017 updates",
+          "grades": [
+            9
+          ],
+          "notes": "Framework course placement; local approved equivalent courses may differ."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9
+          ],
+          "topics": [
+            "Early civilizations and belief traditions",
+            "Regional networks and exchange",
+            "Empires and early global interaction",
+            "Geographic context and comparison"
+          ],
+          "source_ids": [
+            "ny_social_studies_912_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based explanation and comparison",
+        "Source, map and data interpretation",
+        "Student-authored arguments and inquiry"
+      ],
+      "limitations": [
+        "School pacing, readings and assessment preparation require the actual course syllabus.",
+        "AP, IB and dual-enrollment offerings require their own authorized course framework and local approval; equivalency is not automatic.",
+        "Tutoring supports learning and does not submit student work."
+      ],
+      "source_ids": [
+        "ny_social_studies_912_2017",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "global_history_2",
+      "name": "Global History and Geography II",
+      "category": "humanities",
+      "grades": [
+        10
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_social_studies_912_2017",
+          "version": "February 2017 updates",
+          "grades": [
+            10
+          ],
+          "notes": "Framework course placement; local approved equivalent courses may differ."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            10
+          ],
+          "topics": [
+            "World systems around 1750",
+            "Revolutions, industry and empire",
+            "Global conflict and decolonization",
+            "Contemporary interdependence and human rights"
+          ],
+          "source_ids": [
+            "ny_social_studies_912_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based explanation and comparison",
+        "Source, map and data interpretation",
+        "Student-authored arguments and inquiry"
+      ],
+      "limitations": [
+        "School pacing, readings and assessment preparation require the actual course syllabus.",
+        "AP, IB and dual-enrollment offerings require their own authorized course framework and local approval; equivalency is not automatic.",
+        "Tutoring supports learning and does not submit student work."
+      ],
+      "source_ids": [
+        "ny_social_studies_912_2017",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "us_history_government",
+      "name": "United States History and Government",
+      "category": "humanities",
+      "grades": [
+        11
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_social_studies_912_2017",
+          "version": "February 2017 updates",
+          "grades": [
+            11
+          ],
+          "notes": "Framework course placement; local approved equivalent courses may differ."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            11
+          ],
+          "topics": [
+            "Constitutional foundations and institutions",
+            "Expansion, reform and conflict",
+            "Industrial change and global involvement",
+            "Civil rights and contemporary issues"
+          ],
+          "source_ids": [
+            "ny_social_studies_912_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based explanation and comparison",
+        "Source, map and data interpretation",
+        "Student-authored arguments and inquiry"
+      ],
+      "limitations": [
+        "School pacing, readings and assessment preparation require the actual course syllabus.",
+        "AP, IB and dual-enrollment offerings require their own authorized course framework and local approval; equivalency is not automatic.",
+        "Tutoring supports learning and does not submit student work."
+      ],
+      "source_ids": [
+        "ny_social_studies_912_2017",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "participation_in_government",
+      "name": "Participation in Government and Civics",
+      "category": "humanities",
+      "grades": [
+        12
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_social_studies_912_2017",
+          "version": "February 2017 updates",
+          "grades": [
+            12
+          ],
+          "notes": "Framework course placement; local approved equivalent courses may differ."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            12
+          ],
+          "topics": [
+            "Constitutional rights and responsibilities",
+            "Government institutions and public policy",
+            "Civic participation and public deliberation",
+            "Evaluating civic evidence"
+          ],
+          "source_ids": [
+            "ny_social_studies_912_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based explanation and comparison",
+        "Source, map and data interpretation",
+        "Student-authored arguments and inquiry"
+      ],
+      "limitations": [
+        "School pacing, readings and assessment preparation require the actual course syllabus.",
+        "AP, IB and dual-enrollment offerings require their own authorized course framework and local approval; equivalency is not automatic.",
+        "Tutoring supports learning and does not submit student work."
+      ],
+      "source_ids": [
+        "ny_social_studies_912_2017",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "economics",
+      "name": "Economics, the Enterprise System, and Finance",
+      "category": "humanities",
+      "grades": [
+        12
+      ],
+      "placement": "grade_specific",
+      "frameworks": [
+        {
+          "source_id": "ny_social_studies_912_2017",
+          "version": "February 2017 updates",
+          "grades": [
+            12
+          ],
+          "notes": "Framework course placement; local approved equivalent courses may differ."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            12
+          ],
+          "topics": [
+            "Scarcity, incentives and choice",
+            "Markets, enterprise and competition",
+            "Economic policy and indicators",
+            "Personal finance and global trade"
+          ],
+          "source_ids": [
+            "ny_social_studies_912_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Evidence-based explanation and comparison",
+        "Source, map and data interpretation",
+        "Student-authored arguments and inquiry"
+      ],
+      "limitations": [
+        "School pacing, readings and assessment preparation require the actual course syllabus.",
+        "AP, IB and dual-enrollment offerings require their own authorized course framework and local approval; equivalency is not automatic.",
+        "Tutoring supports learning and does not submit student work."
+      ],
+      "source_ids": [
+        "ny_social_studies_912_2017",
+        "ny_social_studies_faq",
+        "ny_disciplinary_literacy_2017"
+      ]
+    },
+    {
+      "code": "world_languages_modern",
+      "name": "World Languages: Modern Languages",
+      "category": "language",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny_world_languages_2021",
+          "version": "2021 modern-language track",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Use the selected language category and checkpoint-specific performance indicators; no universal grade-to-level mapping."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Interpreting language and media",
+            "Interactive communication",
+            "Presenting ideas for an audience",
+            "Cultural perspectives and comparison",
+            "Checkpoint-appropriate thematic contexts"
+          ],
+          "source_ids": [
+            "ny_world_languages_2021",
+            "ny_world_languages_themes_2021"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Vocabulary and grammar in meaningful contexts",
+        "Reading, listening, writing and conversation practice",
+        "Cultural comparison using reviewed sources"
+      ],
+      "limitations": [
+        "School chooses the language, entry grade, pacing and offered checkpoints.",
+        "A student grade does not determine language proficiency or a fixed course number.",
+        "The catalog does not imply that every school offers every language.",
+        "2021 standards remain phased at grades 11 and 12 during 2026–27 unless adopted early.",
+        "Language/category-specific performance indicators must be attached before claiming full checkpoint coverage.",
+        "Speech assessment requires suitable reviewed audio capabilities; text tutoring alone cannot validate spoken performance."
+      ],
+      "source_ids": [
+        "ny_world_languages_2021",
+        "ny_world_languages_implementation",
+        "ny_world_languages_themes_2021",
+        "ny_world_languages_checkpoint_a_2026",
+        "ny_world_languages_checkpoint_b_2026"
+      ]
+    },
+    {
+      "code": "world_languages_classical",
+      "name": "World Languages: Classical Languages",
+      "category": "language",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny_world_languages_2021",
+          "version": "2021 classical-language track",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Classical standard 2 is presentational and standard 3 interpersonal; preserve track-specific numbering."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Reading and interpreting historical language",
+            "Presenting interpretations",
+            "Language interaction as course appropriate",
+            "Ancient cultures and comparison",
+            "Checkpoint-appropriate historical contexts"
+          ],
+          "source_ids": [
+            "ny_world_languages_2021",
+            "ny_world_languages_themes_2021"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Vocabulary, morphology and syntax",
+        "Student-led translation analysis",
+        "Historical and literary context",
+        "Comparing interpretations and evidence"
+      ],
+      "limitations": [
+        "School chooses the language, entry grade, pacing and offered checkpoints.",
+        "A student grade does not determine language proficiency or a fixed course number.",
+        "The catalog does not imply that every school offers every language.",
+        "2021 standards remain phased at grades 11 and 12 during 2026–27 unless adopted early.",
+        "Latin, ancient Greek, ancient Hebrew and other classical offerings are local choices.",
+        "Use classical performance indicators rather than substituting modern-language statements."
+      ],
+      "source_ids": [
+        "ny_world_languages_2021",
+        "ny_world_languages_implementation",
+        "ny_world_languages_themes_2021",
+        "ny_world_languages_checkpoint_a_2026",
+        "ny_world_languages_checkpoint_b_2026"
+      ]
+    },
+    {
+      "code": "american_sign_language",
+      "name": "American Sign Language",
+      "category": "language",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "proficiency",
+      "frameworks": [
+        {
+          "source_id": "ny_world_languages_2021",
+          "version": "2021 modern-language standards with ASL-specific guidance",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Use ASL-specific checkpoint guidance. Older proficiency-category statements conflict with April 2026 Checkpoint B guidance."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Visual language interpretation",
+            "Signed interaction and presentation",
+            "Deaf cultural perspectives",
+            "Checkpoint-appropriate language contexts"
+          ],
+          "source_ids": [
+            "ny_world_languages_2021",
+            "ny_world_languages_checkpoint_a_2026",
+            "ny_world_languages_checkpoint_b_2026"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Language and cultural concepts",
+        "Reviewed visual-language learning materials",
+        "Reflection on student practice with qualified instruction"
+      ],
+      "limitations": [
+        "School chooses the language, entry grade, pacing and offered checkpoints.",
+        "A student grade does not determine language proficiency or a fixed course number.",
+        "The catalog does not imply that every school offers every language.",
+        "2021 standards remain phased at grades 11 and 12 during 2026–27 unless adopted early.",
+        "Text-only tutoring cannot teach or evaluate signing comprehensively.",
+        "ASL category/proficiency targets require specialist review before assignment because official sources conflict.",
+        "Do not claim sign recognition or performance certification without validated visual capabilities and human review."
+      ],
+      "source_ids": [
+        "ny_world_languages_2021",
+        "ny_world_languages_implementation",
+        "ny_world_languages_checkpoint_a_2026",
+        "ny_world_languages_checkpoint_b_2026",
+        "ny_world_languages_proficiency_cat12_2021"
+      ]
+    },
+    {
+      "code": "english_language_development",
+      "name": "English Language Development / ENL",
+      "category": "literacy_support",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "cross_curricular",
+      "frameworks": [
+        {
+          "source_id": "ny_prekindergarten_resource_2021",
+          "version": "2021 consolidated resource",
+          "grades": [
+            -1
+          ],
+          "notes": "Early language development within the full developmental program."
+        },
+        {
+          "source_id": "ny_academic_linguistic_demands_2023",
+          "version": "November 2023",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Scaffolds grade-level Next Generation ELA; does not lower or replace content expectations."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Oral language and early literacy",
+            "Meaning-making with language supports",
+            "Home-language connections"
+          ],
+          "source_ids": [
+            "ny_prekindergarten_resource_2021",
+            "ny_academic_linguistic_demands_2023",
+            "ny_multilingual_next_generation_samples"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Academic vocabulary and text meaning",
+            "Supported explanation and discussion",
+            "Language for subject learning"
+          ],
+          "source_ids": [
+            "ny_academic_linguistic_demands_2023",
+            "ny_enl_bilingual_units_2026"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Discipline-specific language",
+            "Academic argument and communication",
+            "Independent use of language supports"
+          ],
+          "source_ids": [
+            "ny_academic_linguistic_demands_2023",
+            "ny_enl_bilingual_units_2026"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Listening, speaking, reading and writing practice",
+        "Vocabulary and language-structure scaffolding",
+        "Access to the enrolled grade-level subject",
+        "Student-controlled multilingual supports"
+      ],
+      "limitations": [
+        "This overlay does not identify ELL eligibility or prescribe mandated service minutes.",
+        "Do not replace grade-level standards with separate lower expectations.",
+        "Final NYSESLAT was spring 2026; ACCESS/Alternate ACCESS begins spring 2027 while ALD-based instruction continues.",
+        "NYSITELL remains the screener until fall 2027; do not infer WIDA score equivalence from old NYSESLAT levels."
+      ],
+      "source_ids": [
+        "ny_prekindergarten_resource_2021",
+        "ny_ela_2017",
+        "ny_academic_linguistic_demands_2023",
+        "ny_enl_bilingual_units_2026",
+        "ny_multilingual_next_generation_samples",
+        "ny_wida_transition_2025",
+        "ny_wida_assessment_hub_2026",
+        "ny_nyseslat_manual_2026"
+      ]
+    },
+    {
+      "code": "home_language_arts",
+      "name": "Home Language Arts / Bilingual Literacy",
+      "category": "literacy_support",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "cross_curricular",
+      "frameworks": [
+        {
+          "source_id": "ny_prekindergarten_resource_2021",
+          "version": "2021 consolidated resource",
+          "grades": [
+            -1
+          ],
+          "notes": "Early language development within the full developmental program."
+        },
+        {
+          "source_id": "ny_academic_linguistic_demands_2023",
+          "version": "November 2023",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Scaffolds grade-level Next Generation ELA; does not lower or replace content expectations."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Home-language oral expression",
+            "Early literacy connections",
+            "Shared meaning across languages"
+          ],
+          "source_ids": [
+            "ny_prekindergarten_resource_2021",
+            "ny_multilingual_next_generation_samples"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Home-language reading and writing",
+            "Cross-language vocabulary connections",
+            "Content understanding through language"
+          ],
+          "source_ids": [
+            "ny_academic_linguistic_demands_2023",
+            "ny_enl_bilingual_units_2026"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Academic literacy in the home language",
+            "Comparative language awareness",
+            "Research and communication across languages"
+          ],
+          "source_ids": [
+            "ny_academic_linguistic_demands_2023",
+            "ny_enl_bilingual_units_2026"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Home-language literacy development",
+        "Bilingual reading and discussion support",
+        "Connections between language and subject knowledge"
+      ],
+      "limitations": [
+        "The actual language, texts and progression require the school bilingual/HLA curriculum.",
+        "HLA is not simply translation of an English worksheet or a fixed second-language proficiency course.",
+        "The catalog does not determine bilingual-program placement, eligibility or statutory service requirements."
+      ],
+      "source_ids": [
+        "ny_prekindergarten_resource_2021",
+        "ny_academic_linguistic_demands_2023",
+        "ny_enl_bilingual_units_2026",
+        "ny_multilingual_next_generation_samples"
+      ]
+    },
+    {
+      "code": "research_media_literacy",
+      "name": "Research, Library and Media Literacy",
+      "category": "literacy_support",
+      "grades": [
+        -1,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "cross_curricular",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017",
+          "grades": [
+            -1,
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Age-appropriate ELA inquiry, sources and media connections."
+        },
+        {
+          "source_id": "ny_school_library_faq",
+          "version": "Current reviewed guidance",
+          "grades": [
+            7,
+            8
+          ],
+          "notes": "Confirms required integrated library/information-skills instruction; not a full independent content standard."
+        },
+        {
+          "source_id": "ny_media_literacy_toolkit_2025",
+          "version": "January 2025",
+          "grades": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Guidance toolkit to supplement applicable standards, not a new numbered statewide subject."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "topics": [
+            "Asking questions and finding information",
+            "Recognizing sources and creators",
+            "Guided media discussion"
+          ],
+          "source_ids": [
+            "ny_prekindergarten_resource_2021",
+            "ny_ela_2017"
+          ]
+        },
+        {
+          "grades": [
+            3,
+            4,
+            5
+          ],
+          "topics": [
+            "Searching and organizing information",
+            "Source credibility and evidence",
+            "Attribution and responsible sharing"
+          ],
+          "source_ids": [
+            "ny_ela_2017",
+            "ny_media_literacy_toolkit_2025"
+          ]
+        },
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Evaluating sources and media claims",
+            "Research notes and citation",
+            "Bias, evidence and information choices"
+          ],
+          "source_ids": [
+            "ny_ela_2017",
+            "ny_disciplinary_literacy_2017",
+            "ny_school_library_faq",
+            "ny_media_literacy_toolkit_2025"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Independent inquiry and synthesis",
+            "Media influence and competing claims",
+            "Credibility, attribution and plagiarism"
+          ],
+          "source_ids": [
+            "ny_ela_2017",
+            "ny_disciplinary_literacy_2017",
+            "ny_media_literacy_toolkit_2025"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Source discovery and evidence evaluation",
+        "Citation, paraphrase and academic integrity",
+        "Media interpretation and information judgment"
+      ],
+      "limitations": [
+        "Grade focus is an editorial tutoring scope, not an invented statewide library-standard sequence.",
+        "The 2025 toolkit is guidance, not a full curriculum or independent learning-standard set.",
+        "External sources and media require the school review process before student use."
+      ],
+      "source_ids": [
+        "ny_prekindergarten_resource_2021",
+        "ny_ela_2017",
+        "ny_disciplinary_literacy_2017",
+        "ny_school_library_faq",
+        "ny_media_literacy_toolkit_2025"
+      ]
+    },
+    {
+      "code": "disciplinary_literacy",
+      "name": "Literacy in History, Science and Technical Subjects",
+      "category": "literacy_support",
+      "grades": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "grade_band",
+      "frameworks": [
+        {
+          "source_id": "ny_disciplinary_literacy_2017",
+          "version": "Revised 2017",
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "notes": "Reading and writing band 6–8."
+        },
+        {
+          "source_id": "ny_disciplinary_literacy_2017",
+          "version": "Revised 2017",
+          "grades": [
+            9,
+            10
+          ],
+          "notes": "Actual reading/writing table band 9–10; introductory prose uses a broader 9–12 label."
+        },
+        {
+          "source_id": "ny_disciplinary_literacy_2017",
+          "version": "Revised 2017",
+          "grades": [
+            11,
+            12
+          ],
+          "notes": "Actual reading/writing table band 11–12; do not invent individual yearly standards."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            6,
+            7,
+            8
+          ],
+          "topics": [
+            "Reading subject-specific texts",
+            "Evidence and academic vocabulary",
+            "Explanations, arguments and research"
+          ],
+          "source_ids": [
+            "ny_disciplinary_literacy_2017"
+          ]
+        },
+        {
+          "grades": [
+            9,
+            10
+          ],
+          "topics": [
+            "Comparing disciplinary sources",
+            "Evaluating evidence and reasoning",
+            "Evidence-based explanation and inquiry"
+          ],
+          "source_ids": [
+            "ny_disciplinary_literacy_2017"
+          ]
+        },
+        {
+          "grades": [
+            11,
+            12
+          ],
+          "topics": [
+            "Evaluating complex disciplinary texts",
+            "Reconciling competing evidence",
+            "Sustained argument and inquiry"
+          ],
+          "source_ids": [
+            "ny_disciplinary_literacy_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Historical primary/secondary-source reading",
+        "Scientific and technical text comprehension",
+        "Evidence-based student writing and inquiry"
+      ],
+      "limitations": [
+        "An overlay on enrolled content courses; it does not replace their knowledge requirements.",
+        "Use actual source tables for bands 6–8, 9–10 and 11–12, not the broad introductory label, older embedded passages or fabricated per-grade codes.",
+        "Tutoring coaches source use and reasoning; students write their own work."
+      ],
+      "source_ids": [
+        "ny_disciplinary_literacy_2017",
+        "ny_ela_2017"
+      ]
+    },
+    {
+      "code": "psychology",
+      "name": "Psychology",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Research methods and evidence",
+            "Learning and memory",
+            "Development and cognition",
+            "Social influences and behavior"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student.",
+        "Psychology tutoring covers academic concepts and is not mental-health assessment or treatment."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    },
+    {
+      "code": "sociology",
+      "name": "Sociology",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Social research and evidence",
+            "Culture and institutions",
+            "Socialization and group life",
+            "Inequality and social change"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    },
+    {
+      "code": "philosophy",
+      "name": "Philosophy",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Reasoning and argument",
+            "Knowledge and evidence",
+            "Ethical questions",
+            "Comparing philosophical perspectives"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    },
+    {
+      "code": "creative_writing",
+      "name": "Creative Writing",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Narrative craft and voice",
+            "Poetry and imagery",
+            "Character, setting and structure",
+            "Student-led revision and reflection"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    },
+    {
+      "code": "journalism",
+      "name": "Journalism",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "News judgment and verification",
+            "Interviewing and source ethics",
+            "Reporting structure and attribution",
+            "Media framing and editing"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    },
+    {
+      "code": "speech_debate",
+      "name": "Speech and Debate",
+      "category": "local_elective",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "placement": "local_elective",
+      "frameworks": [
+        {
+          "source_id": "ny_ela_2017",
+          "version": "2017 transferable literacy skills",
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "notes": "Literacy alignment only; no claim that ELA supplies this elective’s full subject syllabus."
+        }
+      ],
+      "grade_focus": [
+        {
+          "grades": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "topics": [
+            "Claims, evidence and reasoning",
+            "Audience and organization",
+            "Listening and rebuttal",
+            "Delivery and ethical persuasion"
+          ],
+          "source_ids": [
+            "ny_ela_2017"
+          ]
+        }
+      ],
+      "tutoring_scope": [
+        "Concept explanation and vocabulary",
+        "Evidence evaluation and discussion",
+        "Student-authored practice and revision"
+      ],
+      "limitations": [
+        "Optional school-selected elective; no independent complete statewide subject syllabus is asserted by this catalog.",
+        "A reviewed school syllabus and course-specific source corpus are required before standards or teaching-corpus approval.",
+        "AP, IB, dual-enrollment and specialized versions require their own authorized course framework.",
+        "Tutoring cannot produce submitted papers, speeches, articles or debate cases for the student."
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance"
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "ela_next_generation_assessment_2026",
+      "title": "Next Generation ELA Regents cutover",
+      "applies_from": "2026-06",
+      "grades": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_ela_implementation_2023"
+      ],
+      "finding": "June 2026 is the first Next Generation ELA Regents administration; January 2026 was the last legacy administration. This is an assessment transition, not publication of a new annual curriculum."
+    },
+    {
+      "id": "world_languages_grade10_2026",
+      "title": "World Languages revised standards reach grade 10",
+      "applies_from": "2026-09-01",
+      "grades": [
+        10
+      ],
+      "source_ids": [
+        "ny_world_languages_2021",
+        "ny_world_languages_implementation",
+        "ny_world_languages_checkpoint_b_2026"
+      ],
+      "finding": "Revised 2021 standards are required for grade 10 instruction by September 1, 2026; the first required aligned Checkpoint B assessment is June 2027. Grade is not a universal proficiency level."
+    },
+    {
+      "id": "world_languages_grade11_2027",
+      "title": "World Languages grade 11 phase",
+      "applies_from": "2027-09-01",
+      "grades": [
+        11
+      ],
+      "source_ids": [
+        "ny_world_languages_implementation"
+      ],
+      "finding": "Mandatory grade 11 revised-standard implementation begins after the 2026–27 year; schools may adopt earlier. Preserve the school’s actual version."
+    },
+    {
+      "id": "world_languages_grade12_2028",
+      "title": "World Languages grade 12 phase",
+      "applies_from": "2028-09-01",
+      "grades": [
+        12
+      ],
+      "source_ids": [
+        "ny_world_languages_implementation"
+      ],
+      "finding": "Mandatory grade 12 revised-standard implementation begins September 2028, completing K–12 alignment; do not represent it as universally completed in 2026–27."
+    },
+    {
+      "id": "english_proficiency_access_spring2027",
+      "title": "ACCESS replaces annual NYSESLAT assessment",
+      "applies_from": "2027-spring",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_wida_transition_2025",
+        "ny_wida_assessment_hub_2026",
+        "ny_academic_linguistic_demands_2023",
+        "ny_nyseslat_manual_2026"
+      ],
+      "finding": "Final NYSESLAT administration was spring 2026. First WIDA ACCESS and Alternate ACCESS administration is spring 2027. Instruction remains aligned to NY ALDs and Next Generation ELA; assessment adoption is not adoption of a replacement instructional curriculum."
+    },
+    {
+      "id": "english_proficiency_screener_fall2027",
+      "title": "English-language screener transition follows ACCESS",
+      "applies_from": "2027-fall",
+      "grades": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "source_ids": [
+        "ny_wida_transition_2025"
+      ],
+      "finding": "NYSITELL continues until WIDA screeners are implemented in fall 2027. Do not replace the 2026–27 intake assessment prematurely or invent a score conversion."
+    }
+  ],
+  "review_notes": [
+    {
+      "id": "standards_not_annual_curriculum",
+      "source_ids": [
+        "ny_local_curriculum_guidance",
+        "ny_social_studies_faq",
+        "ny_prekindergarten_resource_2021"
+      ],
+      "finding": "2026–27 labels applicability of reviewed authorities. New York has no single annually issued complete statewide teaching curriculum for all subjects. Schools select curriculum, texts, pacing and electives within requirements."
+    },
+    {
+      "id": "scope_catalog_not_teaching_pack",
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_social_studies_k8_2016",
+        "ny_social_studies_912_2017",
+        "ny_world_languages_2021"
+      ],
+      "finding": "Short topic phrases are original scope summaries for planning and discovery. They are not full standard statements, numbered standards, approved student-facing lessons or evidence of complete corpus coverage."
+    },
+    {
+      "id": "preserve_grade_band_and_proficiency",
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_disciplinary_literacy_2017",
+        "ny_world_languages_implementation"
+      ],
+      "finding": "ELA uses PK–8 grades and 9–10/11–12 bands; actual disciplinary-literacy tables use 6–8, 9–10 and 11–12; languages use checkpoints and language-specific proficiency. Do not fabricate a fixed annual sequence where the authority is banded or proficiency-based."
+    },
+    {
+      "id": "disciplinary_literacy_intro_band_label",
+      "source_ids": [
+        "ny_disciplinary_literacy_2017"
+      ],
+      "finding": "The source introduction summarizes bands as 6–8 and 9–12, but actual reading/writing standard tables separately label 6–8, 9–10 and 11–12. This catalog follows the table labels and does not merge away the high-school progression."
+    },
+    {
+      "id": "social_studies_embedded_legacy_literacy",
+      "source_ids": [
+        "ny_social_studies_k8_2016",
+        "ny_social_studies_912_2017",
+        "ny_disciplinary_literacy_2017"
+      ],
+      "finding": "Social-studies framework PDFs retain older embedded Common Core literacy passages. Pair their subject content with the later 2017 Next Generation disciplinary literacy authority rather than silently treating the embedded text as current literacy alignment."
+    },
+    {
+      "id": "world_languages_topic_count_conflict",
+      "source_ids": [
+        "ny_world_languages_themes_2021",
+        "ny_world_languages_themes_page"
+      ],
+      "finding": "The official themes page states four themes and 17 modern topics but separately claims 18 topics at Checkpoint C. The exact 2021 PDF table has 17 topics; retain the table as evidence and do not encode the inconsistent HTML count."
+    },
+    {
+      "id": "world_languages_track_numbering",
+      "source_ids": [
+        "ny_world_languages_2021"
+      ],
+      "finding": "Modern standard 2 is interpersonal and 3 presentational; classical standard 2 is presentational and 3 interpersonal. Track-specific numbering must remain intact."
+    },
+    {
+      "id": "asl_proficiency_conflict",
+      "source_ids": [
+        "ny_world_languages_proficiency_cat12_2021",
+        "ny_world_languages_checkpoint_b_2026"
+      ],
+      "finding": "The August 2021 category 1–2 proficiency document assigns ASL matching targets, while the April 2026 Checkpoint B page groups ASL with category 3–4. Require ASL-specific specialist review before assigning checkpoint targets or claiming complete proficiency coverage."
+    },
+    {
+      "id": "language_assessment_is_not_curriculum_adoption",
+      "source_ids": [
+        "ny_wida_transition_2025",
+        "ny_academic_linguistic_demands_2023",
+        "ny_enl_bilingual_units_2026"
+      ],
+      "finding": "NYSED’s October 8, 2025 memo expressly preserves ALD and Next Generation ELA instruction while changing English-proficiency assessment. Do not infer adoption of WIDA ELD Standards as the school curriculum, replace the NY ALDs, or map old NYSESLAT levels to WIDA scores automatically."
+    },
+    {
+      "id": "media_and_library_guidance_status",
+      "source_ids": [
+        "ny_school_library_faq",
+        "ny_media_literacy_toolkit_2025",
+        "ny_ela_2017",
+        "ny_disciplinary_literacy_2017"
+      ],
+      "finding": "Library/media-literacy scope draws from existing literacy expectations plus guidance. Library/information-skills instruction is identified for grades 7 and 8, and the January 2025 toolkit is not an independently numbered new K–12 subject standard."
+    },
+    {
+      "id": "local_elective_syllabus_required",
+      "source_ids": [
+        "ny_ela_2017",
+        "ny_local_curriculum_guidance",
+        "ny_social_studies_faq"
+      ],
+      "finding": "Humanities electives are optional school offerings. Transferable literacy skills do not establish a full statewide psychology, sociology, philosophy, writing, journalism or debate syllabus. Require a reviewed local syllabus and corpus; external AP/IB/college frameworks remain separate."
+    },
+    {
+      "id": "ny_inspires_pending_diploma_rules",
+      "source_ids": [
+        "ny_inspires_timeline_2026"
+      ],
+      "finding": "The September 2026 timeline describes proposed diploma-assessment changes for fall 2027 and competency-based implementation for the 2029 entering cohort. It explicitly says existing graduation requirements remain until Board approval. Do not remove 2026–2027 requirements or treat the Portrait of a Graduate as a replacement subject syllabus."
+    },
+    {
+      "id": "ny_alternate_access_overlay",
+      "source_ids": [
+        "ny_alternate_assessment_2026"
+      ],
+      "finding": "Include accessible tutoring across the academic catalog. NYSAA/DLM is an eligibility-based alternate assessment pathway, not an automatic lower-grade curriculum or a diagnosis inferred from chat. A separately reviewed Essential Elements mapping and school-authorized individualized plan are needed before claiming alternate-pathway alignment."
+    }
+  ]
+}

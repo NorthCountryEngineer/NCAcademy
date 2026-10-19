@@ -15,10 +15,42 @@ from .db import Record, canonical, now, uid
 from .permissions import bind_scope, scope_id
 from .school_curriculum_schemas import SchoolCurriculumInput
 from .standards import digest, load_catalogs, package_for
+from .curriculum_review import load_reviews, review_for
 
 
 WORKFLOW_KINDS = ("school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run")
-PLANNER_VERSION = "reviewed-school-planner-v1"
+PLANNER_VERSION = "reviewed-school-planner-v2"
+
+
+def _grade_name(grade):
+    return "Pre-K" if grade == -1 else "Kindergarten" if grade == 0 else "Grade " + str(grade)
+
+
+def _scope_course(config, curriculum, grade, subject, review):
+    """Plan subject scope without inventing official objectives or teaching text."""
+    focus = [item for item in review["grade_focus"] if grade in item["grades"]]
+    topics = list(dict.fromkeys(topic for item in focus for topic in item["topics"]))
+    gaps = [
+        {"code": "alignment_mapping_required", "message": "The official subject scope and sources have been reviewed, but an exact standards alignment package is not installed. Planning topics are not official standard statements or identifiers."},
+        {"code": "instructional_materials_missing", "message": "This source review contains no approved teaching documents. Add reviewed class materials and an exact alignment package before teaching approval."},
+        {"code": "course_sequence_requires_review", "message": "A human must choose the local syllabus, sequence, grade/proficiency placement, accessibility supports and assessments. Catalog coverage does not make this a required course in every listed grade."},
+    ]
+    return {
+        "key": digest({"grade": grade, "subject": subject, "state": config["state"], "academic_year": config["academic_year"]})[:32],
+        "title": f"{review['name']} · {_grade_name(grade)} · {config['academic_year']}",
+        "grade": grade, "academic_year": config["academic_year"], "subject": subject,
+        "curriculum": curriculum, "description": "Reviewed curriculum scope planning draft. Exact standards alignment, local syllabus and approved teaching materials remain required.",
+        "units": [{"title": "Reviewed planning topics", "standard_codes": [], "objectives": [], "planning_topics": topics,
+                   "source_ids": sorted({source_id for item in focus for source_id in item["source_ids"]})}],
+        "planning_topics": topics, "frameworks": deepcopy(review["frameworks"]),
+        "source_ids": deepcopy(review["source_ids"]), "sources": deepcopy(review["sources"]),
+        "catalog_sha256": review["review_sha256"], "curriculum_review_sha256": review["subject_review_sha256"],
+        "standards_version": None, "mapping_version": None, "coverage": "framework_review",
+        "alignment_mapping_available": False, "planning_only": True,
+        "placement": review["placement"], "category": review["category"],
+        "limitations": deepcopy(review["limitations"]), "tutoring_scope": deepcopy(review["tutoring_scope"]),
+        "curriculum_review": deepcopy(review), "gaps": gaps,
+    }
 
 
 def school_configuration(school):
@@ -33,12 +65,21 @@ def plan_curriculum(configuration):
     if config["mode"] == "custom":
         return {"adapter_version": PLANNER_VERSION, "configuration": config, "courses": [], "gaps": [{"code": "custom_ingestion_deferred", "message": "Custom curriculum intent is saved. Document ingestion and curriculum extraction are not available in this release."}], "ingestion_supported": False, "status": "unavailable"}
     catalogs = load_catalogs()
+    reviews = load_reviews()
     for grade in config["grades"]:
         for subject in config["subjects"]:
             curriculum = {"state": config["state"], "subject": subject, "grades": [grade], "academic_year": config["academic_year"], "standards_version": None}
             catalog, selection_gaps = package_for(curriculum, catalogs)
+            review, review_gaps = review_for(curriculum, reviews)
             if catalog is None:
-                gaps.extend({**gap, "grade": grade, "subject": subject} for gap in selection_gaps)
+                # An unavailable or narrower adapter may have a separate scope
+                # review. Expired, future, ambiguous or version-mismatched exact
+                # packages never become an approved mapping through fallback.
+                if review and {gap["code"] for gap in selection_gaps} <= {"mapping_unavailable", "grade_unreviewed"}:
+                    courses.append(_scope_course(config, curriculum, grade, subject, review))
+                    continue
+                effective_gaps = review_gaps if selection_gaps[0]["code"] == "mapping_unavailable" and review_gaps and review_gaps[0]["code"] != "mapping_unavailable" else selection_gaps
+                gaps.extend({**gap, "grade": grade, "subject": subject} for gap in effective_gaps)
                 continue
             curriculum["standards_version"] = catalog["standards_version"]
             grouped = defaultdict(list)
@@ -46,8 +87,13 @@ def plan_curriculum(configuration):
                 grouped[standard["topic"]].append({"code": standard["code"], "title": standard["title"], "summary": standard["summary"], "source_id": catalog["sources"][0]["id"], "source_page": standard["source_page"], "pdf_page": standard["pdf_page"]})
             key = digest({"grade": grade, "subject": subject, "state": config["state"], "academic_year": config["academic_year"]})[:32]
             partial = [{"code": "partial_standards_mapping", "message": catalog["mapping_note"]}, {"code": "course_sequence_requires_review", "message": "Topic groups are a planning draft derived from mapped standards, not a complete state-prescribed grade-year course. Review sequencing, investigations, accessibility and assessments before use."}]
-            title = f"{catalog['subject_name']} · {'Kindergarten' if grade == 0 else 'Grade ' + str(grade)} · {config['academic_year']}"
-            courses.append({"key": key, "title": title, "grade": grade, "academic_year": config["academic_year"], "subject": subject, "curriculum": curriculum, "description": "Partial reviewed-source curriculum plan. " + catalog["mapping_note"], "units": [{"title": topic.replace("_", " ").title(), "standard_codes": [item["code"] for item in standards], "objectives": standards} for topic, standards in sorted(grouped.items())], "source_ids": [source["id"] for source in catalog["sources"]], "sources": deepcopy(catalog["sources"]), "catalog_sha256": catalog["catalog_sha256"], "standards_version": catalog["standards_version"], "mapping_version": catalog["mapping_version"], "coverage": "partial", "gaps": partial})
+            title = f"{catalog['subject_name']} · {_grade_name(grade)} · {config['academic_year']}"
+            course_plan = {"key": key, "title": title, "grade": grade, "academic_year": config["academic_year"], "subject": subject, "curriculum": curriculum, "description": "Partial reviewed-source curriculum plan. " + catalog["mapping_note"], "units": [{"title": topic.replace("_", " ").title(), "standard_codes": [item["code"] for item in standards], "objectives": standards} for topic, standards in sorted(grouped.items())], "source_ids": [source["id"] for source in catalog["sources"]], "sources": deepcopy(catalog["sources"]), "catalog_sha256": catalog["catalog_sha256"], "standards_version": catalog["standards_version"], "mapping_version": catalog["mapping_version"], "coverage": "partial", "alignment_mapping_available": True, "gaps": partial}
+            if review:
+                course_plan.update(curriculum_review=deepcopy(review), curriculum_review_sha256=review["subject_review_sha256"])
+                for field in ("placement", "category", "limitations", "tutoring_scope", "frameworks"):
+                    course_plan[field] = deepcopy(review[field])
+            courses.append(course_plan)
     return {"adapter_version": PLANNER_VERSION, "configuration": config, "courses": courses, "gaps": gaps, "ingestion_supported": False, "status": "ready" if courses else "unavailable"}
 
 

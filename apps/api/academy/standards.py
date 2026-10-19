@@ -18,6 +18,7 @@ from sqlalchemy import select
 from .db import Record, canonical, now
 from .permissions import bind_scope, scope_id
 from .standards_schemas import CurriculumInput
+from .curriculum_review import load_reviews, review_for, review_catalog_descriptor
 
 
 CATALOG_PATHS = tuple(Path(__file__).with_name("standards_data") / name for name in (
@@ -99,7 +100,21 @@ def catalog_descriptor():
         state = states.setdefault(state_code, {"code": state_code, "name": default["state_name"], "subjects": []})
         versions = [{**{key: catalog[key] for key in ("standards_version", "mapping_version", "academic_years", "grades", "coverage", "reviewed_at", "review_valid_through", "catalog_sha256")}, "mapping_revision": catalog.get("mapping_revision", 0), "available": _review_rank(catalog) is not None} for catalog in ordered]
         state["subjects"].append({"code": subject_code, "name": default["subject_name"], "grades": sorted({grade for catalog in catalogs for grade in catalog["grades"]}), "academic_years": sorted({year for catalog in catalogs for year in catalog["academic_years"]}, reverse=True), "versions": versions, "default_selection_requires_curriculum": True, "bundled_instructional_documents": len(default.get("teaching_documents", [])), "teaching_pack_version": default.get("teaching_pack_version"), **{key: default[key] for key in ("standards_version", "mapping_version", "coverage", "reviewed_at", "review_valid_through", "mapping_note")}})
-    return {"states": list(states.values()), "refresh_mode": "reviewed_package", "network_fetch": False, "instructional_resources_required": False, "human_corpus_approval_required": True}
+    for reviewed_state in review_catalog_descriptor()["states"]:
+        state = states.setdefault(reviewed_state["code"], {"code": reviewed_state["code"], "name": reviewed_state["name"], "subjects": []})
+        existing = {item["code"]: item for item in state["subjects"]}
+        for reviewed in reviewed_state["subjects"]:
+            if reviewed["code"] in existing:
+                subject = existing[reviewed["code"]]
+                subject["curriculum_review"] = deepcopy(reviewed)
+                subject["alignment_mapping_available"] = any(version["available"] for version in subject["versions"])
+                for field in ("category", "placement", "frameworks", "grade_focus", "tutoring_scope", "limitations", "source_ids"):
+                    subject[field] = deepcopy(reviewed[field])
+            else:
+                state["subjects"].append(deepcopy(reviewed))
+        state["subjects"].sort(key=lambda item: item["code"])
+    return {"states": list(states.values()), "refresh_mode": "reviewed_packages_and_scope", "network_fetch": False, "instructional_resources_required": False, "human_corpus_approval_required": True,
+            "scope_review_is_teaching_package": False}
 
 
 def configuration_material(db, course, school_id):
@@ -151,7 +166,15 @@ def snapshot_material(db, course, school_id, *, external=True):
     configuration = configuration_material(db, course, school_id)
     catalogs = load_catalogs()
     catalog, gaps = package_for(configuration["course"]["curriculum"], catalogs)
+    curriculum = configuration["course"]["curriculum"]
+    # An exact teaching package keeps its own version authority. The separate
+    # source-scope context can accompany it without verifying another version.
+    review_curriculum = {**curriculum, "standards_version": None} if curriculum and catalog else curriculum
+    curriculum_review, review_gaps = review_for(review_curriculum, load_reviews())
     documents, sources = [], []
+    if curriculum_review and not catalog:
+        sources = deepcopy(curriculum_review["sources"])
+        gaps.append({"code": "alignment_mapping_required", "message": "Reviewed subject scope and official sources are available, but no exact standards alignment package is installed. A scope review is not teaching content or approval."})
     if catalog:
         sources = deepcopy(catalog["sources"])
         for standard in catalog["standards"]:
@@ -196,7 +219,10 @@ def snapshot_material(db, course, school_id, *, external=True):
         selected_resources = sum(item["kind"] == "instructional_supplement" for item in documents)
     if not selected_resources and not source_references:
         gaps.append({"code": "instructional_materials_missing", "message": "No reviewed teaching documents are available. Install an applicable reviewed source pack or add class teaching resources for human review."})
-    material = {"schema_version": 1, "course_id": course.id, "school_id": school_id, "curriculum": configuration["course"]["curriculum"], "configuration_sha256": digest(configuration), "catalog_sha256": catalog["catalog_sha256"] if catalog else None, "catalog_set_sha256": digest([catalog["catalog_sha256"]]) if catalog else digest(sorted(item["catalog_sha256"] for item in catalogs)), "status": "aligned" if catalog else "unverified", "coverage": "partial" if catalog else "none", "standards_version": catalog["standards_version"] if catalog else None, "mapping_version": catalog["mapping_version"] if catalog else None, "teaching_pack_version": catalog.get("teaching_pack_version") if catalog else None, "reviewed_at": catalog["reviewed_at"] if catalog else None, "review_valid_through": catalog["review_valid_through"] if catalog else None, "sources": sources, "applicability_references": deepcopy(catalog.get("applicability_references", [])) if catalog else [], "documents": documents, "gaps": gaps, "source_reference_count": source_references, "local_material_count": selected_resources, "instructional_material_count": selected_resources + source_references, "runtime_output_policy": "Corpus retrieval does not authorize generated student-visible prose or student work completion"}
+    material = {"schema_version": 1, "course_id": course.id, "school_id": school_id, "curriculum": configuration["course"]["curriculum"], "configuration_sha256": digest(configuration), "catalog_sha256": catalog["catalog_sha256"] if catalog else None, "catalog_set_sha256": digest([catalog["catalog_sha256"]]) if catalog else digest(sorted(item["catalog_sha256"] for item in catalogs)), "status": "aligned" if catalog else "unverified", "coverage": "partial" if catalog else "framework_review" if curriculum_review else "none", "standards_version": catalog["standards_version"] if catalog else None, "mapping_version": catalog["mapping_version"] if catalog else None, "teaching_pack_version": catalog.get("teaching_pack_version") if catalog else None, "reviewed_at": catalog["reviewed_at"] if catalog else None, "review_valid_through": catalog["review_valid_through"] if catalog else None, "sources": sources, "applicability_references": deepcopy(catalog.get("applicability_references", [])) if catalog else [], "documents": documents, "gaps": gaps, "source_reference_count": source_references, "local_material_count": selected_resources, "instructional_material_count": selected_resources + source_references, "runtime_output_policy": "Corpus retrieval does not authorize generated student-visible prose or student work completion",
+                "curriculum_review": curriculum_review, "curriculum_review_gaps": review_gaps,
+                "curriculum_review_sha256": curriculum_review["subject_review_sha256"] if curriculum_review else None,
+                "alignment_mapping_available": catalog is not None}
     return material
 
 
