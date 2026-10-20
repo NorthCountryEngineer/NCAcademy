@@ -1,5 +1,55 @@
 # Homework Help
 
+## School AI assistant
+
+Homework Help has a separately approved **generative AI mode**. A school's assistant can help with every currently enrolled class, including classes taught by a human, and with general study questions. It does not require an AI teacher profile or a complete standards corpus. It never creates a student Core identity or gives its persona Teacher API authority. The previous approved-excerpt workflow remains available when the new mode is not configured; its contract is documented below.
+
+In School setup or Administration, open **Homework Help AI**. Select existing school connections and exact allowed models for three phases: course triage, tutoring and independent output review. Configure the assistant's name, biography, bounded behavior profile, daily turn/token limits and input/output bounds. Save a draft, then explicitly approve that exact revision as a human School/Admin. Approval binds the connection snapshots as well as the settings. Editing a connection, credential, model or configuration invalidates admission until reviewed again. The deployment-wide live-model switch remains a separate default-off control. This configuration does not enable live traffic by itself.
+
+Triage receives only the current school's enrolled course candidates and bounded conversation context. Its strict result can select an authorized course, request clarification or choose general study help. A student can correct the course. It cannot grant enrollment, impersonate a human teacher, browse arbitrary websites or call tools. Tutoring can generate explanations, analogous examples and guided practice. It must not write a submission, complete an assessed worksheet or produce an essay for the student. Deterministic checks and a separate safety-model verdict gate each reply; failed, malformed or uncertain operations release no generated answer. These checks reduce risk but cannot guarantee correctness or catch every completion attempt. This exception does not widen assignment tutoring, Lesson Q&A, curated lessons or shared lesson publication.
+
+The server optionally supplies current, approved **public teaching passages**, never teacher-only documents or standards-summary placeholders. Exact grounding snapshots and admitted source references are retained. Course and assignment links come from server-owned records; the model may select only offered reference IDs. Displayed text is bounded plain text, without generated HTML or arbitrary URLs. Follow-up context includes bounded prior student and released assistant messages from the selected course/general context. Current enrollment, approval, connections, preferences and source admission are checked around sends, release and replay. Revocation withholds previously displayed assistance without rewriting its historical evidence.
+
+Students complete the existing nine-question intake. Their bounded learning weights guide this assistant through a stable school-specific preference scope; they cannot override its system rules. Released AI messages accept the existing structured style/helpfulness/accuracy feedback. Style adjustments remain personal and bounded. An accuracy rating flags a concern; it does not certify an answer or silently rewrite shared teaching material.
+
+### Photographs and durable evidence
+
+Up to two normalized assignment pictures may accompany a question, within the existing 400,000-byte HTTP bound. Image use requires an approved image policy, explicit capability attestations for **all three models**, and student confirmation naming their destinations. Triage, tutoring and output review receive the actual normalized pictures when admitted; the reviewer can therefore compare proposed assistance with the photographed task. Photos remain encrypted in the private message. Replay/export JSON contains descriptors and hashes; separately authorized, audited image reads return private no-store JPEGs. No photo is sent without consent.
+
+Schema 11 protects immutable assistant revisions, approvals, sessions and phase-send records, and seals terminal AI messages. The independent PII key encrypts local-family messages, photos, prompt/result evidence and related audit payloads before audit hashing. Evidence records the student's question, exact bounded phase prompts, model/policy/configuration/grounding snapshots, visible validated provider results, usage, routing, refusals, withheld results and exact released response. It excludes hidden model reasoning. Persisted send markers precede every external phase; final evidence commits before a reply reaches the student.
+
+An idempotent retry reads the same durable operation. Changed input under its key is rejected. A process interruption or uncertain model response is observed through history and is **never automatically resent**. A human School/Admin can review the pending operation and explicitly close it as uncertain using its exact reviewed snapshot hash and a required reason. Closure seals a withheld result, preserves every send/result event and releases the student's pending barrier without another inference; concurrent changes require a fresh review. A late active phase cannot overwrite that terminal decision. The UI explains pending/withheld states rather than silently sending again. AI session creation is limited to 100 per student per UTC day and 100 messages per session. New sessions do not reset the approved daily message/token allowances; clarification, blocked admissions and stored pictures also have independent bounded storage allowances. These limits reserve conservatively and record provider usage separately; token limits are not currency limits.
+
+Human School/Admin reviewers can discover and read complete authorized school conversations, including pre-triage questions. A currently assigned Teacher, including an authorized Core teaching agent with the audit capability, receives only that class's interactions through the class review routes. Other courses, general questions and full provider prompt evidence are excluded from that class projection. All reviews and image reads are audited. Full tenant evidence remains available only under the existing Admin export boundary.
+
+### AI API
+
+All routes retain existing authentication, tenant/current membership checks and browser mutation CSRF controls. Request objects reject unknown fields. Configuration is restricted to human School/Admin; asking requires an enrolled human Student.
+
+| Operation | Route |
+| --- | --- |
+| Read/save school configuration | `GET/PUT /api/homework-help/configuration?school_id=<id>` |
+| Approve exact saved revision | `POST /api/homework-help/configuration/approve?school_id=<id>` with `{revision_id}` |
+| Available assistant, enrolled courses, own paginated sessions | `GET /api/homework-help/ai?school_id=<id>&cursor=…` |
+| Start/reconcile own session | `POST /api/homework-help/ai/sessions` with `{school_id?, idempotency_key}` |
+| Read own session | `GET /api/homework-help/ai/sessions/{id}` |
+| Ask or correct routing | `POST /api/homework-help/ai/sessions/{id}/messages` with bounded question, optional pictures/consent/course, `routing_mode: auto|general` and idempotency key |
+| Read an authorized normalized photo | `GET /api/homework-help/ai/sessions/{id}/messages/{message}/images/{image}` |
+| Paginated school review catalog | `GET /api/homework-help/ai/review-sessions?school_id=<id>&cursor=…` |
+| Complete school review | `GET /api/homework-help/ai/sessions/{id}/review` |
+| Class-only review catalog/session | `GET /api/courses/{course}/homework-help/review-sessions`, `/api/courses/{course}/homework-help/sessions/{session}/review` |
+| Close an uncertain pending operation without resend | `POST /api/homework-help/ai/sessions/{id}/messages/{message}/close-uncertain` with `{expected_sha256, reason}`; human School/Admin only |
+| Personal released-message feedback | Existing `/api/me/feedback`, with the AI message ID as `turn_id` |
+| Authorized school/tenant metadata delivery health | `GET /api/homework-help/audit-delivery?school_id=<id>` |
+
+The AI index and school catalog return `next_cursor`; use that opaque cursor to continue rather than constructing offsets. Exact typed schemas are in the generated [OpenAPI reference](reference/openapi.json). AI sessions use separate record kinds and endpoints so legacy conversation evidence and release rules retain their meaning. Voice integration for these generated replies remains deferred; existing voice playback is limited to the legacy released teaching flow.
+
+### Core pipeline and independent archive
+
+Each local audit append atomically queues an allowlisted metadata event. A separate restricted worker delivers it to the existing Core pipeline with stable event IDs and safe duplicate reconciliation. Core receives hashes, pseudonymous references, status/usage and phase metadata; **no questions, replies, photos, names, credentials or PII key**. The API never waits for Core delivery or retries model inference as queue work. A separately scheduled archive retains original encrypted audit evidence. Delivery health and archive freshness are independent signals. See [audit delivery and activation](audit-delivery.md), [encryption testing](family-accounts.md) and [archive recovery](session-archive.md). Source packaging does not activate either worker in production.
+
+## Legacy approved-excerpt mode
+
 Homework Help is a private conversational workspace for an enrolled student. It identifies a course, brings in that course's approved AI teacher and keeps the question, routing decision, attachments, teacher selection and released teaching evidence in the student's learning record. Students may correct the course or choose another admitted teacher on a subsequent message.
 
 The triage component is deliberately narrow: it ranks the names, descriptions and subject labels of currently enrolled courses that have an enabled, human-approved private lesson teacher. A distinctive course match can be selected automatically. A follow-up can continue the current course and stable teacher. Ambiguous matches ask the student; a photograph without written context always asks for an explicit course before any model send. Triage makes no external model call, reads no image content and cannot grant access to a different course or teacher.

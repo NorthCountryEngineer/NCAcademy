@@ -90,7 +90,7 @@ python3 scripts/package_source.py
 
 The source archive and SHA256 inventory are written under ignored `build/`. Runtime data, private `.env`, credentials, dependency directories, frontend build output and Git history are excluded. [Source packaging](../scripts/package_source.py) uses explicit source directories and rejects source symlinks and secret-like runtime files. The archive includes this patch and review baseline.
 
-The manifest has the explicit unresolved marker `REQUIRES_IMMUTABLE_PRIVATE_ECR_DIGEST`. Source validation permits this documented preparation state; release validation rejects it:
+A source-preparation manifest may use the explicit unresolved marker `REQUIRES_IMMUTABLE_PRIVATE_ECR_DIGEST`. Release manifests must replace it with the verified private image digest. Source validation permits the preparation state; release validation rejects it:
 
 ```sh
 python3 scripts/check_package.py --release

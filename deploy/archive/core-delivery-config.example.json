@@ -1,0 +1,11 @@
+{
+  "tenant_id": "REPLACE-WITH-CORE-ORGANIZATION-ID",
+  "core_origin": "https://core.example.invalid",
+  "allowed_origins": ["https://core.example.invalid"],
+  "pipeline_slug": "academy-audit-metadata",
+  "service_id": "REPLACE-WITH-ACADEMY-SERVICE-ID",
+  "environment": "production",
+  "ca_bundle": "/trusted-ca/core-ca.crt",
+  "batch_size": 50,
+  "lease_seconds": 120
+}

@@ -4,7 +4,9 @@ This source revision follows the deployed teacher/media release `78b48d6ba0e874f
 
 ## Intake and settings
 
-After their first authenticated Student visit, students complete nine short questions before new tutoring, Lesson Q&A or private lesson curation. Existing students without preferences see the same intake on their next visit. Identity remains owned by Core; intake cannot grant school/class access. Questions use structured choices, including neutral answers, rather than freeform system instructions or a diagnosis.
+Generative Homework Help also requires this intake. Its stable school assistant preference scope supports enrolled-course and general conversations without creating a teacher identity. Structured feedback accepts an owned released AI message ID, with the same bounded style changes and accuracy-review flag. Preferences cannot relax system rules, source permissions or independent safety review. The exact effective weights are pinned to each admitted interaction.
+
+After their first authenticated Student visit, students complete nine short questions before new tutoring, Lesson Q&A or private lesson curation. Existing students without preferences see the same intake on their next visit. Staff identities retain Core authority; platform-created students retain their local username/password identity. Intake cannot grant school/class access. Questions use structured choices, including neutral answers, rather than freeform system instructions or a diagnosis.
 
 | Dimension | Preference captured |
 | --- | --- |

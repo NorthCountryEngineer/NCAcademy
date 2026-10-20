@@ -1,7 +1,10 @@
 """Human school onboarding: review a plan, explicitly create classes, inspect runs."""
-from fastapi import Depends, HTTPException
+from typing import Literal
+
+from fastapi import Depends, HTTPException, Query
+from sqlalchemy import select
 from .db import Record, canonical, now
-from .permissions import bind_scope, global_admin, require_school, scope_id
+from .permissions import bind_scope, global_admin, require_school, school_role, scope_id
 from .school_curriculum import plan_curriculum, school_configuration, workflow_descriptor, workflow_record, workflow_rows
 from .school_curriculum_schemas import CurriculumPublishInput, CurriculumRunInput
 from .standards import build_course_corpus, catalog_descriptor, digest
@@ -35,14 +38,77 @@ def register_school_curriculum_api(app, database, settings, actor, audit_actor):
                 school_access(db, identity, school_id)
             elif not global_admin(identity):
                 raise HTTPException(403, "Human administrator permission required")
-            return {**catalog_descriptor(), "modes": ["state", "custom", "none"], "custom_ingestion_supported": False, "planner": {"mode": "reviewed_source_planner", "live_model_used": False, "network_fetch": False}, "course_creation_requires_confirmation": True}
+            return {**catalog_descriptor(), "modes": ["state", "custom", "none"], "custom_ingestion_supported": False, "planner": {"mode": "reviewed_source_planner", "live_model_used": False, "network_fetch": False}, "course_creation_requires_confirmation": True,
+                    "class_catalog_url": "/api/course-catalog", "custom_course_creation_supported": True,
+                    "class_catalog_independent_of_curriculum_planner": True}
+
+    @app.get("/api/course-catalog")
+    def class_catalog(
+        school_id: str | None = None,
+        state: str = Query(default="US-NY", pattern=r"^US-[A-Z]{2}$"),
+        academic_year: str = Query(default="2026-2027", pattern=r"^20[0-9]{2}-20[0-9]{2}$"),
+        q: str = Query(default="", max_length=200),
+        subject_area: str | None = Query(default=None, max_length=200),
+        level: Literal["secondary", "prior_to_secondary", "all_grades"] | None = None,
+        regents_only: bool = False,
+        offset: int = Query(default=0, ge=0),
+        limit: int = Query(default=50, ge=1, le=250),
+        identity=Depends(actor),
+    ):
+        """Class choices are independent of AI coverage and school curriculum.
+
+        The complete official reporting catalog is a source of class names and
+        identifiers, not a set of installed teaching corpora or grade mandates.
+        """
+        with database.factory() as db:
+            staff_roles = {"admin", "school", "teacher"}
+            if school_id:
+                require_school(db, identity, school_id, settings, staff_roles)
+            elif not global_admin(identity):
+                schools = db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "school"))
+                if not any(school_role(db, identity, school.id, settings) in staff_roles for school in schools):
+                    raise HTTPException(403, "Class creation permission required")
+
+        from .course_catalog import assessment_source_descriptor, load_course_catalog, regents_course_codes
+
+        try:
+            catalog = load_course_catalog(state, academic_year)
+        except HTTPException as exc:
+            if exc.status_code == 422:
+                raise HTTPException(404, "An official course catalog is not installed for this state and academic year") from exc
+            raise
+        if state != catalog["state"] or academic_year != catalog["academic_year"]:
+            raise HTTPException(404, "An official course catalog is not installed for this state and academic year")
+        query = q.strip().casefold()
+        query = "physical education" if query in {"gym", "pe", "p.e", "p.e."} else query
+        regents_codes = regents_course_codes(state, academic_year)
+        named_regents_search = query == "regents"
+        if named_regents_search:
+            query = ""
+        items = [
+            item for item in catalog["courses"]
+            if (not subject_area or item["subject_area"] == subject_area)
+            and (not level or item["level"] == level)
+            and (not (regents_only or named_regents_search) or item["course_code"] in regents_codes)
+            and (not query or query in " ".join(str(item[field]) for field in ("course_code", "title", "description", "subject_area")).casefold())
+        ]
+        return {
+            **{field: catalog[field] for field in ("state", "academic_year", "catalog_sha256", "title", "sources")},
+            "items": items[offset:offset + limit], "total": len(items), "offset": offset, "limit": limit,
+            "subject_areas": sorted({item["subject_area"] for item in catalog["courses"]}),
+            "levels": sorted({item["level"] for item in catalog["courses"]}),
+            "regents_course_codes": sorted(regents_codes),
+            "state_assessment_source": assessment_source_descriptor(state, academic_year),
+            "network_fetch": False, "custom_courses_supported": True,
+            "curriculum_alignment_required": False, "teaching_corpus_required_for_class_creation": False,
+        }
 
     @app.get("/api/schools/{school_id}/curriculum")
     def curriculum(school_id: str, identity=Depends(actor)):
         with database.factory() as db:
             school = school_access(db, identity, school_id)
             rows = workflow_rows(db, identity["tenant_id"], school_id, ("school_curriculum_run", "school_curriculum_publication"))
-            return {"school_id": school_id, "school_version": school.value.get("version", 1), "curriculum_revision": school.value.get("curriculum_revision", 1), "configuration": school_configuration(school), "runs": [workflow_descriptor(db, row, school) for row in rows if row.kind == "school_curriculum_run"], "publications": [workflow_descriptor(db, row, school) for row in rows if row.kind == "school_curriculum_publication"], "capabilities": {"run_planner": True, "create_classes": True, "custom_ingestion": False}}
+            return {"school_id": school_id, "school_version": school.value.get("version", 1), "curriculum_revision": school.value.get("curriculum_revision", 1), "configuration": school_configuration(school), "runs": [workflow_descriptor(db, row, school) for row in rows if row.kind == "school_curriculum_run"], "publications": [workflow_descriptor(db, row, school) for row in rows if row.kind == "school_curriculum_publication"], "capabilities": {"run_planner": True, "create_classes": True, "custom_courses": True, "official_class_catalog": True, "curriculum_required_for_class_creation": False, "custom_ingestion": False}}
 
     @app.post("/api/schools/{school_id}/curriculum/runs", status_code=201)
     def run(school_id: str, body: CurriculumRunInput, identity=Depends(actor)):

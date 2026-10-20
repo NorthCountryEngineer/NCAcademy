@@ -16,6 +16,7 @@ from .db import Audit, Record, SEALED_JOB_KINDS, canonical
 
 ENVELOPE = "__academy_pii__"
 PRIVATE_KINDS = {
+    "homework_ai_session", "homework_ai_message", "homework_ai_send",
     "draft", "submission", "review", "turn", "lesson_turn", "homework_session",
     "homework_message", "homework_outcome", "student_voice_preference",
     "student_preference_revision", "student_agent_feedback", "voice_operation",

@@ -74,6 +74,43 @@ def source(tmp_path, values):
     return DatabaseSource(url, "synthetic-tenant", local_test=True)
 
 
+def test_export_requires_supplied_independent_head_to_survive_cursor_loss(archive, tmp_path):
+    values = events(3)
+    source_db = source(tmp_path, values)
+    path = tmp_path / "cursor.json"
+    accepted = export_once(archive, source_db, path)["checkpoint"]
+    path.unlink()
+    # Recover through exactly the independently accepted remote head.
+    assert export_once(archive, source_db, path, trusted_checkpoint=accepted)["archived_sequence"] == 3
+    path.unlink()
+    archive.objects.values.pop(archive.commit_key(accepted["manifest_first"]))
+    with pytest.raises(ArchiveError, match="removed or changed"):
+        export_once(archive, source_db, path, trusted_checkpoint=accepted)
+
+
+def test_independent_head_rejects_database_rollback_even_if_cursor_is_lost(archive, tmp_path):
+    values = events(3)
+    source_db = source(tmp_path, values)
+    path = tmp_path / "cursor.json"
+    accepted = export_once(archive, source_db, path)["checkpoint"]
+    path.unlink()
+    rolled_dir = tmp_path / "restored"
+    rolled_dir.mkdir()
+    rolled = source(rolled_dir, [])
+    with pytest.raises(ArchiveError, match="independently retained"):
+        export_once(archive, rolled, path, trusted_checkpoint=accepted)
+
+
+def test_export_health_receipt_recovers_interrupted_atomic_write(archive, tmp_path):
+    source_db = source(tmp_path, events(3))
+    cursor, health = tmp_path / "cursor.json", tmp_path / "health.json"
+    health.with_name("health.json.pending").write_text("interrupted synthetic write")
+    result = export_once(archive, source_db, cursor, trusted_checkpoint=archive.empty(), health_path=health)
+    assert json.loads(health.read_bytes()) == result
+    assert not health.with_name("health.json.pending").exists()
+    assert health.stat().st_mode & 0o777 == 0o600
+
+
 def test_complete_event_bytes_encrypted_signed_restored_and_offline_verifiable(archive, tmp_path):
     original = events()
     cursor_path = tmp_path / "cursor.json"

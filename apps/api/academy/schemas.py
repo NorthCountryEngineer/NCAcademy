@@ -35,12 +35,20 @@ class TutorPolicy(Strict):
         return value
 
 
+class CourseCatalogSelectionInput(Strict):
+    state: str = Field(pattern=r"^US-[A-Z]{2}$")
+    academic_year: str = Field(pattern=r"^20[0-9]{2}-20[0-9]{2}$")
+    course_code: str = Field(min_length=1, max_length=20, pattern=r"^[A-Za-z0-9]+$")
+    catalog_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
 class CourseInput(Strict):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(default="", max_length=10000)
     school_id: str | None = Field(default=None, min_length=1, max_length=64)
     teacher_id: str | None = Field(default=None, min_length=1, max_length=64)
     curriculum: CurriculumInput | None = None
+    course_catalog: CourseCatalogSelectionInput | None = None
 
 
 class AssignmentInput(Strict):

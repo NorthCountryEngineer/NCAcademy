@@ -53,6 +53,7 @@ jobs:
         run: |
           python scripts/check_package.py
           python scripts/review_ny_curriculum.py --check
+          python scripts/import_ny_course_catalog.py --check
           python -m pytest apps/api/tests apps/archive/tests scripts/tests -q
       - name: Test and build the frontend
         run: |

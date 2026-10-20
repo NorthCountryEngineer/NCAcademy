@@ -1,5 +1,9 @@
 # Session evidence and audit controls
 
+Generative Homework Help records exact visible questions/replies, bounded student-and-assistant context, triage decisions, approved configuration/connections, grounding and policy snapshots, phase prompts, validated visible provider responses, usage and withholding decisions. It collects no hidden model reasoning. Local-family records and related audit payloads are encrypted with the independent PII key before hashing; authorized replay provides a separate plaintext projection. Human School/Admin can review complete school conversations. Class Teachers/authorized teaching agents receive only currently assigned class interactions, excluding general/other-course questions and full provider prompt evidence. Reviews and protected image reads are audited. See [Homework Help](homework-help.md).
+
+Schema 11 adds a transactional **metadata-only Core outbox**, immutable delivery receipts and independent mutable delivery state. The restricted API appends evidence and queue rows together; only a separate restricted dispatcher updates delivery state. Core receives allowlisted hashes, pseudonymous references, status, phase and usage, never transcripts, identities, photos or the PII key. Network uncertainty can retry the same Core event ID; it cannot retry inference. The original encrypted audit chain still goes to the independent archive. Delivery success does not establish archive freshness. See [delivery, health and activation](audit-delivery.md).
+
 ## What instructors can establish
 
 Replay preserves the student's submitted attempt and questions, the assistance actually displayed, assignment/policy/model snapshots, denials, provider errors and usage. Instructors can inspect progress over time and compare the student's final submission with the assistance supplied. It records service-visible evidence; it cannot prove independent authorship, record work done elsewhere, or expose hidden model reasoning.

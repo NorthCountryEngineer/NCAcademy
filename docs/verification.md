@@ -1,5 +1,54 @@
 # Verification record
 
+## Complete NYSED course catalog source verification — October 20, 2026
+
+The complete API/archive/script suite passed **1,540 tests with no skips**, including all three isolated real PostgreSQL acceptance cases. The final source includes **57 new catalog/import cases** and **22 class-catalog API/create/update/agent-publication cases**. Catalog tests compare every one of the **2,030 official rows** with the retained original NYSED workbook, verify **25 subject areas** and all three reporting levels, and check all **48 state-assessment rows**, **26 assessed course codes** and **12 Regents course codes** against the separate official workbook. The import and existing 67-pathway/470-combination report checks pass independently.
+
+API tests prove complete pagination, current staff/agent authority, all-grades visibility, gym/PE search, verified Regents discovery, optional standards, custom courses in state-curriculum schools, server-owned official metadata, stale/unknown selection rejection, omission-versus-null editing and renewed human-publication validation. Every official course entry additionally passed the actual class-creation schema with `curriculum: null`; no source title, description or code is excluded by those bounds. Existing student PII, model/audit, family, group, Classroom, source/corpus and permissions regressions remain passing.
+
+All **267 frontend tests** passed, along with TypeScript and the production build. The standalone browser rehearsal showed all 2,030 options by default, 70 results for gym/physical education, the band options and all 12 Regents choices. It successfully created Physical Education (`08001`) and a custom Robotics class without state standards or a corpus approval; persisted official code/provenance and the optional-preparation panel were visible afterwards. The rehearsal used a new synthetic database and separate loopback port; existing previews and their data were untouched. Its process and browser tab were shut down. Three screenshots are retained under ignored `build/course-catalog/`.
+
+Normal API and web Dockerfiles built ARM64 nonroot images. All **62 API source/data file hashes**, including the catalog JSON and both XLSX sources, match the workspace. All **three web assets** match the final production build. With networking disabled, the API image explicitly migrated a synthetic database, exposed all 2,030 choices, returned all 12 verified Regents choices and created PE, General Band, Algebra I and an independent custom class without standards. The resulting audit chain verified. No model/Core call occurred. This revision needs no additional schema or grant; it uses optional metadata in existing course records and retains the current schema-11 requirement from the preceding pending changes.
+
+The full suite ran against an owned fresh loopback PostgreSQL 14 fixture, which was stopped and removed afterwards. Source hash, schema parity, container and test receipts plus the deterministic combined source package are under ignored `build/all-nys-courses/`. Updated local documentation links and staged whitespace checks pass. The only backend warning is the existing Starlette deprecation; the existing frontend bundle-size advisory remains nonblocking. No push, production migration/deployment, real student data or live inference was used. The release image pin intentionally remains unresolved until a matching private immutable image is published and verified.
+
+Repeat the catalog checks in the locked test environment:
+
+```sh
+python scripts/import_ny_course_catalog.py --check
+PYTHONPATH=apps/api:apps/archive ALLOW_LIVE_MODELS=false python -m pytest apps/api/tests/test_course_catalog.py apps/api/tests/test_course_catalog_creation.py -q
+npm test --prefix apps/web -- --run src/course-creation.test.tsx
+npm run build --prefix apps/web
+```
+
+The committed CI job now verifies workbook parity along with the complete regression suite. [Course selection and custom classes](ny-course-catalog.md) documents the exact source receipts and operator workflow.
+
+
+## Generative Homework Help and audit delivery source verification — October 20, 2026
+
+The complete API/archive/script regression run passed **1,461 tests with no skips**, including all **three real PostgreSQL acceptance cases** on an owned, isolated loopback PostgreSQL 14 fixture. Those cases cover restricted API grants, preserved historical school/audit evidence and the separate metadata dispatcher role, SQL immutability, recoverable leases and bigint Core receipts. An additional final schema run passed **7 tests** with TCP SCRAM password authentication, matching CI's credential boundary. A small subsequent null-approval lookup cleanup passed all **49 generative Homework Help tests** without the new null-key warnings. The broad run's superseded warnings and the existing Starlette deprecation do not indicate failed tests.
+
+The AI tests cover human-taught classes, general and explicit routing, clarification, bounded student/assistant history, current enrollment and configuration/connection/source revocation, approved public-only grounding, three-model photo consent, strict visible output, safety withholding, quotas, encrypted raw SQL evidence, feedback, idempotency and phase-send uncertainty. Operator closure is tested during all three active phases: terminal output stays withheld, late results remain immutable private receipts, and no inference is resent. Migration regressions preserve original audit ciphertext/hash bytes and reconcile old-task outbox gaps without replacing existing richer metadata. Dispatcher/archive cases cover strict metadata allowlists, transaction rollback, destination/authority binding, duplicate recovery, expired leases, stale ownership, backoff, independent checkpoint continuity and freshness.
+
+All **257 frontend tests** passed, including school assistant configuration/approval, private conversational history, explicit general help, no automatic retries, school and class-only review, operator closure and independent delivery status. TypeScript and the production build passed under the bundled Node 24 runtime. The normal web Dockerfile also built under Node 22. The existing bundle-size advisory remains nonblocking; local source tests do not establish real-model accuracy, refusal reliability or latency.
+
+The normal API, web and archive Dockerfiles built ARM64 images. Extracted hashes match all **58 API source/data files**, all **three archive worker files** and all **three built web assets**. API/archive execute as UID 10001; web executes as UID 101. The final API image explicitly migrated a synthetic SQLite database to schema 11 with networking disabled, then passed readiness, authenticated settings, audit-chain verification and metadata queue checks. A separate read-only/nonroot API/web preview passed the **14-check** synthetic coursework/intake/feedback smoke and verified its **34-event** audit chain with zero model calls. Its API image preceded only the null-approval warning cleanup; the final image's separate offline smoke passed after that cleanup. The browser rendered the new administrative controls with no warning/error logs. Owned preview resources and the PostgreSQL fixture were removed after verification.
+
+Source-package validation, generated OpenAPI, New York coverage/register reproducibility, whitespace checks and **137 relative documentation links** passed. Receipts, synthetic screenshots and the deterministic source archive are under ignored `build/homework-ai/`. The archive and Core delivery CLIs started successfully with networking disabled. Kubernetes examples remain suspended; no live Core ingest, real-model/voice/Google request, storage-retention acceptance, production credential configuration, push, production migration or deployment was performed. Current production acceptance requires a matching immutable image, schema-11 owner migration/final reconciliation, explicit school model approval, dedicated worker credentials, independent retained storage/checkpoints, monitoring and tested key recovery. See [deployment](deployment.md) and [audit delivery](audit-delivery.md).
+
+Repeat the source checks with the locked dependencies:
+
+```sh
+PYTHONPATH=apps/api:apps/archive ALLOW_LIVE_MODELS=false python -m pytest apps/api/tests apps/archive/tests scripts/tests -q
+npm test --prefix apps/web -- --run
+npm run build --prefix apps/web
+python scripts/check_package.py
+python scripts/review_ny_curriculum.py --check
+```
+
+Without `ACADEMY_TEST_POSTGRES_URL`, three optional PostgreSQL tests skip. Supply a fresh isolated loopback database named exactly `academy_privilege_test` with a disposable owner login to exercise them; the committed CI job provisions that fixture. These tests refuse other database names or non-loopback hosts and must never target a development or production database. No external provider is required.
+
+
 ## New York curriculum review source verification
 
 The complete API/archive/script suite passed **1,356 tests**; **two opt-in PostgreSQL privilege cases were skipped** because this run did not supply their isolated PostgreSQL fixture. This revision introduces no database schema or grant change. The 118 focused source/curriculum cases are included in the full result. All **237 frontend tests**, TypeScript and the production build passed. The existing dependency deprecation and frontend bundle-size advisories remain nonblocking.

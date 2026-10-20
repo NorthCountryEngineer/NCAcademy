@@ -34,7 +34,7 @@ def test_upgrade_preserves_legacy_records_and_audit_prefix_and_is_idempotent(tmp
         assert all((db.get(Record,k).kind,db.get(Record,k).parent_id,db.get(Record,k).owner_id,db.get(Record,k).data,db.get(Record,k).created_at)==v for k,v in before_records.items())
         after = [(r.id,r.sequence,r.payload,r.hash,r.previous_hash,r.created_at) for r in db.scalars(select(Audit).order_by(Audit.sequence))]
         assert after[:len(before_events)] == before_events
-        assert len(after) == len(before_events)+8
+        assert len(after) == len(before_events)+9
         marker = db.get(Record,teaching_schema_id(settings.tenant_id))
         assert marker.value == {'version':3,'immutable_teaching_snapshots':True}
         assert db.get(Record,external_review_schema_id(settings.tenant_id)).value == {'version':4,'immutable_external_reviews':True}
@@ -114,7 +114,7 @@ def test_schema4_upgrade_keeps_schema3_marker_and_requires_owner_migration(app, 
     assert client.get('/api/ready').status_code == 200
     from conftest import login
     login(client,'demo-admin')
-    assert client.get('/api/admin/settings').json()['schema_version'] == 10
+    assert client.get('/api/admin/settings').json()['schema_version'] == 11
 
 
 def test_schema6_requires_owner_migration_and_preserves_prior_evidence(app, client):

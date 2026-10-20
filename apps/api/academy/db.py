@@ -47,8 +47,12 @@ def family_schema_id(tenant_id):
     return "family-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
 
 
-IMMUTABLE_RECORD_KINDS = {"family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
-SEALED_JOB_KINDS = {"classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"}
+def homework_ai_schema_id(tenant_id):
+    return "homework-ai-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+IMMUTABLE_RECORD_KINDS = {"homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
+SEALED_JOB_KINDS = {"homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"}
 
 
 def now():
@@ -200,6 +204,8 @@ def audit(db, tenant, actor, event_type, payload, session_id=""):
     row.hash = hashlib.sha256(canonical(audit_material(row)).encode()).hexdigest()
     db.add(row)
     head.sequence, head.digest = row.sequence, row.hash
+    from .audit_delivery import enqueue_audit_metadata
+    enqueue_audit_metadata(db, row, payload)
     return row
 
 
@@ -213,3 +219,7 @@ def audit_dict(row, *, reveal=False):
         from .pii_storage import audit_payload
         result["private_payload"] = audit_payload(row)
     return result
+
+
+# Register outbox tables before any caller creates metadata, including isolated tests.
+from . import audit_delivery as _audit_delivery_models  # noqa: E402,F401

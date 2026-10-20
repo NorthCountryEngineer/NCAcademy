@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowRight, BookOpen, ImagePlus, MessageSquareText, Plus, RefreshCw, Send, X } from 'lucide-react';
 import { errorText, stamp } from './api';
+import { HomeworkAI } from './HomeworkAI';
+import { homeworkAIIndex, type HomeworkAIIndex } from './homework-ai-api';
 import { Badge, Empty, Notice, PageHead, Spinner } from './components';
 import { prepareAssignmentImage, recordLessonProgress, type CuratedImage } from './curated-api';
 import { CuratedLessonView, releasedCuratedLesson } from './CuratedLessons';
@@ -8,7 +10,15 @@ import { HomeworkMicrophone, HomeworkSpeech, TeacherVoiceSettings } from './Home
 import type { TeacherVoiceConfig } from './homework-voice-api';
 import { createHomeworkSession, finishHomeworkIdentity, homeworkIndex, homeworkReferenceTarget, homeworkRequestProblem, homeworkSession, privateHomeworkImageUrl, retainedHomeworkIdentity, resumeHomeworkMessage, sendHomeworkMessage, type HomeworkCourse, type HomeworkIdentity, type HomeworkInput, type HomeworkMessage, type HomeworkSession, type HomeworkSessionSummary, type HomeworkTarget } from './homework-api';
 
-export function HomeworkHelp({schoolId,userId,openCourse,initialCourseId,compact=false}:{schoolId:string;userId:string;openCourse:(target:HomeworkTarget)=>void;initialCourseId?:string;compact?:boolean}){
+export function HomeworkHelp(props:{schoolId:string;userId:string;openCourse:(target:HomeworkTarget)=>void;initialCourseId?:string;compact?:boolean}){
+ const [index,setIndex]=useState<HomeworkAIIndex|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
+ useEffect(()=>{let active=true;setLoading(true);setError('');homeworkAIIndex(props.schoolId).then(value=>{if(active)setIndex(value);}).catch(e=>{if(active)setError(errorText(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[props.schoolId,props.userId]);
+ if(loading)return <div className={props.compact?'homework-embedded':undefined}><h2>Homework Help</h2><Spinner text="Loading Homework Help…"/></div>;
+ if(error)return <><h2>Homework Help</h2><Notice error={error}/><p className="help-text">The assistant configuration could not be confirmed. Reload this page before sending a question.</p></>;
+ return index?.assistant.configuration?.enabled||index?.sessions.length?<HomeworkAI key={`${props.schoolId}:${props.userId}`} {...props} index={index}/>:<LegacyHomeworkHelp key={`${props.schoolId}:${props.userId}`} {...props}/>;
+}
+
+function LegacyHomeworkHelp({schoolId,userId,openCourse,initialCourseId,compact=false}:{schoolId:string;userId:string;openCourse:(target:HomeworkTarget)=>void;initialCourseId?:string;compact?:boolean}){
  const [courses,setCourses]=useState<HomeworkCourse[]>([]),[sessions,setSessions]=useState<HomeworkSessionSummary[]>([]),[sessionId,setSessionId]=useState(''),[session,setSession]=useState<HomeworkSession|null>(null),[courseId,setCourseId]=useState(''),[teacherId,setTeacherId]=useState(''),[message,setMessage]=useState(''),[images,setImages]=useState<CuratedImage[]>([]),[confirmed,setConfirmed]=useState(false),[loading,setLoading]=useState(true),[historyLoading,setHistoryLoading]=useState(false),[busy,setBusy]=useState(false),[photoBusy,setPhotoBusy]=useState(false),[error,setError]=useState(''),[uncertain,setUncertain]=useState(false),[voice,setVoice]=useState<TeacherVoiceConfig|null>(null);
  const sending=useRef(false),createKey=useRef(''),pendingIdentity=useRef<HomeworkIdentity|null>(null);
  const selectedCourse=courses.find(course=>course.id===courseId),selectedTeacher=selectedCourse?.teachers.find(teacher=>teacher.id===teacherId),pending=!!session?.messages.some(item=>item.status==='pending'),locked=busy||historyLoading||uncertain||pending;

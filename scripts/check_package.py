@@ -34,7 +34,16 @@ def validate(root: Path = ROOT, release: bool = False) -> dict:
         raise ValueError('Duplicate application permissions.')
     required = ('apps/api/Dockerfile', 'apps/api/requirements.lock.txt', 'apps/web/Dockerfile',
                 'apps/web/package-lock.json', 'apps/archive/Dockerfile', 'apps/archive/requirements.lock.txt',
-                'deploy/archive/kubernetes.example.yaml', 'compose.yaml', 'nce/core-onboarding.patch', 'nce/core-patch-baseline.json')
+                'deploy/archive/kubernetes.example.yaml', 'apps/archive/core_delivery.py',
+                'apps/archive/archive_health.py', 'deploy/archive/core-delivery.example.yaml',
+                'deploy/archive/core-delivery-config.example.json', 'deploy/archive/core-delivery-role.sql',
+                'deploy/archive/core-metadata-dataset.schema.json', 'docs/audit-delivery.md',
+                'apps/api/academy/course_catalog.py',
+                'apps/api/academy/course_catalog_data/ny_sced_2026_2027.json',
+                'apps/api/academy/course_catalog_data/sced-course-codes-2026-27.xlsx',
+                'apps/api/academy/course_catalog_data/codes-and-descriptions-for-courses-ending-in-state-assessments-2026-27.xlsx',
+                'scripts/import_ny_course_catalog.py',
+                'compose.yaml', 'nce/core-onboarding.patch', 'nce/core-patch-baseline.json')
     for path in required:
         if not (root / path).is_file() or (root / path).is_symlink():
             raise ValueError('Missing regular package input: ' + path)

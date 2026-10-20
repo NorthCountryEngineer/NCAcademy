@@ -1,7 +1,8 @@
 """Explicit schema admission; never run migrations during login/readiness."""
-from sqlalchemy import text
+import json
+from sqlalchemy import text, select
 from .config import Settings
-from .db import Base, Database, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
+from .db import Base, Database, Audit, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
 from .database_roles import configure_runtime_role, runtime_credentials
 from .permissions import migrate_school_scopes
 
@@ -24,8 +25,11 @@ def migrate(settings=None):
     sealed_jobs = ",".join("'" + kind + "'" for kind in sorted(SEALED_JOB_KINDS))
     with database.engine.begin() as connection:
         install_activity_indexes(connection, database.engine.dialect.name)
+        immutable_delivery = ("audit_delivery_outbox", "audit_delivery_receipts")
         if database.engine.dialect.name == "sqlite":
             for operation in ("UPDATE", "DELETE"):
+                for table in immutable_delivery:
+                    connection.execute(text(f"CREATE TRIGGER IF NOT EXISTS immutable_{table}_{operation.lower()} BEFORE {operation} ON {table} BEGIN SELECT RAISE(ABORT, 'Audit delivery evidence is append-only'); END"))
                 connection.execute(text(f"CREATE TRIGGER IF NOT EXISTS immutable_audit_{operation.lower()} BEFORE {operation} ON audit_events BEGIN SELECT RAISE(ABORT, 'Audit events are append-only'); END"))
                 connection.execute(text(f"DROP TRIGGER IF EXISTS immutable_submission_{operation.lower()}"))
                 connection.execute(text(f"CREATE TRIGGER immutable_submission_{operation.lower()} BEFORE {operation} ON records WHEN OLD.kind IN ({protected}) BEGIN SELECT RAISE(ABORT, 'Submitted work and approved teaching snapshots are immutable'); END"))
@@ -35,6 +39,9 @@ def migrate(settings=None):
         else:
             connection.execute(text("CREATE OR REPLACE FUNCTION academy_reject_audit_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Audit events are append-only'; END $$"))
             connection.execute(text(f"CREATE OR REPLACE FUNCTION academy_reject_submission_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.kind IN ({protected}) THEN RAISE EXCEPTION 'Submitted work and approved teaching snapshots are immutable'; END IF; IF TG_OP = 'DELETE' THEN RETURN OLD; END IF; RETURN NEW; END $$"))
+            for table in immutable_delivery:
+                connection.execute(text(f"DROP TRIGGER IF EXISTS immutable_delivery ON {table}"))
+                connection.execute(text(f"CREATE TRIGGER immutable_delivery BEFORE UPDATE OR DELETE ON {table} FOR EACH ROW EXECUTE FUNCTION academy_reject_audit_mutation()"))
             connection.execute(text("DROP TRIGGER IF EXISTS immutable_audit ON audit_events"))
             connection.execute(text("CREATE TRIGGER immutable_audit BEFORE UPDATE OR DELETE ON audit_events FOR EACH ROW EXECUTE FUNCTION academy_reject_audit_mutation()"))
             connection.execute(text("DROP TRIGGER IF EXISTS immutable_submission ON records"))
@@ -91,6 +98,19 @@ def migrate(settings=None):
         if not db.get(Record, family_marker_id):
             db.add(Record(id=family_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 10, "encrypted_local_family_accounts": True})))
             audit(db, settings.tenant_id, "deployment-migration", "schema.local_family_initialized", {"version": 10, "historical_records_preserved": True})
+        # Reconcile gaps on every explicit owner run, including events an older
+        # task appended during a rolling upgrade. Never rewrite richer existing
+        # metadata or decrypt historical private audit payloads for backfill.
+        from .audit_delivery import AuditDeliveryOutbox, enqueue_audit_metadata
+        missing = (select(Audit).outerjoin(AuditDeliveryOutbox,
+            (AuditDeliveryOutbox.tenant_id == Audit.tenant_id) & (AuditDeliveryOutbox.audit_id == Audit.id))
+            .where(Audit.tenant_id == settings.tenant_id, AuditDeliveryOutbox.id.is_(None)).order_by(Audit.sequence))
+        for historical in db.scalars(missing).yield_per(250):
+            enqueue_audit_metadata(db, historical, json.loads(historical.payload))
+        ai_marker_id = homework_ai_schema_id(settings.tenant_id)
+        if not db.get(Record, ai_marker_id):
+            db.add(Record(id=ai_marker_id, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 11, "generated_homework_and_metadata_outbox": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.homework_ai_initialized", {"version": 11, "historical_records_preserved": True, "metadata_only_backfill": True})
     database.engine.dispose()
 
 

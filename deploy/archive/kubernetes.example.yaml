@@ -152,6 +152,8 @@ spec:
                 - --signing-key=/archive-keys/signing-private.bin
                 - --database-url-file=/database/url.txt
                 - --cursor=/state/cursor.json
+                - --trusted-checkpoint=/independent/accepted-cursor.json
+                - --health-file=/state/health.json
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
@@ -166,7 +168,12 @@ spec:
                 - {name: keys, mountPath: /archive-keys, readOnly: true}
                 - {name: database, mountPath: /database, readOnly: true}
                 - {name: tls, mountPath: /archive-tls, readOnly: true}
+                - {name: independent, mountPath: /independent, readOnly: true}
           volumes:
+            # Independently maintained owner-accepted checkpoint. The exporter
+            # has read-only access and cannot replace this expected head.
+            - name: independent
+              secret: {secretName: academy-audit-independent-checkpoint, defaultMode: 0440}
             - {name: state, persistentVolumeClaim: {claimName: academy-audit-worker-state}}
             - name: config
               configMap: {name: academy-audit-export-config}

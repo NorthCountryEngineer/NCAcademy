@@ -1,5 +1,7 @@
 # New York curriculum for 2026 and 2027
 
+**Course creation now uses a separate complete NYSED course catalog.** All 2,030 official 2026–2027 entries, including PE, art, band, orchestra, chorus, dance, theater and CTE, can be selected when creating a class. Custom classes can have no state catalog or standards binding. The 67 pathways described here concern standards planning and AI teaching coverage; their limitations never exclude a subject from class creation. See [the complete course catalog](ny-course-catalog.md).
+
 NCAcademy’s New York planning catalog covers **Pre-K, kindergarten and grades 1–12**, with the academic portions of every NYSED subject area represented. The current instructional year is **2026–2027**. Calendar-year 2026 assessment changes are included below so a student’s examination version can be distinguished from the standards used for current instruction. Review date: **October 18, 2026**.
 
 New York establishes learning standards, frameworks and instructional requirements; schools develop their own curriculum and select materials. A subject appearing at several grades means it is available for appropriate school placement, enrichment or integrated instruction. It does not mean that every school must offer that named course in every listed grade. [NYSED curriculum guidance](https://www.nysed.gov/early-learning/curriculum), [NYSED standards by content area](https://www.nysed.gov/standards-instruction/nys-p-12-learning-standards-content-area).
@@ -8,7 +10,7 @@ The accompanying [coverage table](ny-curriculum-2026-coverage.csv) gives every s
 
 ## Coverage and teaching readiness
 
-The catalog represents **tutoring scope**, including reading and writing instruction, mathematics, science, history and civics, languages, computing, finance, health, career theory and academic arts. It includes music literacy, theory and history; it excludes band rehearsal and instrumental performance assessment. The same boundary applies to sports performance, clinical practice, machinery operation, physical dance execution and supervised laboratory or safety competencies.
+This older subject review describes **AI tutoring coverage**, including reading and writing instruction, mathematics, science, history and civics, languages, computing, finance, health, career theory and academic arts. These coverage descriptions do not restrict class creation: the full course catalog includes band, physical education, performance and practical courses. An AI conversation alone does not certify actual instrument/sports performance, clinical practice, machinery operation, dance execution or supervised laboratory/safety competency. Such classes can still be created, assigned teachers and populated with coursework.
 
 Most entries are reviewed framework and topic plans. They still need exact standard mappings, a school-approved sequence and suitable teaching material before becoming an approved AI-teacher corpus. The existing Earth and Space Sciences and Environmental Science packages remain explicitly **partial** mappings with limited teaching summaries. Their readiness does not establish full coverage of those courses. [Existing science package review](ny-school-curriculum-sources.md).
 

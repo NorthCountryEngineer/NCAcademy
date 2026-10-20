@@ -381,9 +381,13 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                     raise HTTPException(409, "Proposal author is no longer assigned to this class")
             if operation in {"course.create", "course.update"}:
                 from .schemas import CourseInput
+                from .course_catalog import catalog_selection
                 content = CourseInput.model_validate(value["payload"])
+                # Validate again at human publication. A proposal's exact source
+                # may have changed since the teaching agent selected it.
+                selected_catalog = catalog_selection(content.course_catalog.model_dump()) if content.course_catalog else None
                 if operation == "course.create":
-                    target = add(db, identity, "course", {"title": content.title, "description": content.description, "curriculum": content.curriculum.model_dump() if content.curriculum else None}, sid, row.owner_id, parent="")
+                    target = add(db, identity, "course", {"title": content.title, "description": content.description, "curriculum": content.curriculum.model_dump() if content.curriculum else None, "course_catalog": selected_catalog}, sid, row.owner_id, parent="")
                     target.parent_id = ""
                     add(db, identity, "enrollment", {"role": "teacher"}, sid, row.owner_id, target.id)
                 else:
@@ -391,7 +395,10 @@ def register_school_api(app, database, auth, settings, actor, staged_change, val
                     curriculum = target.value.get("curriculum")
                     if "curriculum" in content.model_fields_set:
                         curriculum = content.curriculum.model_dump() if content.curriculum else None
-                    target.set({**target.value, "title": content.title, "description": content.description, "curriculum": curriculum})
+                    course_catalog = target.value.get("course_catalog")
+                    if "course_catalog" in content.model_fields_set:
+                        course_catalog = selected_catalog
+                    target.set({**target.value, "title": content.title, "description": content.description, "curriculum": curriculum, "course_catalog": course_catalog})
                 from .standards import build_course_corpus
                 if target.value.get("curriculum") or "curriculum" in content.model_fields_set:
                     build_course_corpus(db, identity, target, sid, audit_actor)

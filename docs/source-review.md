@@ -6,6 +6,10 @@ Review the staged source with `git diff --cached --stat` and `git diff --cached`
 
 `python3 scripts/check_package.py` validates source-package contracts. `--release` additionally refuses unresolved ECR image placeholders. The release manifest must pin the published API image by digest before final source publication and exact-commit CI admission.
 
+The source also includes the complete official course catalog JSON, both pinned NYSED workbooks and the offline importer. Its 2,030-row/source-assessment parity check must pass before source publication; workbook presence does not imply teaching-corpus approval.
+
+The schema-11 source package includes the AI Homework Help API/UI, generated OpenAPI, metadata dispatcher, archive freshness probe, strict Core dataset schema, separate database-role SQL and suspended Kubernetes examples. Review those alongside the model-approval and independent-archive activation instructions. The package contains no worker credential, PII/archive key, database contents or production-specific storage endpoint. Worker deployment/activation is separate from the normal frontend/API recipe; see [audit delivery](audit-delivery.md).
+
 ```sh
 python3 scripts/package_source.py
 ```

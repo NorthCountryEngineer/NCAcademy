@@ -1,5 +1,21 @@
 # Changelog
 
+## Complete NYSED course choices and independent custom classes — October 20, 2026
+
+- Added every one of the 2,030 official 2026–2027 NYSED course entries across 25 subject areas, preserving codes, exact source text, reporting levels and indicators. PE, arts, band, orchestra, chorus, dance, theater, practical subjects and CTE are included without teaching-readiness filters.
+- Added searchable, paginated course selection, subject/level filters and verified Regents course discovery. Retained both official source workbooks and deterministic offline source parity checks, including all 48 state-assessment rows and 12 Regents course codes.
+- Made Custom course an explicit supported creation path with no inherited school/NYS binding. Optional standards alignment stays separate; explicit null clears a binding on edit and omission preserves existing historical metadata.
+- Added server-owned catalog provenance and exact-source validation for direct human saves and human publication of agent proposals. Class creation requires no ready corpus or AI approval. Existing teaching, school/class authority and student-work controls remain intact.
+- Updated guides, API/OpenAPI, CI source checks, tests and source/container packaging. This is local source preparation; no push or deployment is implied.
+
+## Generative Homework Help and durable audit delivery — October 20, 2026
+
+- Added a human-approved school AI assistant with separate triage, tutoring and safety-model configuration. It serves enrolled human/AI-taught courses and general study questions, supports explicit course/general correction, bounded conversation history, approved optional public grounding and server-owned references.
+- Added generated plain-text explanations and guided practice behind completion/refusal checks and independent output review. Retained narrower assignment/Q&A/curated-material publication rules. Added three-model photo capability/consent, personal preference feedback, current-authority/snapshot checks, durable phase markers and no uncertain inference retries.
+- Added private session/history UI, School/Admin full review, class-scoped teacher/agent review and scoped metadata-delivery status. Schema 11 encrypts new local-family evidence and protects immutable revisions, approvals, sessions, send markers and sealed terminal messages without rewriting earlier audit bytes.
+- Added a transactional metadata-only Core pipeline outbox, independent least-privilege dispatcher, stable idempotent delivery, leases/backoff and immutable receipts. Core receives no transcript/photo/identity/credential payloads. The separate archive adds independent-checkpoint continuity, durable success receipts and freshness monitoring; scheduled examples remain suspended pending actual deployment acceptance.
+- Updated API/OpenAPI, encryption, operating/recovery and deployment documentation, mocked regressions and local source packaging. No live inference, push, production migration or worker activation is implied by this source preparation.
+
 ## New York curriculum scope review — October 18, 2026
 
 - Added four reviewed 2026–2027 domain catalogs covering Pre-K through grade 12, core academic subjects, languages and language support, computing, health/finance, academic arts and career studies. Local electives, state bands, proficiency levels and practical limitations remain explicit.

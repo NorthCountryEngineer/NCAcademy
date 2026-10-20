@@ -1,5 +1,7 @@
 # Optional Homework Help voice
 
+These contracts apply to the legacy approved-teaching flow. Voice for the separately approved generative school Homework Help assistant remains deferred; no AI reply is silently sent to speech synthesis.
+
 Live voice setup and credential lookup are deferred at the owner's request on October 18, 2026. Keep the configuration, stock-voice selector, recording/transcript review, exact-reply playback interfaces and mocked tests as scaffolding. Text remains the default; resume provider setup and live acceptance only when requested.
 
 Homework Help keeps voice under the same student, class, approved teacher, source and learning-preference boundaries as written help. Students can select a school-approved stock voice for each AI teacher. That personal choice follows the stable teacher profile across its assigned classes and grades; it does not edit the shared teacher or another student's settings. Choosing text-only clears the personal voice selection. Voice does not add an unrestricted conversational agent or allow an answer-writing model.

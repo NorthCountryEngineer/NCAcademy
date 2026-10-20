@@ -401,7 +401,7 @@ class Archive:
         return {"tenant_id": self.config.tenant_id, "events": events, "head": {"sequence": cursor["sequence"], "digest": cursor["digest"]}}, cursor
 
 
-def export_once(archive, source, cursor_path):
+def export_once(archive, source, cursor_path, *, trusted_checkpoint=None, health_path=None):
     path = Path(cursor_path)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     fd = os.open(path.with_name(path.name + ".lock"), os.O_WRONLY | os.O_CREAT, 0o600)
@@ -410,17 +410,42 @@ def export_once(archive, source, cursor_path):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise ArchiveError("Another exporter holds this persistent cursor") from None
-        return _export_locked(archive, source, cursor_path)
+        result = _export_locked(archive, source, cursor_path, trusted_checkpoint=trusted_checkpoint)
+        if health_path is not None:
+            # This path shares the cursor's lock and survives an interrupted
+            # fsync/rename without concealing a later successful export.
+            health_path = Path(health_path)
+            health_path.with_name(health_path.name + ".pending").unlink(missing_ok=True)
+            atomic_private(health_path, canonical(result))
+        return result
 
 
-def _export_locked(archive, source, cursor_path):
+def _export_locked(archive, source, cursor_path, *, trusted_checkpoint=None):
     path = Path(cursor_path)
     # A leftover fsync temporary file is not a committed cursor. Remote commit
     # records recover a crash between upload, checkpoint and local rename.
     path.with_name(path.name + ".pending").unlink(missing_ok=True)
     cursor = json.loads(path.read_bytes()) if path.exists() else archive.empty()
     archive.verify_cursor(cursor)
+    if trusted_checkpoint is not None:
+        # A separately retained expected head survives loss of both this PVC
+        # and a remote tail. Verify the anchored manifest history in bounded
+        # segments; do not accumulate decrypted tenant history in memory.
+        archive.verify_cursor(trusted_checkpoint)
+        anchored = archive.empty()
+        while anchored["sequence"] < trusted_checkpoint["sequence"]:
+            found = archive.read_next(anchored)
+            if found is None:
+                raise ArchiveError("Independently checkpointed archive history is missing")
+            _, anchored = found
+        if anchored != trusted_checkpoint:
+            raise ArchiveError("Independent checkpoint differs from retained manifest history")
     with source.snapshot() as snapshot:
+        if trusted_checkpoint is not None and trusted_checkpoint["sequence"]:
+            expected = trusted_checkpoint
+            boundary = list(snapshot.events(expected["sequence"] - 1, 1))
+            if expected["sequence"] > snapshot.head["sequence"] or not boundary or boundary[0]["hash"] != expected["digest"]:
+                raise ArchiveError("Database differs from independently retained checkpoint")
         if cursor["sequence"] > snapshot.head["sequence"]:
             raise ArchiveError("Database is behind independently archived evidence")
         if cursor["sequence"]:
@@ -464,6 +489,7 @@ def parser():
     value.add_argument("--database-url-file", type=Path)
     value.add_argument("--cursor", type=Path)
     value.add_argument("--trusted-checkpoint", type=Path)
+    value.add_argument("--health-file", type=Path)
     value.add_argument("--output", type=Path)
     return value
 
@@ -477,7 +503,8 @@ def main(argv=None):
             if not args.database_url_file or not args.cursor or not args.signing_key:
                 raise ArchiveError("Export requires a separate database URL, signer and persistent cursor path")
             database_url = private_bytes(args.database_url_file).decode().strip()
-            result = export_once(archive, DatabaseSource(database_url, config.tenant_id), args.cursor)
+            trusted = json.loads(private_bytes(args.trusted_checkpoint)) if args.trusted_checkpoint else None
+            result = export_once(archive, DatabaseSource(database_url, config.tenant_id), args.cursor, trusted_checkpoint=trusted, health_path=args.health_file)
         else:
             if not args.output or not args.trusted_checkpoint:
                 raise ArchiveError("Owner restore requires a private output path and independently retained trusted checkpoint")

@@ -144,7 +144,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             for field,index_name in (("idempotency_key","academy_voice_key"),("budget_day","academy_voice_day"),("status","academy_voice_status")):
                 plan = connection.execute(text(f"EXPLAIN SELECT id FROM records WHERE kind='voice_operation' AND tenant_id='local-academy' AND owner_id='synthetic-student' AND CAST(CAST(data AS JSON)->>'{field}' AS VARCHAR)='synthetic-value'")).all()
                 assert any(index_name in str(row) for row in plan), plan
-        for kind in ("classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"):
+        for kind in ("homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"):
             identifier = "pending-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"status":"pending"}'})
@@ -155,7 +155,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})
@@ -172,6 +172,14 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                 stored = connection.execute(text("SELECT kind,data FROM records WHERE id = :id"), {"id": identifier}).one()
                 assert stored == (kind, '{"original":true}')
         for statement in (
+            "UPDATE audit_delivery_outbox SET metadata_json = '{}'",
+            "DELETE FROM audit_delivery_outbox",
+            "TRUNCATE audit_delivery_outbox",
+            "UPDATE audit_delivery_state SET status = 'delivered'",
+            "DELETE FROM audit_delivery_state",
+            "INSERT INTO audit_delivery_receipts (id) VALUES ('forbidden')",
+            "UPDATE audit_delivery_receipts SET outcome = 'created'",
+            "DELETE FROM audit_delivery_receipts",
             "UPDATE audit_events SET payload = '{}'",
             "DELETE FROM audit_events",
             "TRUNCATE audit_events",
@@ -193,6 +201,9 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             assert caught.value.orig.sqlstate == "42501", statement
         with engine.connect() as connection:
             assert connection.execute(text("SELECT count(*) FROM audit_events")).scalar_one() >= 4
+            assert connection.execute(text("SELECT count(*) FROM audit_delivery_outbox")).scalar_one() >= 4
+            assert connection.execute(text("SELECT count(*) FROM audit_delivery_state")).scalar_one() >= 4
+            assert connection.execute(text("SELECT count(*) FROM audit_delivery_receipts")).scalar_one() >= 0
     finally:
         engine.dispose()
     # The migration secret can be rotated, including SQL quoting characters.

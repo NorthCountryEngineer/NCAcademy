@@ -18,6 +18,11 @@ flowchart LR
     Provider --> Gate[Validate approved ID only]
     Gate --> Audit[Commit audit before response]
     Audit --> Browser
+    API --> Homework[Approved school AI triage / tutor / safety]
+    Homework --> Audit
+    Audit --> Outbox[Atomic metadata outbox]
+    Outbox --> Dispatcher[Separate restricted dispatcher]
+    Dispatcher --> Pipeline[Core JSON metadata pipeline]
     DB -. read-only extraction .-> Worker[Separate archive worker]
     Worker --> Archive[Encrypted signed S3-compatible archive]
     Operator[Separate operator / KMS signer] --> Archive
@@ -49,7 +54,9 @@ The [Groups integration](group-chat.md) uses NCE Core Chat for message storage a
 
 Core application/AI sender records bind to immutable local commands and exact delivery receipts carrying the actual actor. Only matching messages are projected; upstream text and reply previews are never identity authority. Markers commit before I/O and receipt/audit before output. Core message IDs support explicit same-command retries; non-idempotent uncertain room creation requires operator reconciliation. Schema 8 protects chat evidence and seals terminal attempts. Core transport, workload provisioning and package grants are documented separately in the [contract](core-chat-contract.md).
 
-## Assistance boundary
+## Class selection and assistance boundaries
+
+Class identity is independent of instructional coverage. The packaged NYSED SCED workbook supplies all 2,030 official 2026–2027 course entries, including practical/performance/PE/arts/CTE subjects, with exact source receipts and no request-time network lookup. A separate verified state-assessment source drives Regents discovery. Course creation stores a server-resolved catalog snapshot only when selected; custom classes can have neither a catalog binding nor state standards, regardless of school curriculum. This uses existing course records with no new schema/grants. Missing AI teaching material cannot remove a class option. Optional `curriculum` still governs the separate standards/corpus preparation described below. See [course selection](ny-course-catalog.md).
 
 School setup owns a versioned curriculum intent independent of each class's effective teaching configuration. A deterministic reviewed-source planning agent snapshots installed jurisdiction packages and drafts local grade/subject/year courses. A human explicitly materializes selected classes through an immutable idempotent publication receipt; each class retains its exact school-curriculum origin. Logo/custom metadata, state/custom/no-curriculum selection, the teaching team and saved run evidence share a resumable administrative workspace. Custom ingestion is an extension point, not an active parser. Teacher assignment records the actual per-class corpus preparation in a separate immutable knowledge-workflow run. Schema 7 protects these receipts; none grants Core capabilities or teaching approval. See [school onboarding](school-onboarding.md).
 
@@ -71,11 +78,17 @@ Disabled assistance makes no provider call. Assignment curated mode progresses t
 
 ## Homework Help and speech
 
+The school AI mode is separate from the legacy selector flow below. It supports every currently enrolled class, even with a human teacher, plus general study questions. Human approval pins a school assistant configuration and three model/connection snapshots: triage, tutoring and independent output review. The server controls candidate classes, optional approved public teaching passages, citations, bounded conversation context and personal learning weights. A strict plain-text answer and safety verdict gate generated explanations. No tools, student-work writes or shared publication are granted; completion controls reduce risk rather than guarantee correctness or perfect refusal. Three-model image capability and explicit student consent are required for photos. Schema 11 protects immutable configuration/approval/session/send records and sealed terminal messages. Local-family evidence uses the independent PII key. See [the complete AI and legacy contracts](homework-help.md).
+
+Each phase commits its own durable send marker and checks current authority/configuration before I/O. Terminal audit commits before display. A transport/crash uncertainty is never automatically resent. School/Admin replay includes the full school conversation; current class Teachers/authorized agents receive only that class's interactions, excluding other courses/general questions and complete provider prompts. The existing structured feedback adapts bounded personal weights under a stable school assistant scope. Voice remains deferred for generated replies.
+
 The student-owned Homework Help conversation is pinned to one school. A narrow triage component ranks currently enrolled, admitted course descriptors; ambiguity or photo-only context requires a student course choice. Handoff invokes the existing curated-lesson lifecycle with an exact approved teacher, corpus and model policy. Follow-up context is bounded to currently admitted prior questions for that same class/persona. Server-generated references point only to current coursework. Immutable messages/outcomes link to sealed course turns; explicit recovery of a request interrupted before admission reuses its original lesson key. Independent message/photo-storage budgets also count clarification and blocked requests.
 
 Optional ElevenLabs speech uses a school-scoped encrypted connection and an independently fixed stock catalog. A personal voice revision follows the stable teacher. Bounded microphone recordings become editable transcripts; students explicitly send the question. Read-aloud accepts only an owned released turn ID and derives the exact text on the server. Neither voice direction creates a new unrestricted tutoring model path. Before-send/release/playback authorization, durable markers, quotas and uncertainty apply. Raw microphone bytes do not enter persistent records or audit; transcripts, exact spoken text and processing evidence do. Generated playback is encrypted and privately served. Schema 6 protects Homework messages/outcomes, personal voice revisions and completed speech operations. See [Homework Help](homework-help.md) and [voice](homework-voice.md).
 
 ## Audit and evidence
+
+Every audit append also inserts an allowlisted metadata outbox event in the same transaction. A separate dispatcher, with no raw audit/record/PII-key access, sends stable event IDs to Core's existing JSON pipeline. Core contains hashes, opaque correlated references, status, phase and bounded usage only. Recoverable leases, destination binding, duplicate reconciliation and immutable receipts support asynchronous delivery after local evidence is durable. Failed delivery does not resend a model request. The independently encrypted archive continues to preserve original audit ciphertext; delivery health and archive freshness remain separate checks. See [delivery and operational activation](audit-delivery.md).
 
 Student learning preferences are a separate personal layer over approved teaching configuration. Nine structured intake answers initialize bounded numeric presentation weights. Immutable per-interaction feedback contributes only to that student's teacher-specific adjustment. Accuracy concerns remain review evidence. Preferences cannot grant capabilities, admit sources or alter factual content. Each new tutoring operation pins the exact preference revision and effective weights and revalidates them before external send and release. School-wide teacher metadata and other students' weights are unaffected. The additive schema-5 migration preserves earlier identities and evidence. See [learning preferences](student-learning-preferences.md).
 

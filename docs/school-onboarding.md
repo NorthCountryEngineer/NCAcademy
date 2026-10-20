@@ -1,5 +1,7 @@
 # School setup, curriculum and knowledge workflows
 
+**Creating a class is independent of curriculum planning.** Courses → Create course offers the complete 2,030-entry official NYSED 2026–2027 catalog, including gym/PE, art, band, music, performance and career subjects, plus normal custom classes with no state binding. These options work in every school curriculum mode and do not require a ready AI corpus. The standards planner below remains a separate subject/grade planning workflow. See [all New York course options and custom classes](ny-course-catalog.md).
+
 A human application Admin creates a school and continues into its setup workspace. A human School administrator can resume setup for an assigned school. The school stores its name, description, normalized logo, custom key/value metadata and curriculum choice. These are application settings; saving them creates no Core resource, upstream account, grant, credential or external agent deployment.
 
 ## School details and branding

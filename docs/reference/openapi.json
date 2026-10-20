@@ -73,6 +73,77 @@
         "title": "AIBehavior",
         "type": "object"
       },
+      "AIMessageInput": {
+        "additionalProperties": false,
+        "properties": {
+          "course_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "idempotency_key": {
+            "maxLength": 100,
+            "minLength": 8,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "image_use_confirmed": {
+            "default": false,
+            "title": "Image Use Confirmed",
+            "type": "boolean"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/CuratedImage"
+            },
+            "maxItems": 2,
+            "title": "Images",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Message",
+            "type": "string"
+          },
+          "routing_mode": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "general"
+            ],
+            "title": "Routing Mode",
+            "type": "string"
+          },
+          "teacher_profile_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Profile Id"
+          }
+        },
+        "required": [
+          "idempotency_key"
+        ],
+        "title": "AIMessageInput",
+        "type": "object"
+      },
       "AgentPlacementInput": {
         "additionalProperties": false,
         "properties": {
@@ -140,6 +211,22 @@
           "core_resource_id"
         ],
         "title": "AgentPlacementInput",
+        "type": "object"
+      },
+      "ApprovalInput": {
+        "additionalProperties": false,
+        "properties": {
+          "revision_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id"
+        ],
+        "title": "ApprovalInput",
         "type": "object"
       },
       "ApprovedText": {
@@ -516,6 +603,131 @@
         "title": "ClassroomLinkInput",
         "type": "object"
       },
+      "CloseUncertainInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Expected Sha256",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_sha256",
+          "reason"
+        ],
+        "title": "CloseUncertainInput",
+        "type": "object"
+      },
+      "ConfigurationInput": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_images": {
+            "default": false,
+            "title": "Allow Images",
+            "type": "boolean"
+          },
+          "behavior": {
+            "$ref": "#/components/schemas/AIBehavior"
+          },
+          "biography": {
+            "default": "A school-approved AI learning assistant.",
+            "maxLength": 4000,
+            "title": "Biography",
+            "type": "string"
+          },
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "max_daily_tokens": {
+            "default": 200000,
+            "maximum": 2000000.0,
+            "minimum": 1000.0,
+            "title": "Max Daily Tokens",
+            "type": "integer"
+          },
+          "max_daily_turns": {
+            "default": 30,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Daily Turns",
+            "type": "integer"
+          },
+          "max_input_chars": {
+            "default": 5000,
+            "maximum": 10000.0,
+            "minimum": 100.0,
+            "title": "Max Input Chars",
+            "type": "integer"
+          },
+          "max_output_tokens": {
+            "default": 1500,
+            "maximum": 3000.0,
+            "minimum": 200.0,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "name": {
+            "default": "Homework Helper",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "safety": {
+            "$ref": "#/components/schemas/ModelRef"
+          },
+          "safety_image_capable": {
+            "default": false,
+            "title": "Safety Image Capable",
+            "type": "boolean"
+          },
+          "triage": {
+            "$ref": "#/components/schemas/ModelRef"
+          },
+          "triage_confidence_threshold": {
+            "default": 0.75,
+            "maximum": 1.0,
+            "minimum": 0.5,
+            "title": "Triage Confidence Threshold",
+            "type": "number"
+          },
+          "triage_image_capable": {
+            "default": false,
+            "title": "Triage Image Capable",
+            "type": "boolean"
+          },
+          "tutor": {
+            "$ref": "#/components/schemas/ModelRef"
+          },
+          "tutor_image_capable": {
+            "default": false,
+            "title": "Tutor Image Capable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "triage",
+          "tutor",
+          "safety",
+          "expected_version"
+        ],
+        "title": "ConfigurationInput",
+        "type": "object"
+      },
       "ConnectionInput": {
         "additionalProperties": false,
         "properties": {
@@ -662,9 +874,54 @@
         "title": "CorpusRetrievalInput",
         "type": "object"
       },
+      "CourseCatalogSelectionInput": {
+        "additionalProperties": false,
+        "properties": {
+          "academic_year": {
+            "pattern": "^20[0-9]{2}-20[0-9]{2}$",
+            "title": "Academic Year",
+            "type": "string"
+          },
+          "catalog_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Catalog Sha256",
+            "type": "string"
+          },
+          "course_code": {
+            "maxLength": 20,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9]+$",
+            "title": "Course Code",
+            "type": "string"
+          },
+          "state": {
+            "pattern": "^US-[A-Z]{2}$",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "academic_year",
+          "course_code",
+          "catalog_sha256"
+        ],
+        "title": "CourseCatalogSelectionInput",
+        "type": "object"
+      },
       "CourseInput": {
         "additionalProperties": false,
         "properties": {
+          "course_catalog": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CourseCatalogSelectionInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "curriculum": {
             "anyOf": [
               {
@@ -868,10 +1125,10 @@
           "grades": {
             "items": {
               "maximum": 12.0,
-              "minimum": 0.0,
+              "minimum": -1.0,
               "type": "integer"
             },
-            "maxItems": 13,
+            "maxItems": 14,
             "minItems": 1,
             "title": "Grades",
             "type": "array"
@@ -1762,6 +2019,30 @@
         "title": "MembershipInput",
         "type": "object"
       },
+      "ModelRef": {
+        "additionalProperties": false,
+        "properties": {
+          "connection_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 150,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$",
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connection_id",
+          "model"
+        ],
+        "title": "ModelRef",
+        "type": "object"
+      },
       "ParentStudents": {
         "additionalProperties": false,
         "properties": {
@@ -1989,10 +2270,10 @@
           "grades": {
             "items": {
               "maximum": 12.0,
-              "minimum": 0.0,
+              "minimum": -1.0,
               "type": "integer"
             },
-            "maxItems": 13,
+            "maxItems": 14,
             "title": "Grades",
             "type": "array"
           },
@@ -2016,7 +2297,7 @@
             "items": {
               "type": "string"
             },
-            "maxItems": 20,
+            "maxItems": 80,
             "title": "Subjects",
             "type": "array"
           }
@@ -5101,6 +5382,155 @@
         "summary": "Recover"
       }
     },
+    "/api/course-catalog": {
+      "get": {
+        "description": "Class choices are independent of AI coverage and school curriculum.\n\nThe complete official reporting catalog is a source of class names and\nidentifiers, not a set of installed teaching corpora or grade mandates.",
+        "operationId": "class_catalog_api_course_catalog_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "default": "US-NY",
+              "pattern": "^US-[A-Z]{2}$",
+              "title": "State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "academic_year",
+            "required": false,
+            "schema": {
+              "default": "2026-2027",
+              "pattern": "^20[0-9]{2}-20[0-9]{2}$",
+              "title": "Academic Year",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Area"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "secondary",
+                    "prior_to_secondary",
+                    "all_grades"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "regents_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Regents Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 250,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Class Catalog"
+      }
+    },
     "/api/courses": {
       "get": {
         "operationId": "courses_api_courses_get",
@@ -6247,6 +6677,89 @@
         "summary": "Import Corpus"
       }
     },
+    "/api/courses/{course_id}/homework-help/review-sessions": {
+      "get": {
+        "operationId": "teacher_review_sessions_api_courses__course_id__homework_help_review_sessions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Teacher Review Sessions"
+      }
+    },
+    "/api/courses/{course_id}/homework-help/sessions/{session_id}/review": {
+      "get": {
+        "operationId": "teacher_review_api_courses__course_id__homework_help_sessions__session_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Teacher Review"
+      }
+    },
     "/api/courses/{course_id}/teacher-tutor": {
       "get": {
         "operationId": "get_lessons_api_courses__course_id__teacher_tutor_get",
@@ -7039,6 +7552,588 @@
           }
         },
         "summary": "Index"
+      }
+    },
+    "/api/homework-help/ai": {
+      "get": {
+        "operationId": "index_api_homework_help_ai_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Index"
+      }
+    },
+    "/api/homework-help/ai/review-sessions": {
+      "get": {
+        "operationId": "review_sessions_api_homework_help_ai_review_sessions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Sessions"
+      }
+    },
+    "/api/homework-help/ai/sessions": {
+      "post": {
+        "operationId": "create_session_api_homework_help_ai_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeworkSessionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Session"
+      }
+    },
+    "/api/homework-help/ai/sessions/{session_id}": {
+      "get": {
+        "operationId": "history_api_homework_help_ai_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History"
+      }
+    },
+    "/api/homework-help/ai/sessions/{session_id}/messages": {
+      "post": {
+        "operationId": "ask_api_homework_help_ai_sessions__session_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIMessageInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask"
+      }
+    },
+    "/api/homework-help/ai/sessions/{session_id}/messages/{message_id}/close-uncertain": {
+      "post": {
+        "operationId": "close_uncertain_api_homework_help_ai_sessions__session_id__messages__message_id__close_uncertain_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseUncertainInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Uncertain"
+      }
+    },
+    "/api/homework-help/ai/sessions/{session_id}/messages/{message_id}/images/{image_id}": {
+      "get": {
+        "operationId": "image_api_homework_help_ai_sessions__session_id__messages__message_id__images__image_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "image_id",
+            "required": true,
+            "schema": {
+              "title": "Image Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Image"
+      }
+    },
+    "/api/homework-help/ai/sessions/{session_id}/review": {
+      "get": {
+        "operationId": "review_api_homework_help_ai_sessions__session_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review"
+      }
+    },
+    "/api/homework-help/audit-delivery": {
+      "get": {
+        "operationId": "homework_audit_delivery_api_homework_help_audit_delivery_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Homework Audit Delivery"
+      }
+    },
+    "/api/homework-help/configuration": {
+      "get": {
+        "operationId": "configuration_api_homework_help_configuration_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Configuration"
+      },
+      "put": {
+        "operationId": "save_configuration_api_homework_help_configuration_put",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigurationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Configuration"
+      }
+    },
+    "/api/homework-help/configuration/approve": {
+      "post": {
+        "operationId": "approve_configuration_api_homework_help_configuration_approve_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "school_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Configuration"
       }
     },
     "/api/homework-help/review-sessions": {

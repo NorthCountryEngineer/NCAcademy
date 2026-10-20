@@ -12,7 +12,7 @@ from sqlalchemy import select, text
 
 from .auth import Auth
 from .config import Settings
-from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id
+from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id
 from .family_accounts import register_family_api, record_enrollment_change
 from .permissions import normalized_role, global_admin, scope_id, bind_scope, school_role, require_school, default_school_id, membership_id
 from .school_api import register_school_api
@@ -30,9 +30,11 @@ from .standards_api import register_standards_api
 from .external_review import register_external_review_api
 from .youtube import fetch_youtube_metadata
 from .standards import build_course_corpus, retrieve_corpus
+from .course_catalog import catalog_selection
 from .schemas import CourseInput, AssignmentInput, EnrollmentInput, ContentInput, ReviewInput, TutorInput, ConnectionInput
 from .learning_preferences import register_learning_preferences_api, preference_snapshot, require_preference_snapshot
 from .homework_api import register_homework_api
+from .homework_ai_api import register_homework_ai_api
 from .voice_api import register_voice_api
 from . import provider
 
@@ -42,7 +44,7 @@ def request_body_limit(method, path):
     # All ordinary API routes retain the existing smaller request boundary.
     if method == "POST" and re.fullmatch(r"/api/courses/[^/]{1,64}/voice/transcriptions", path):
         return 4300000
-    if method == "POST" and (re.fullmatch(r"/api/courses/[^/]{1,64}/curated-lessons", path) or re.fullmatch(r"/api/homework-help/sessions/[^/]{1,64}/messages", path)):
+    if method == "POST" and (re.fullmatch(r"/api/courses/[^/]{1,64}/curated-lessons", path) or re.fullmatch(r"/api/homework-help/(?:ai/)?sessions/[^/]{1,64}/messages", path)):
         return 400000
     return 150000
 
@@ -326,6 +328,12 @@ def create_app(settings=None):
                 family_schema = db.get(Record, family_schema_id(settings.tenant_id))
                 if not family_schema or family_schema.kind != "schema" or family_schema.value.get("version") != 10:
                     raise ValueError()
+                ai_schema = db.get(Record, homework_ai_schema_id(settings.tenant_id))
+                if not ai_schema or ai_schema.kind != "schema" or ai_schema.value.get("version") != 11:
+                    raise ValueError()
+                from .audit_delivery import AuditDeliveryOutbox, AuditDeliveryState, AuditDeliveryReceipt
+                for table in (AuditDeliveryOutbox, AuditDeliveryState, AuditDeliveryReceipt):
+                    db.execute(select(table).limit(1))
             return {"status": "ready", "service": "ncacademy"}
         except Exception:
             return JSONResponse({"status": "migration_required"}, status_code=503)
@@ -372,9 +380,16 @@ def create_app(settings=None):
                 raise HTTPException(403, "Teachers create their own classes")
             if owner != identity["id"]:
                 ensure_teacher(db, owner, sid, identity)
+            requested_catalog = body.course_catalog.model_dump() if body.course_catalog else None
+            official_catalog = catalog_selection(requested_catalog) if requested_catalog else None
+            value = {"title": body.title, "description": body.description, "curriculum": body.curriculum.model_dump() if body.curriculum else None}
             if identity.get("principal_kind") == "agent":
-                return staged_change(db, identity, sid, None, "course.create", {"title": body.title, "description": body.description, "curriculum": body.curriculum.model_dump() if body.curriculum else None})
-            row = add(db, "course", identity, {"title": body.title, "description": body.description, "curriculum": body.curriculum.model_dump() if body.curriculum else None}, owner=owner)
+                if "course_catalog" in body.model_fields_set:
+                    value["course_catalog"] = requested_catalog
+                return staged_change(db, identity, sid, None, "course.create", value)
+            if "course_catalog" in body.model_fields_set:
+                value["course_catalog"] = official_catalog
+            row = add(db, "course", identity, value, owner=owner)
             bind_scope(db, row, sid)
             add(db, "enrollment", identity, {"role": "teacher"}, row.id, owner)
             audit_actor(db, identity, "course.created", {"course_id": row.id, "school_id": sid, "teacher_id": owner, **row.value})
@@ -419,11 +434,18 @@ def create_app(settings=None):
                 payload = {"title": body.title, "description": body.description}
                 if "curriculum" in body.model_fields_set:
                     payload["curriculum"] = body.curriculum.model_dump() if body.curriculum else None
+                if "course_catalog" in body.model_fields_set:
+                    payload["course_catalog"] = body.course_catalog.model_dump() if body.course_catalog else None
+                    if payload["course_catalog"]:
+                        catalog_selection(payload["course_catalog"])
                 return staged_change(db, identity, sid, course_id, "course.update", payload, row.id)
             curriculum = row.value.get("curriculum")
             if "curriculum" in body.model_fields_set:
                 curriculum = body.curriculum.model_dump() if body.curriculum else None
-            row.set({**row.value, "title": body.title, "description": body.description, "curriculum": curriculum})
+            value = {**row.value, "title": body.title, "description": body.description, "curriculum": curriculum}
+            if "course_catalog" in body.model_fields_set:
+                value["course_catalog"] = catalog_selection(body.course_catalog.model_dump()) if body.course_catalog else None
+            row.set(value)
             row.owner_id = owner
             if owner and not any(r.owner_id == owner for r in rows(db, "enrollment", identity, parent_id=course_id)):
                 add(db, "enrollment", identity, {"role": "teacher"}, course_id, owner)
@@ -583,7 +605,7 @@ def create_app(settings=None):
     @app.get("/api/admin/settings")
     def settings_status(identity=Depends(actor)):
         admin(identity)
-        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 10}
+        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 11, "homework_help_output": "separately approved generated tutoring; independent safety review; no student-work completion"}
 
     @app.get("/api/admin/connections")
     def connections(school_id: str | None = None, identity=Depends(actor)):
@@ -921,6 +943,17 @@ def create_app(settings=None):
             audit_actor(db, identity, "audit.verified", {"valid": valid, "checked_sequence": count, "checked_digest": previous})
             return {"valid": valid, "count": count, "head": previous}
 
+    @app.get("/api/homework-help/audit-delivery")
+    def homework_audit_delivery(school_id: str | None = None, identity=Depends(actor)):
+        from .audit_delivery import delivery_status
+        with database.write() as db:
+            school = None if global_admin(identity) and school_id is None else selected_school(db, identity, school_id, {"admin", "school"}, human=True)
+            if school is None:
+                admin(identity)
+            result = delivery_status(db, identity["tenant_id"], school)
+            audit_actor(db, identity, "audit_delivery.status_reviewed", {"school_id": school, "metadata_only": True})
+            return result
+
     register_family_api(app, database, auth, settings, actor, audit_actor)
     register_school_api(app, database, auth, settings, actor, staged_change, validate_binding, audit_actor)
     register_school_curriculum_api(app, database, settings, actor, audit_actor)
@@ -931,6 +964,7 @@ def create_app(settings=None):
     register_lesson_api(app, database, auth, settings, actor, audit_actor)
     curate_lesson = register_curated_lesson_api(app, database, auth, settings, actor, audit_actor, review_session=review_session)
     register_homework_api(app, database, auth, settings, actor, audit_actor, curate_lesson)
+    register_homework_ai_api(app, database, auth, settings, actor, audit_actor)
     register_voice_api(app, database, auth, settings, actor, audit_actor)
     register_learning_preferences_api(app, database, auth, settings, actor, audit_actor)
     register_external_review_api(app, database, auth, settings, actor, audit_actor)

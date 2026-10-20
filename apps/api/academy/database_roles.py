@@ -58,6 +58,8 @@ than trying to repurpose an identity belonging to another application.
             cursor.execute(sql.SQL("GRANT SELECT, INSERT ON core_identity_bindings TO {}").format(role))
             cursor.execute(sql.SQL("GRANT SELECT, INSERT ON audit_events TO {}").format(role))
             cursor.execute(sql.SQL("GRANT SELECT, INSERT, UPDATE ON audit_heads TO {}").format(role))
+            cursor.execute(sql.SQL("GRANT SELECT, INSERT ON audit_delivery_outbox, audit_delivery_state TO {}").format(role))
+            cursor.execute(sql.SQL("GRANT SELECT ON audit_delivery_receipts TO {}").format(role))
     except Exception:
         # Never include SQL or provider/database diagnostics in migration logs:
         # ALTER ROLE necessarily contains the new password as a SQL literal.

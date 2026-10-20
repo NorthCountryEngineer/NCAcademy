@@ -1,0 +1,84 @@
+# Apply with the private archive namespace/service account package. Suspended
+# until exact Core pipeline, least-privilege credentials and restore tests pass.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: academy-core-metadata-delivery
+  namespace: ncacademy-audit
+spec:
+  suspend: true
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels: {app: academy-core-metadata-delivery}
+        spec:
+          serviceAccountName: archive-no-api-access
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile: {type: RuntimeDefault}
+          containers:
+            - name: deliver
+              image: REPLACE_WITH_REVIEWED_ARCHIVE_WORKER_AT_SHA256_DIGEST
+              command: [python, /archive/core_delivery.py]
+              args:
+                - deliver
+                - --config=/delivery-config/config.json
+                - --credentials=/core-workload/credentials.json
+                - --database-url-file=/delivery-database/url.txt
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              resources:
+                requests: {cpu: 50m, memory: 64Mi}
+                limits: {cpu: "1", memory: 256Mi}
+              volumeMounts:
+                - {name: config, mountPath: /delivery-config, readOnly: true}
+                - {name: workload, mountPath: /core-workload, readOnly: true}
+                - {name: database, mountPath: /delivery-database, readOnly: true}
+                - {name: ca, mountPath: /trusted-ca, readOnly: true}
+          volumes:
+            - name: config
+              secret: {secretName: academy-core-delivery-config, defaultMode: 0440}
+            - name: workload
+              secret: {secretName: academy-core-delivery-workload, defaultMode: 0440}
+            - name: database
+              secret: {secretName: academy-core-delivery-database, defaultMode: 0440}
+            - name: ca
+              secret: {secretName: academy-core-delivery-trusted-ca, defaultMode: 0440}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: academy-core-delivery-private-egress
+  namespace: ncacademy-audit
+spec:
+  podSelector:
+    matchLabels: {app: academy-core-metadata-delivery}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+          podSelector:
+            matchLabels: {k8s-app: kube-dns}
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+    # Documentation-only addresses fail closed. Replace with reviewed private
+    # PostgreSQL route and tightly scoped Core TLS egress for this deployment.
+    - to: [{ipBlock: {cidr: 192.0.2.20/32}}]
+      ports: [{port: 5432, protocol: TCP}]
+    - to: [{ipBlock: {cidr: 192.0.2.50/32}}]
+      ports: [{port: 443, protocol: TCP}]
