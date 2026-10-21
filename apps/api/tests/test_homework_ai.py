@@ -30,7 +30,10 @@ def environment(client, app, monkeypatch, **changes):
     def classify(connection, key, model, prompt, maximum):
         calls.append((connection, key, model, prompt, maximum))
         if model == "triage":
-            output = {"route": "course", "course_id": "demo-course", "confidence": 0.95}
+            content = prompt[1]["content"]
+            payload = json.loads(content[0]["text"] if isinstance(content, list) else content)
+            course = None if payload.get("routing_mode") == "general" else payload.get("requested_course_id") or next((item["id"] for item in payload["courses"]), None)
+            output = triage_result(course_id=course)
         elif model == "tutor":
             output = {"mode": "explanation", "text": "A claim states an idea. Evidence supports that idea. What evidence have you found so far?", "reference_ids": ["course:demo-course"]}
         else:
@@ -41,6 +44,11 @@ def environment(client, app, monkeypatch, **changes):
     session = client.post("/api/homework-help/ai/sessions", json={"school_id": school, "idempotency_key": "synthetic-ai-session-123"}, headers=headers)
     assert session.status_code == 200, session.text
     return {"headers": headers, "admin": admin, "school": school, "connection": connection, "configuration": descriptor, "session": session.json(), "calls": calls, "transport": classify}
+
+
+def triage_result(course_id=None, teacher_profile_id=None, confidence=0.95, **changes):
+    response = {"mode": "explanation", "text": "A claim states an idea. Evidence supports that idea. What evidence have you found so far?", "reference_ids": ["course:" + course_id] if course_id else []}
+    return {"route": "course" if course_id else "general", "course_id": course_id, "teacher_profile_id": teacher_profile_id, "topic": "Understanding evidence", "confidence": confidence, "response": response, **changes}
 
 
 def result(output, **changes):
@@ -63,9 +71,9 @@ def test_human_teacher_course_has_independent_school_ai_and_exact_audited_genera
     reply = response.json()
     assert reply["status"] == "released" and reply["answer"].startswith("A claim")
     assert reply["triage"]["course_id"] == "demo-course" and reply["triage"]["teacher_name"] == "School AI Helper"
-    assert [call[2] for call in env["calls"]] == ["triage", "tutor", "safety"]
+    assert [call[2] for call in env["calls"]] == ["triage", "safety"]
     assert reply["references"][0]["url"] == "/#course=demo-course" and reply["citations"] == []
-    assert ask(client, env).json() == reply and len(env["calls"]) == 3
+    assert ask(client, env).json() == reply and len(env["calls"]) == 2
     assert ask(client, env, message="Changed").status_code == 409
     assert client.get(f"/api/homework-help/ai/sessions/{env['session']['id']}").json()["messages"] == [reply]
     with app.state.database.factory() as db:
@@ -74,7 +82,7 @@ def test_human_teacher_course_has_independent_school_ai_and_exact_audited_genera
         assert stored["teacher_profile_id"].startswith("homework-ai:")
         assert stored["conversation_context_snapshot"] == []
         markers = list(db.scalars(select(Record).where(Record.kind == "homework_ai_send", Record.parent_id == reply["id"])))
-        assert len(markers) == 3
+        assert len(markers) == 2
         events = list(db.scalars(select(Audit).where(Audit.session_id == env["session"]["id"]).order_by(Audit.sequence)))
         assert events[-1].event_type == "homework_ai.released"
         assert json.loads(events[-1].payload)["answer"] == reply["answer"]
@@ -86,7 +94,7 @@ def test_general_ai_does_not_need_course_teacher_or_corpus_and_uses_both_sides_o
     def general(*args):
         response = env["transport"](*args)
         if args[2] == "triage":
-            return result({"route": "general", "course_id": None, "confidence": 0.95})
+            return result(triage_result(response={"mode": "explanation", "text": "Gravity is an attraction between masses. What do you already know about it?", "reference_ids": []}))
         if args[2] == "tutor":
             return result({"mode": "explanation", "text": "Gravity is an attraction between masses. What do you already know about it?", "reference_ids": []})
         return response
@@ -95,18 +103,18 @@ def test_general_ai_does_not_need_course_teacher_or_corpus_and_uses_both_sides_o
     assert first["status"] == "released" and first["triage"]["course_id"] is None
     second = ask(client, env, message="Can you explain that another way?", idempotency_key="follow-up-general-123").json()
     assert second["status"] == "released"
-    tutors = [json.loads(call[3][1]["content"]) for call in env["calls"] if call[2] == "tutor"]
+    tutors = [json.loads(call[3][1]["content"]) for call in env["calls"] if call[2] == "triage"]
     assert tutors[-1]["previous_messages"][0]["student"] == "What is gravity?"
     assert tutors[-1]["previous_messages"][0]["assistant"] == first["answer"]
 
 
-def test_explicit_course_choice_skips_routing_model_and_is_server_authorized(client, app, monkeypatch):
+def test_explicit_course_choice_uses_same_triage_assistant_and_is_server_authorized(client, app, monkeypatch):
     env = environment(client, app, monkeypatch)
     assert ask(client, env, course_id="foreign-course").status_code == 403
     assert not env["calls"]
     value = ask(client, env, course_id="demo-course").json()
     assert value["status"] == "released" and value["triage"]["method"] == "student_choice"
-    assert [call[2] for call in env["calls"]] == ["tutor", "safety"]
+    assert [call[2] for call in env["calls"]] == ["triage", "safety"]
 
 
 @pytest.mark.parametrize("route", [{"route": "course", "course_id": "foreign", "confidence": 1}, {"route": "general", "course_id": "demo-course", "confidence": 1}])
@@ -117,11 +125,11 @@ def test_model_course_ids_are_never_authority(client, app, monkeypatch, route):
     assert value["status"] == "withheld" and value["answer"] is None
 
 
-def test_low_confidence_is_fixed_clarification_without_generated_tutor_content(client, app, monkeypatch):
+def test_low_confidence_keeps_general_help_without_course_requirement(client, app, monkeypatch):
     env = environment(client, app, monkeypatch)
-    monkeypatch.setattr(app.state, "classify", lambda *args: result({"route": "course", "course_id": "demo-course", "confidence": 0.51}))
+    monkeypatch.setattr(app.state, "classify", lambda *args: result(triage_result(course_id="demo-course", confidence=0.51, response={"mode": "clarify", "text": "Which part of the topic would you like to explore?", "reference_ids": []})) if args[2] == "triage" else result({"verdict": "allow", "reason_codes": []}))
     value = ask(client, env).json()
-    assert value["status"] == "clarify" and value["answer"] == "Which of your courses is this question for? You can also choose general help."
+    assert value["status"] == "clarify" and value["answer"] == "Which part of the topic would you like to explore?"
     assert value["triage"]["course_id"] is None and value["usage"]["triage"]
 
 
@@ -137,11 +145,11 @@ def test_deterministic_guard_withholds_completion_links_and_html(client, app, mo
     env = environment(client, app, monkeypatch)
     def unsafe(*args):
         response = env["transport"](*args)
-        return result({"mode": "explanation", "text": output, "reference_ids": []}) if args[2] == "tutor" else response
+        return result(triage_result(course_id="demo-course", response={"mode": "explanation", "text": output, "reference_ids": []})) if args[2] == "triage" else response
     monkeypatch.setattr(app.state, "classify", unsafe)
     value = ask(client, env).json()
     assert value["status"] == "withheld" and value["answer"] is None
-    assert [call[2] for call in env["calls"]] == ["triage", "tutor"]
+    assert [call[2] for call in env["calls"]] == ["triage"]
 
 
 def test_independent_safety_denial_retains_candidate_but_never_displays_it(client, app, monkeypatch):
@@ -154,7 +162,7 @@ def test_independent_safety_denial_retains_candidate_but_never_displays_it(clien
     assert value["status"] == "withheld" and value["answer"] is None
     with app.state.database.factory() as db:
         stored = db.get(Record, value["id"]).value
-        assert "A claim states" in stored["phases"]["tutor"]["response"]["visible_content"]
+        assert "A claim states" in stored["phases"]["triage"]["response"]["visible_content"]
         assert "assignment_completion" in stored["phases"]["safety"]["response"]["visible_content"]
 
 
@@ -185,7 +193,7 @@ def test_model_gate_approval_and_credential_rotation_revoke_new_and_historical_r
     app.state.settings.allow_live_models = False
     assert client.get(f"/api/homework-help/ai/sessions/{env['session']['id']}").json()["messages"][0]["status"] == "withheld"
     blocked = ask(client, env, idempotency_key="gate-disabled-123").json()
-    assert blocked["status"] == "blocked" and len(env["calls"]) == 3
+    assert blocked["status"] == "blocked" and len(env["calls"]) == 2
     app.state.settings.allow_live_models = True
     admin = login(client, "demo-admin")
     connection = env["connection"]
@@ -222,7 +230,7 @@ def test_terminal_audit_commit_failure_never_releases_or_resends(client, app, mo
     finally:
         event.remove(Audit, "before_insert", fail)
     recovered = ask(client, env).json()
-    assert recovered["status"] == "pending" and recovered["answer"] is None and len(env["calls"]) == 3
+    assert recovered["status"] == "pending" and recovered["answer"] is None and len(env["calls"]) == 2
 
 
 @pytest.mark.parametrize("user", ["demo-instructor", "demo-school", "demo-admin", "demo-student2"])
@@ -235,7 +243,7 @@ def test_sessions_private_to_student_and_reviews_only_human_school_admin(client,
     reviewed = client.get(f"/api/homework-help/ai/sessions/{env['session']['id']}/review")
     assert reviewed.status_code == (200 if user in {"demo-school", "demo-admin"} else 403)
     if reviewed.status_code == 200:
-        assert reviewed.json()["messages"][0]["phases"]["tutor"]["response"]["visible_content"]
+        assert reviewed.json()["messages"][0]["phases"]["triage"]["response"]["visible_content"]
         assert reviewed.json()["events"][-1]["event_type"] == "homework_ai.reviewed"
         assert "synthetic-ai-homework-secret" not in reviewed.text
 
@@ -295,7 +303,7 @@ def test_class_teacher_review_contains_only_selected_class_interactions_without_
     def general(*args):
         response = env["transport"](*args)
         if args[2] == "triage":
-            return result({"route": "general", "course_id": None, "confidence": 0.95})
+            return result(triage_result(response={"mode": "explanation", "text": "Gravity is an attraction between masses. What do you already know about it?", "reference_ids": []}))
         if args[2] == "tutor":
             return result({"mode": "explanation", "text": "Private unrelated question answer.", "reference_ids": []})
         return response
@@ -343,7 +351,7 @@ def test_safety_requires_exact_current_approval_before_release(client, app, monk
         return response
     monkeypatch.setattr(app.state, "classify", revoke)
     reply = ask(client, env).json()
-    assert reply["status"] == "withheld" and reply["answer"] is None and len(env["calls"]) == 3
+    assert reply["status"] == "withheld" and reply["answer"] is None and len(env["calls"]) == 2
 
 
 def test_platform_local_student_transcripts_prompts_send_evidence_and_audits_are_encrypted(client, app, monkeypatch):
@@ -368,7 +376,7 @@ def test_platform_local_student_transcripts_prompts_send_evidence_and_audits_are
         raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
         assert question not in raw and reply["answer"] not in raw
         owned = list(db.scalars(select(Record).where(Record.owner_id == student["id"], Record.kind.in_(["homework_ai_session", "homework_ai_message", "homework_ai_send"]))))
-        assert len(owned) == 5 and all(ENVELOPE in json.loads(row.data) for row in owned)
+        assert len(owned) == 4 and all(ENVELOPE in json.loads(row.data) for row in owned)
         assert "synthetic-ai-question-123" not in db.get(Record, reply["id"]).data
         events = list(db.scalars(select(Audit).where(Audit.session_id == env["session"]["id"])))
         assert all(ENVELOPE in json.loads(row.payload) for row in events)
@@ -402,7 +410,7 @@ def test_catalog_pagination_keeps_every_old_conversation_discoverable(client, ap
     assert client.get("/api/homework-help/ai/review-sessions?school_id=" + env["school"] + "&cursor=invalid").status_code == 422
 
 
-def test_general_choice_does_not_call_router_and_auto_followup_keeps_authorized_last_course_hint(client, app, monkeypatch):
+def test_general_choice_uses_same_assistant_and_auto_followup_keeps_authorized_last_course_hint(client, app, monkeypatch):
     env = environment(client, app, monkeypatch)
     first = ask(client, env).json()
     assert first["status"] == "released"
@@ -413,12 +421,12 @@ def test_general_choice_does_not_call_router_and_auto_followup_keeps_authorized_
     assert route_prompt["previous_messages"][-1]["assistant"] == first["answer"]
     def general(*args):
         env["calls"].append(args)
-        return result({"mode": "explanation", "text": "General learning can cover many topics. What would you like to explore?", "reference_ids": []}) if args[2] == "tutor" else result({"verdict": "allow", "reason_codes": []})
+        return result(triage_result(response={"mode": "explanation", "text": "General learning can cover many topics. What would you like to explore?", "reference_ids": []})) if args[2] == "triage" else result({"verdict": "allow", "reason_codes": []})
     monkeypatch.setattr(app.state, "classify", general)
     before = len(env["calls"])
     third = ask(client, env, message="Something unrelated", routing_mode="general", idempotency_key="chosen-general-123").json()
     assert third["status"] == "released" and third["triage"]["method"] == "student_general"
-    assert [call[2] for call in env["calls"][before:]] == ["tutor", "safety"]
+    assert [call[2] for call in env["calls"][before:]] == ["triage", "safety"]
     prompt = json.loads(env["calls"][before][3][1]["content"])
     assert prompt["previous_messages"] == []
     assert ask(client, env, course_id="demo-course", routing_mode="general", idempotency_key="conflicting-mode-123").status_code == 422
@@ -432,6 +440,8 @@ def test_optional_grounding_includes_only_current_approved_public_teaching_passa
     calls = []
     def grounded(*args):
         calls.append(args)
+        if args[2] == "triage":
+            return result(triage_result(course_id=teacher["course"]["id"], teacher_profile_id=teacher["profile"]["id"]))
         if args[2] == "tutor":
             payload = json.loads(args[3][1]["content"])
             assert payload["reference_passages"]
@@ -442,7 +452,7 @@ def test_optional_grounding_includes_only_current_approved_public_teaching_passa
     assert reply["status"] == "released", reply
     assert len(reply["citations"]) == 1 and reply["citations"][0]["content_sha256"]
     assert reply["citations"][0]["corpus_id"]
-    tutor_payload = json.loads(calls[0][3][1]["content"])
+    tutor_payload = json.loads(next(call for call in calls if call[2] == "tutor")[3][1]["content"])
     assert all(item["excerpt"] and item["reference_id"].startswith("document:") for item in tutor_payload["reference_passages"])
     admin = login(client, "demo-admin")
     resource = teacher["resource"]
@@ -595,7 +605,7 @@ def test_operator_closure_rejects_stale_hash_foreign_message_and_cross_school(cl
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("phase", ["triage", "tutor", "safety"])
+@pytest.mark.parametrize("phase", ["triage", "safety"])
 def test_operator_closure_during_model_call_seals_message_and_retains_late_result_without_release(client, app, monkeypatch, phase):
     from fastapi.testclient import TestClient
     env = environment(client, app, monkeypatch)
@@ -615,7 +625,7 @@ def test_operator_closure_during_model_call_seals_message_and_retains_late_resul
         monkeypatch.setattr(app.state, "classify", close_during_call)
         reply = ask(client, env).json()
         assert closed and reply["status"] == "withheld" and reply["answer"] is None
-        assert len(env["calls"]) == ["triage", "tutor", "safety"].index(phase) + 1
+        assert len(env["calls"]) == ["triage", "safety"].index(phase) + 1
         review = operator.get(f"/api/homework-help/ai/sessions/{env['session']['id']}/review").json()
         retained = review["messages"][0]
         assert retained["withholding_code"] == "operator_closed_uncertain"
@@ -625,7 +635,7 @@ def test_operator_closure_during_model_call_seals_message_and_retains_late_resul
         assert retained["late_provider_receipts"][0]["response"]["visible_content"]
         assert any(event.get("payload", {}).get("late_after_terminal") for event in review["events"])
         assert ask(client, env).json()["status"] == "withheld"
-        assert len(env["calls"]) == ["triage", "tutor", "safety"].index(phase) + 1
+        assert len(env["calls"]) == ["triage", "safety"].index(phase) + 1
 
 
 def test_operator_closure_during_failed_model_call_retains_late_uncertainty(client, app, monkeypatch):

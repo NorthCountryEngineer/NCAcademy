@@ -180,7 +180,7 @@ def register_learning_preferences_api(app, database, auth, settings, actor, audi
             raise HTTPException(404, "Student interaction not found")
         if turn.kind == "homework_ai_message":
             from .homework_ai import feedback_context
-            context = feedback_context(db, identity, turn, settings)
+            context = feedback_context(db, identity, turn, settings, app=app)
             return turn, context["course_id"], context["school_id"]
         task = db.get(Record, turn.parent_id) if turn.kind == "turn" else None
         if turn.kind == "turn" and (not task or task.tenant_id != identity["tenant_id"] or task.kind != "assignment"):

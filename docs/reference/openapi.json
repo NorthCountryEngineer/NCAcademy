@@ -717,6 +717,11 @@
             "default": false,
             "title": "Tutor Image Capable",
             "type": "boolean"
+          },
+          "use_school_teacher_personas": {
+            "default": true,
+            "title": "Use School Teacher Personas",
+            "type": "boolean"
           }
         },
         "required": [
