@@ -1,5 +1,11 @@
 # Changelog
 
+## Independent teacher profile review — October 23, 2026
+
+- Removed the dependency on assigned class corpus approval from **Approve current profile**. Human administrators can review a human or AI teacher's biography, picture and teaching approach while class knowledge preparation is pending.
+- Kept immutable versioned profile/context approval, current school authority and separate teaching-material review. Pending corpora remain unavailable to class tutoring; profile approval grants no identity or teaching permissions.
+- Clarified readiness guidance and added regression coverage for the approval action, unchanged teaching guards and reapproval after class materials change.
+
 ## Enrollment-independent Homework Help chat — October 21, 2026
 
 - Made Homework Help a provider-neutral conversation workspace with a left conversation list, selected chat, new conversation and photo-capable composer. It no longer silently falls back to a class-selection flow when AI setup is unavailable.

@@ -1,5 +1,13 @@
 # Verification record
 
+## Independent teacher profile approval — October 23, 2026
+
+The teacher onboarding and Lesson Q&A regression suite passed **62 tests**. Human and managed AI profiles can be approved with pending, unsupported-grade or custom-class corpora without creating corpus approvals or changing identity/class permissions. With enabled model gates and valid connections, managed and Core-bound class tutoring still releases no content and makes no provider or authority call until corpus approval and subsequent exact profile reapproval are both current. Existing version, school, tenant, agent, archive and context-change checks remain covered.
+
+All **277 frontend tests** passed, including direct interaction with the real approval form handlers: an unchecked review or busy request cannot submit, a reviewed profile with unprepared materials can submit its exact version once, server conflicts remain visible, and switching teacher or context requires fresh review. TypeScript and the production build passed with the locked dependencies in an isolated local copy whose 77 frontend source files matched the worktree. A browser rehearsal of the compiled real component confirmed the disabled-to-enabled checkbox transition, exactly one successful approval request with pending materials, the approved profile indicator, and review reset when switching between same-version teachers. This used only synthetic loopback data.
+
+The exact ARM64 API image passed all **63 source-file hashes**, schema-11 migration/readiness and the default teaching-readiness guard in a read-only, nonroot container with networking disabled. No schema or Core permission change is needed. The existing base-image scan findings are unchanged. Exact-commit CI and the normal Core release still provide deployment acceptance; browser fixtures and model transports use no real student data or live providers.
+
 ## Enrollment-independent Homework Help source checks — October 21, 2026
 
 The focused backend regression suite passed **60 tests** on the final runtime source. It covers zero enrollments, current school membership/revocation, direct triage answers with no tutor call, matched managed and Core-bound school AI personas, base approved personas without classes/corpora, optional school persona admission, protected coursework denial, selected-class authority, general-history survival after unrelated enrollment changes, scoped prior-class context, version-2 human reapproval of historical configurations, and in-flight closure/revocation with no model resend. Provider transports remain mocked; the existing Starlette deprecation is nonblocking.

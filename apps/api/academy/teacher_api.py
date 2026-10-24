@@ -94,7 +94,7 @@ def _approved(db, profile, school_id):
     return revision
 
 
-def _planned_context(db, profile, course, school_id, require_binding=True):
+def _planned_context(db, profile, course, school_id, require_binding=True, require_ready=True):
     from .standards import corpus_descriptor
     link = next((row for row in _assignments(db, profile) if row.value["course_id"] == course.id and scope_id(db, row) == school_id), None)
     principal_id, eligible = _binding_state(db, profile, school_id)
@@ -107,7 +107,7 @@ def _planned_context(db, profile, course, school_id, require_binding=True):
     if not planned or planned.get("corpus") != link.value.get("corpus") or planned.get("curriculum") != course.value.get("curriculum"):
         raise HTTPException(409, "Approved teaching context no longer matches this class")
     current = corpus_descriptor(db, course, school_id)
-    if not current.get("ready_for_teaching") or _corpus_reference(current) != link.value.get("corpus"):
+    if (require_ready and not current.get("ready_for_teaching")) or _corpus_reference(current) != link.value.get("corpus"):
         raise HTTPException(409, "Class teaching materials changed; review its teacher assignment again")
     return revision, link
 
@@ -129,7 +129,9 @@ def _approval_current(db, profile, school_id):
             if scope_id(db, link) != school_id:
                 return False
             course = _find(db, profile.tenant_id, link.value["course_id"], "course", school_id)
-            _planned_context(db, profile, course, school_id, require_binding=False)
+            # Profile review can pin pending class materials. Teaching paths
+            # retain the default requirement for a separately approved corpus.
+            _planned_context(db, profile, course, school_id, require_binding=False, require_ready=False)
         return True
     except (HTTPException, KeyError, TypeError, ValueError):
         return False
@@ -277,7 +279,7 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
             current = corpus_descriptor(db, course, school_id)
             assigned.append({"id": course.id, "title": course.value["title"], "curriculum": course.value.get("curriculum"), "corpus": {**_corpus_reference(current), "ready_for_teaching": current.get("ready_for_teaching", False), "gaps": current.get("gaps", [])}, "has_teaching_authority": eligible and _teaches(db, course, principal_id)})
         workflow = next((item for item in reversed(_rows(db, row.tenant_id, "knowledge_workflow_run", school_id)) if item.value.get("teacher_profile_id") == row.id), None)
-        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "latest_onboarding_run": workflow_descriptor(db, workflow, db.get(Record, school_id)) if workflow else None, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and value.get("tutor_model") and approval_current and assigned), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
+        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "latest_onboarding_run": workflow_descriptor(db, workflow, db.get(Record, school_id)) if workflow else None, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and value.get("tutor_model") and approval_current and assigned and all(item["corpus"]["ready_for_teaching"] for item in assigned)), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
 
     @app.get("/api/schools/{school_id}/teachers")
     def teachers(school_id: str, identity=Depends(actor)):
@@ -382,13 +384,12 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
             if row.value["status"] == "archived":
                 raise HTTPException(409, "Restore the profile before approval")
             validate_model(db, identity, school_id, row.value)
-            # One human approval pins the current, separately approved corpus for
-            # each planned class. No redundant assignment save or corpus grant.
+            # Profile review pins each current class context without approving
+            # its teaching materials. Runtime teaching still requires its own
+            # current corpus approval, as well as this exact profile revision.
             for link in _assignments(db, row):
                 course = _find(db, identity["tenant_id"], link.value["course_id"], "course", school_id)
                 current = corpus_descriptor(db, course, school_id)
-                if not current.get("ready_for_teaching"):
-                    raise HTTPException(409, "Approve each class corpus with teaching materials before approving its teacher profile")
                 link.set({**link.value, "curriculum": course.value.get("curriculum"), "corpus": _corpus_reference(current)})
             value = invalidate({**row.value, "status": "ready"})
             snapshot = {"profile_id": row.id, "kind": value["kind"], "version": value["version"], **{key: value.get(key) for key in METADATA_FIELDS if key != "contact_email"}, "principal_id": value.get("principal_id"), "agent_placement_id": value.get("agent_placement_id"), "binding_context": value.get("binding_context"), "courses": [{key: link.value[key] for key in ("course_id", "curriculum", "corpus")} for link in _assignments(db, row)]}

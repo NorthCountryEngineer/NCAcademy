@@ -184,11 +184,18 @@ def test_existing_configuration_without_new_flag_is_readable_but_requires_v2_hum
     assert approved["boundary_version"] == BOUNDARY_VERSION
 
 
-def test_approved_base_ai_persona_needs_no_course_or_corpus_to_help(client, app, monkeypatch):
-    from test_teacher_onboarding import create, approve
+@pytest.mark.parametrize("pending_class", [False, True])
+def test_approved_base_ai_persona_needs_no_course_or_corpus_to_help(client, app, monkeypatch, pending_class):
+    from test_teacher_onboarding import create, approve, assign, course
     env = environment(client, app, monkeypatch)
     admin = login(client, "demo-admin")
-    profile = approve(client, admin, env["school"], create(client, admin, env["school"], kind="ai", name="Patient Math Coach", expertise=["mathematics"], ai_behavior={"tone": "warm", "instructions": "Use patient, short explanations."}))
+    profile = create(client, admin, env["school"], kind="ai", name="Patient Math Coach", expertise=["mathematics"], ai_behavior={"tone": "warm", "instructions": "Use patient, short explanations."})
+    if pending_class:
+        classroom = course(client, admin, env["school"], title="PRIVATE_PENDING_CLASS")
+        profile = assign(client, admin, env["school"], profile, [classroom["id"]])
+        assert not profile["assigned_courses"][0]["corpus"]["ready_for_teaching"]
+    profile = approve(client, admin, env["school"], profile)
+    assert profile["approval_current"]
     remove_enrollments(app)
     env["headers"] = login(client)
     calls = []
@@ -200,6 +207,7 @@ def test_approved_base_ai_persona_needs_no_course_or_corpus_to_help(client, app,
             payload = json.loads(args[3][1]["content"])
             assert payload["assistant"]["behavior"]["instructions"] == "Use patient, short explanations."
             assert payload["course"] is None and payload["reference_passages"] == []
+            assert "PRIVATE_PENDING_CLASS" not in json.dumps(payload)
             return result({"mode": "guided_practice", "text": "Let's explore the method using a different example. Which step would you like to practice?", "reference_ids": []})
         return result({"verdict": "allow", "reason_codes": []})
     monkeypatch.setattr(app.state, "classify", classify)

@@ -203,7 +203,57 @@ def test_many_class_plans_build_idempotent_corpora_but_never_enroll_teachers(cli
         assert [(r.id, r.data) for r in db.scalars(select(Record).where(Record.kind == "enrollment"))] == enrollment_bytes
     removed = assign(client, headers, school, again, [second["id"]])
     assert removed["course_ids"] == [second["id"]]
-    assert client.post(path(school, profile["id"], "approve"), json={"expected_version": removed["version"]}, headers=headers).status_code == 409
+    current = approve(client, headers, school, removed)
+    assert current["approval_current"] is True
+    assert not current["assigned_courses"][0]["corpus"]["ready_for_teaching"]
+
+
+@pytest.mark.parametrize("kind", ["human", "ai"])
+@pytest.mark.parametrize("curriculum", [CURRICULUM, {**CURRICULUM, "grades": [8]}, None], ids=["pending-supported", "unsupported-grade", "custom-class"])
+def test_profile_approval_pins_pending_class_context_without_approving_materials_or_granting_authority(client, app, kind, curriculum):
+    headers = login(client, "demo-school")
+    school = school_id(app)
+    response = client.post("/api/courses", json={"school_id": school, "title": "Profile review before class preparation", "curriculum": curriculum}, headers=headers)
+    assert response.status_code == 201, response.text
+    classroom = response.json()
+    profile = assign(client, headers, school, create(client, headers, school, kind=kind), [classroom["id"]])
+    before = client.get(f"/api/courses/{classroom['id']}/corpus").json()
+    assert not before["ready_for_teaching"] and before["approval"]["status"] == "pending"
+    with app.state.database.factory() as db:
+        authority = [(row.id, row.data) for row in db.scalars(select(Record).where(Record.kind.in_(["school_membership", "enrollment", "user", "agent_placement"])).order_by(Record.id))]
+        approvals = [(row.id, row.data) for row in db.scalars(select(Record).where(Record.kind == "corpus_approval").order_by(Record.id))]
+    current = approve(client, headers, school, profile)
+    assert current["approval_current"] is True and current["approved_version"] == current["version"]
+    assert current["activation"]["managed_lesson_configured"] is False
+    assert current["activation"]["runtime_active"] is False and current["authority_granted"] is False
+    assert client.get(f"/api/courses/{classroom['id']}/corpus").json() == before
+    with app.state.database.factory() as db:
+        revision = db.get(Record, current["approved_revision_id"])
+        assert revision.value["approved_by"] == "demo-school"
+        assert revision.value["snapshot"]["courses"][0]["corpus"]["approval"]["status"] == "pending"
+        assert [(row.id, row.data) for row in db.scalars(select(Record).where(Record.kind == "corpus_approval").order_by(Record.id))] == approvals
+        assert [(row.id, row.data) for row in db.scalars(select(Record).where(Record.kind.in_(["school_membership", "enrollment", "user", "agent_placement"])).order_by(Record.id))] == authority
+        events = list(db.scalars(select(Audit).where(Audit.event_type == "teacher_profile.approved")))
+        assert len(events) == 1 and current["approved_revision_id"] in events[0].payload
+
+
+def test_approving_pending_corpus_requires_a_fresh_profile_review_before_managed_teaching(client, app):
+    headers = login(client, "demo-admin")
+    school = school_id(app)
+    classroom = course(client, headers, school)
+    connection = client.post("/api/admin/connections", json={"name": "Pending review model", "school_id": school, "endpoint": "https://models.example.test/v1", "models": ["bounded"], "enabled": False}, headers=headers).json()
+    profile = create(client, headers, school, kind="ai", tutor_model={"connection_id": connection["id"], "model": "bounded"})
+    current = approve(client, headers, school, assign(client, headers, school, profile, [classroom["id"]]))
+    assert current["approval_current"] is True and not current["activation"]["managed_lesson_configured"]
+    corpus = client.get(f"/api/courses/{classroom['id']}/corpus").json()
+    reviewed = client.post(f"/api/courses/{classroom['id']}/corpus/approve", json={"corpus_id": corpus["id"], "snapshot_sha256": corpus["snapshot_sha256"]}, headers=headers)
+    assert reviewed.status_code == 200 and reviewed.json()["ready_for_teaching"], reviewed.text
+    stale = client.get(path(school, current["id"])).json()
+    assert stale["approved_version"] == stale["version"] and stale["approval_current"] is False
+    assert not stale["activation"]["managed_lesson_configured"]
+    refreshed = approve(client, headers, school, stale)
+    assert refreshed["approval_current"] is True and refreshed["activation"]["managed_lesson_configured"] is True
+    assert refreshed["approved_revision_id"] != current["approved_revision_id"]
 
 
 def test_picture_actual_raster_validation_strips_metadata_and_avoids_audit_bytes(client, app):

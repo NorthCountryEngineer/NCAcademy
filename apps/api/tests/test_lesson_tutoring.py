@@ -9,7 +9,7 @@ from academy.db import Audit, Record
 from academy import lesson_api
 from academy.lesson_api import lesson_session_id, _turn_budget_day
 from conftest import login
-from test_teacher_onboarding import school_id, placement, course, create, assign, approve
+from test_teacher_onboarding import school_id, placement, course, create, assign, approve, path
 
 
 def lesson_environment(client, app, monkeypatch, bound=False, **policy_changes):
@@ -80,6 +80,44 @@ def test_managed_teacher_needs_no_machine_identity_and_renders_exact_cited_excer
         assert "synthetic-lesson-key-never-live" not in str(stored)
         events = list(db.scalars(select(Audit).where(Audit.session_id == turn["session_id"]).order_by(Audit.sequence)))
         assert [event.event_type for event in events if event.event_type.startswith("lesson.")] == ["lesson.admitted", "lesson.send_marked", "lesson.provider_result", "lesson.released"]
+
+
+@pytest.mark.parametrize("bound", [False, True], ids=["managed", "core-bound"])
+def test_current_profile_review_does_not_admit_unapproved_class_materials_even_with_live_model_and_enrollment(client, app, monkeypatch, bound):
+    env = lesson_environment(client, app, monkeypatch, bound=bound)
+    admin = login(client, "demo-admin")
+    changed = client.put(f"/api/resources/{env['resource']['id']}", json={"name": "Changed public lesson evidence", "content": "New teaching material needs its own human review before class tutoring.", "audience": "all", "course_id": env["course"]["id"]}, headers=admin)
+    assert changed.status_code == 200, changed.text
+    corpus = client.post(f"/api/courses/{env['course']['id']}/corpus/refresh", headers=admin).json()
+    assert corpus["approval"]["status"] == "pending" and not corpus["ready_for_teaching"]
+    profile = approve(client, admin, env["school"], env["profile"])
+    assert profile["approval_current"] is True and not profile["activation"]["managed_lesson_configured"]
+    assert app.state.settings.allow_live_models is True
+    assert app.state.settings.allow_agent_teachers is bound
+    env["headers"] = login(client, "demo-student")
+    assert all(card["id"] != profile["id"] for card in client.get(f"/api/courses/{env['course']['id']}").json()["teachers"])
+    blocked = ask(client, env)
+    assert blocked.status_code == 200, blocked.text
+    assert blocked.json()["status"] == "blocked" and blocked.json()["approved_text"] is None
+    assert env["calls"] == [] and env["hook_calls"] == []
+    with app.state.database.factory() as db:
+        stored = db.get(Record, blocked.json()["id"]).value
+        assert stored["send_marker"] is None and stored["reservation"] == 0
+    # Corpus approval alone cannot silently replace the pending descriptor in
+    # the immutable teacher revision. Both reviews must still be current.
+    admin = login(client, "demo-admin")
+    reviewed = client.post(f"/api/courses/{env['course']['id']}/corpus/approve", json={"corpus_id": corpus["id"], "snapshot_sha256": corpus["snapshot_sha256"]}, headers=admin)
+    assert reviewed.status_code == 200 and reviewed.json()["ready_for_teaching"], reviewed.text
+    stale = client.get(path(env["school"], profile["id"])).json()
+    assert stale["approval_current"] is False
+    env["headers"] = login(client, "demo-student")
+    assert ask(client, env, key="corpus-only-review-12345").json()["status"] == "blocked"
+    assert env["calls"] == [] and env["hook_calls"] == []
+    admin = login(client, "demo-admin")
+    approve(client, admin, env["school"], stale)
+    env["headers"] = login(client, "demo-student")
+    assert ask(client, env, key="both-reviews-current-12345").json()["status"] == "released"
+    assert len(env["calls"]) == 1 and len(env["hook_calls"]) == (2 if bound else 0)
 
 
 def test_core_bound_teacher_checks_fresh_authority_twice_and_never_falls_back(client, app, monkeypatch):
