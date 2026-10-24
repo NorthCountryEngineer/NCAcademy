@@ -154,6 +154,10 @@ def resolve_lesson_runtime(db, identity, course_id, profile_id, settings):
     context = resolve_lesson_context(db, identity, course, school_id, settings, profile_id)
     if context["teacher_mode"] == "core_agent" and not settings.allow_agent_teachers:
         raise HTTPException(403, "Core teacher admission is not enabled")
+    from .teacher_models import model_policy_context
+    execution = model_policy_context(db, identity, profile_id, school_id, "lesson")
+    if execution:
+        context = {**context, "tutor_model": {**execution["policy"]["primary"], **execution["policy"]["lesson_policy"]}, "model_execution_snapshot": execution}
     if not context.get("tutor_model"):
         raise HTTPException(409, "The approved teacher has no lesson model policy")
     policy = TeacherTutorModel.model_validate(context["tutor_model"]).model_dump()

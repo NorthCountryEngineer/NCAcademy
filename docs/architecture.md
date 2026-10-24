@@ -1,5 +1,7 @@
 # Architecture
 
+Teacher identity/personality and course corpora remain independent of separately human-approved model execution policies. Schema 12 protects immutable model revisions/approvals while a scoped pointer selects the active policy. Lesson execution uses its fixed primary; opted-in Homework text handoffs use the teacher primary under the school budget and independent safety pass. Routing candidates/rules produce local previews only. See [teacher models](teacher-models.md) for execution/replay boundaries and the cost-aware routing plan.
+
 NCAcademy is a separate application with its own database and credentials. NCE Core provides staff identity, staff authorization and deployment control. Platform-local students and parents use separately administered username/password identities with no upstream provisioning. The same-origin React frontend calls the FastAPI service; PostgreSQL stores curriculum, work, sessions, settings and audit records. SQLite is confined to local development/testing.
 
 ```mermaid

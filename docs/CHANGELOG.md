@@ -1,5 +1,14 @@
 # Changelog
 
+## Teacher model policies and routing foundations — October 23, 2026
+
+- Added a prominent AI-teacher Models workspace with independently saved/reviewed/approved school-integrated primary models and per-activity limits. Model swaps preserve teacher metadata, profile approval, assigned classes, student preferences and course corpora.
+- Added scoped immutable model-policy revisions/approvals and schema-12 SQL protection. Active-policy/connection changes withhold in-flight replies without provider fallback; policy-only swaps retain approved Homework history.
+- Added explicit school opt-in for teacher-specific Homework text models. Existing approvals/defaults and named photo destinations remain compatible; independent triage, safety and shared student budgets remain mandatory.
+- Added fixed-primary execution receipts and bounded no-call routing previews with allowlisted candidates/rules. Automatic per-question switching and price/budget settlement are documented as subsequent implementation phases; unknown cost is explicit.
+- Documented administration, APIs, privacy/audit boundaries, release migration and cost-aware routing acceptance in [teacher models](teacher-models.md).
+
+
 ## Independent teacher profile review — October 23, 2026
 
 - Removed the dependency on assigned class corpus approval from **Approve current profile**. Human administrators can review a human or AI teacher's biography, picture and teaching approach while class knowledge preparation is pending.

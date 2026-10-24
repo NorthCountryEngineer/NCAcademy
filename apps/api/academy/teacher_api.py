@@ -189,8 +189,17 @@ def course_teacher_cards(db, identity, course, school_id, settings):
         available = snapshot["kind"] == "ai" and bound and settings.allow_live_models and settings.allow_agent_teachers
         lesson_enabled = snapshot["kind"] == "ai" and settings.allow_live_models and (not bound or settings.allow_agent_teachers)
         model = snapshot.get("tutor_model")
+        model_error = False
+        if snapshot["kind"] == "ai":
+            from .teacher_models import model_policy_context
+            try:
+                execution = model_policy_context(db, identity, profile, school_id, "lesson")
+                if execution:
+                    model = {**execution["policy"]["primary"], **execution["policy"]["lesson_policy"]}
+            except HTTPException:
+                model_error = True
         connection = db.get(Record, model["connection_id"]) if model else None
-        configured = bool(connection and connection.kind == "connection" and connection.tenant_id == course.tenant_id and scope_id(db, connection) == school_id and connection.value.get("enabled") and connection.value.get("key_cipher") and model["model"] in connection.value.get("models", []))
+        configured = bool(not model_error and connection and connection.kind == "connection" and connection.tenant_id == course.tenant_id and scope_id(db, connection) == school_id and connection.value.get("enabled") and connection.value.get("key_cipher") and model["model"] in connection.value.get("models", []))
         result.append({"id": profile.id, "kind": snapshot["kind"], **{key: snapshot[key] for key in ("name", "biography", "pronouns", "title", "picture")}, "context_ready": True, "available_for_tutoring": bool(available), "lesson_mode": ("core_agent" if bound else "managed") if snapshot["kind"] == "ai" else None, "lesson_tutoring_available": bool(lesson_enabled and configured), "lesson_max_input_chars": model["max_input_chars"] if model else None, "lesson_max_turns": model["max_turns"] if model else None, "lesson_unavailable_reason": None if lesson_enabled and configured else "This teacher's approved model connection or lesson access is not enabled.", "curation_available": bool(lesson_enabled and configured and model.get("allow_lesson_curation", False)), "curation_images_allowed": bool(lesson_enabled and configured and model.get("allow_lesson_curation", False) and model.get("allow_assignment_images", False)), "curation_model_label": (str(connection.value.get("name", "School model"))[:200] + " · " + model["model"]) if configured else None, "curation_max_input_chars": model["max_input_chars"] if model else None, "curation_unavailable_reason": None if lesson_enabled and configured and model.get("allow_lesson_curation", False) else "Private lesson curation requires a current human-approved teacher policy and enabled model connection."})
     return result
 
@@ -278,8 +287,17 @@ def register_teacher_api(app, database, auth, settings, actor, audit_actor):
                 continue
             current = corpus_descriptor(db, course, school_id)
             assigned.append({"id": course.id, "title": course.value["title"], "curriculum": course.value.get("curriculum"), "corpus": {**_corpus_reference(current), "ready_for_teaching": current.get("ready_for_teaching", False), "gaps": current.get("gaps", [])}, "has_teaching_authority": eligible and _teaches(db, course, principal_id)})
+        lesson_model_configured = bool(value.get("tutor_model"))
+        if value["kind"] == "ai" and approval_current:
+            from .teacher_models import model_policy_context
+            try:
+                execution = model_policy_context(db, {"tenant_id": row.tenant_id}, row, school_id, "lesson")
+                if execution:
+                    lesson_model_configured = True
+            except HTTPException:
+                lesson_model_configured = False
         workflow = next((item for item in reversed(_rows(db, row.tenant_id, "knowledge_workflow_run", school_id)) if item.value.get("teacher_profile_id") == row.id), None)
-        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "latest_onboarding_run": workflow_descriptor(db, workflow, db.get(Record, school_id)) if workflow else None, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and value.get("tutor_model") and approval_current and assigned and all(item["corpus"]["ready_for_teaching"] for item in assigned)), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
+        return {"id": row.id, "school_id": school_id, **{key: item for key, item in value.items() if key != "binding_context"}, "latest_onboarding_run": workflow_descriptor(db, workflow, db.get(Record, school_id)) if workflow else None, "tutor_model": value.get("tutor_model"), "approval_current": approval_current, "course_ids": [item["id"] for item in assigned], "assigned_courses": assigned, "can_manage": True, "authority_granted": False, "activation": {"mode": "human" if value["kind"] == "human" else "core_agent" if value.get("agent_placement_id") else "managed", "managed_lesson_configured": bool(value["kind"] == "ai" and not value.get("agent_placement_id") and lesson_model_configured and approval_current and assigned and all(item["corpus"]["ready_for_teaching"] for item in assigned)), "identity_linked": bool(value.get("principal_id") or value.get("agent_placement_id")), "identity_eligible": eligible, "eligibility_scope": "local_only", "agent_admission_enabled": settings.allow_agent_teachers, "live_models_enabled": settings.allow_live_models, "runtime_active": False, "authority_granted": False}}
 
     @app.get("/api/schools/{school_id}/teachers")
     def teachers(school_id: str, identity=Depends(actor)):

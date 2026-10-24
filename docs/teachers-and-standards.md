@@ -1,5 +1,7 @@
 # Teacher onboarding and course knowledge
 
+AI teachers have a separate **Models** workspace for assigning integrated school models. Saving/swapping/approving a model policy preserves the exact teacher personality, profile approval, class assignments and knowledge corpus. Fixed-primary execution and no-call routing previews are implemented; automatic cost-aware switching is planned. See [teacher model settings and implementation plan](teacher-models.md).
+
 Teacher onboarding and corpora are part of the released October 18, 2026 baseline. The current local source extends them with school-wide curriculum setup, grade/year course planning and visible corpus-build receipts; its production release still requires a matching image and exact-source checks. See [school setup](school-onboarding.md).
 
 ## Onboard a human or AI teacher

@@ -1,5 +1,7 @@
 # Homework Help
 
+School/Admins may explicitly approve the new `allow_teacher_models` opt-in to use each matching AI teacher’s independently approved primary for text responses. Missing/false preserves existing school-model behavior. Triage/safety and all Homework photo destinations remain school-controlled. Reply Model details show actual models, policy revisions, normalized token usage and advisory alternate choices; unknown pricing is not shown as zero. See [teacher models](teacher-models.md) for fixed/preview execution, in-flight/replay safeguards and the live-routing plan.
+
 ## School AI assistant
 
 Homework Help is a private, model-provider-neutral chat workspace for an authenticated student in a school. Course enrollment is not required. Conversations appear on the left and the selected conversation and composer on the right; students can start a conversation, reopen history, ask a written question or attach permitted homework photos. Routing is automatic. The screen stays in this chat workspace when the school assistant is unavailable and explains that school setup is required. It does not silently substitute the enrollment-dependent legacy flow. Earlier guided-lesson conversations retain their separate historical contract below.

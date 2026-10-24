@@ -213,22 +213,6 @@
         "title": "AgentPlacementInput",
         "type": "object"
       },
-      "ApprovalInput": {
-        "additionalProperties": false,
-        "properties": {
-          "revision_id": {
-            "maxLength": 64,
-            "minLength": 1,
-            "title": "Revision Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "revision_id"
-        ],
-        "title": "ApprovalInput",
-        "type": "object"
-      },
       "ApprovedText": {
         "additionalProperties": false,
         "properties": {
@@ -377,6 +361,61 @@
           "model"
         ],
         "title": "AuditAgentInput",
+        "type": "object"
+      },
+      "Candidate": {
+        "additionalProperties": false,
+        "properties": {
+          "connection_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 150,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$",
+            "title": "Model",
+            "type": "string"
+          },
+          "tasks": {
+            "items": {
+              "enum": [
+                "simple",
+                "reasoning",
+                "long_context",
+                "image"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "connection_id",
+          "model",
+          "id",
+          "label",
+          "tasks"
+        ],
+        "title": "Candidate",
         "type": "object"
       },
       "ChatBootstrapInput": {
@@ -631,6 +670,11 @@
           "allow_images": {
             "default": false,
             "title": "Allow Images",
+            "type": "boolean"
+          },
+          "allow_teacher_models": {
+            "default": false,
+            "title": "Allow Teacher Models",
             "type": "boolean"
           },
           "behavior": {
@@ -2000,6 +2044,58 @@
         "title": "LessonInput",
         "type": "object"
       },
+      "LessonPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_assignment_images": {
+            "default": false,
+            "title": "Allow Assignment Images",
+            "type": "boolean"
+          },
+          "allow_lesson_curation": {
+            "default": false,
+            "title": "Allow Lesson Curation",
+            "type": "boolean"
+          },
+          "curation_max_output_tokens": {
+            "default": 700,
+            "maximum": 1200.0,
+            "minimum": 200.0,
+            "title": "Curation Max Output Tokens",
+            "type": "integer"
+          },
+          "max_input_chars": {
+            "default": 3000,
+            "maximum": 10000.0,
+            "minimum": 100.0,
+            "title": "Max Input Chars",
+            "type": "integer"
+          },
+          "max_output_tokens": {
+            "default": 80,
+            "maximum": 200.0,
+            "minimum": 30.0,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "max_total_tokens": {
+            "default": 20000,
+            "maximum": 1000000.0,
+            "minimum": 500.0,
+            "title": "Max Total Tokens",
+            "type": "integer"
+          },
+          "max_turns": {
+            "default": 8,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Turns",
+            "type": "integer"
+          }
+        },
+        "title": "LessonPolicy",
+        "type": "object"
+      },
       "MembershipInput": {
         "additionalProperties": false,
         "properties": {
@@ -2125,6 +2221,25 @@
         "title": "PasswordLogin",
         "type": "object"
       },
+      "PolicyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/TeacherModelPolicy"
+          }
+        },
+        "required": [
+          "expected_version",
+          "policy"
+        ],
+        "title": "PolicyInput",
+        "type": "object"
+      },
       "PreferenceInput": {
         "additionalProperties": false,
         "properties": {
@@ -2146,6 +2261,24 @@
           "expected_version"
         ],
         "title": "PreferenceInput",
+        "type": "object"
+      },
+      "PreviewInput": {
+        "additionalProperties": false,
+        "properties": {
+          "has_images": {
+            "default": false,
+            "title": "Has Images",
+            "type": "boolean"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "title": "PreviewInput",
         "type": "object"
       },
       "ResetInput": {
@@ -2249,6 +2382,72 @@
           "name"
         ],
         "title": "ResourceInput",
+        "type": "object"
+      },
+      "Routing": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "maxItems": 8,
+            "title": "Candidates",
+            "type": "array"
+          },
+          "max_question_chars": {
+            "default": 10000,
+            "maximum": 10000.0,
+            "minimum": 100.0,
+            "title": "Max Question Chars",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "fixed",
+            "enum": [
+              "fixed",
+              "preview"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/Rule"
+            },
+            "maxItems": 4,
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "title": "Routing",
+        "type": "object"
+      },
+      "Rule": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "task": {
+            "enum": [
+              "simple",
+              "reasoning",
+              "long_context",
+              "image"
+            ],
+            "title": "Task",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task",
+          "candidate_id"
+        ],
+        "title": "Rule",
         "type": "object"
       },
       "SchoolCurriculumInput": {
@@ -2678,6 +2877,52 @@
           "kind"
         ],
         "title": "TeacherCreate",
+        "type": "object"
+      },
+      "TeacherModelPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "assignment_images_reviewed": {
+            "default": false,
+            "title": "Assignment Images Reviewed",
+            "type": "boolean"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "homework_enabled": {
+            "default": true,
+            "title": "Homework Enabled",
+            "type": "boolean"
+          },
+          "homework_max_output_tokens": {
+            "default": 1500,
+            "maximum": 3000.0,
+            "minimum": 200.0,
+            "title": "Homework Max Output Tokens",
+            "type": "integer"
+          },
+          "lesson_enabled": {
+            "default": true,
+            "title": "Lesson Enabled",
+            "type": "boolean"
+          },
+          "lesson_policy": {
+            "$ref": "#/components/schemas/LessonPolicy"
+          },
+          "primary": {
+            "$ref": "#/components/schemas/ModelRef"
+          },
+          "routing": {
+            "$ref": "#/components/schemas/Routing"
+          }
+        },
+        "required": [
+          "primary"
+        ],
+        "title": "TeacherModelPolicy",
         "type": "object"
       },
       "TeacherPicture": {
@@ -3256,6 +3501,22 @@
         "title": "ReviewInput",
         "type": "object"
       },
+      "academy__homework_ai__ApprovalInput": {
+        "additionalProperties": false,
+        "properties": {
+          "revision_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id"
+        ],
+        "title": "ApprovalInput",
+        "type": "object"
+      },
       "academy__schemas__ReviewInput": {
         "additionalProperties": false,
         "properties": {
@@ -3270,6 +3531,28 @@
           "feedback"
         ],
         "title": "ReviewInput",
+        "type": "object"
+      },
+      "academy__teacher_models__ApprovalInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "revision_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_version",
+          "revision_id"
+        ],
+        "title": "ApprovalInput",
         "type": "object"
       }
     }
@@ -8112,7 +8395,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApprovalInput"
+                "$ref": "#/components/schemas/academy__homework_ai__ApprovalInput"
               }
             }
           },
@@ -10288,6 +10571,218 @@
           }
         },
         "summary": "Assign Courses"
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/models": {
+      "get": {
+        "operationId": "get_policy_api_schools__school_id__teachers__profile_id__models_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Policy"
+      },
+      "put": {
+        "operationId": "save_policy_api_schools__school_id__teachers__profile_id__models_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Policy"
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/models/approve": {
+      "post": {
+        "operationId": "approve_policy_api_schools__school_id__teachers__profile_id__models_approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/academy__teacher_models__ApprovalInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Policy"
+      }
+    },
+    "/api/schools/{school_id}/teachers/{profile_id}/models/preview": {
+      "post": {
+        "operationId": "preview_api_schools__school_id__teachers__profile_id__models_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "profile_id",
+            "required": true,
+            "schema": {
+              "title": "Profile Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview"
       }
     },
     "/api/standards/catalog": {

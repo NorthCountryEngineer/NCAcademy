@@ -20,6 +20,7 @@ from .homework_ai import (VERSION, BOUNDARY_VERSION, PHASES, LIMITS, SYSTEM_BOUN
 from .learning_preferences import preference_snapshot, student_principal
 from .lesson_api import completion_request
 from .permissions import bind_scope, require_school, scope_id
+from .teacher_models import model_policy_context, preview_model_policy
 
 
 class AIMessageInput(HomeworkMessageInput):
@@ -216,9 +217,19 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             if data["status"] != "pending" or phase in data["phases"]:
                 raise HTTPException(409, "This phase already has a durable outcome or send marker; no retry")
             connection = snapshot["connections"][phase]
+            selected_model = snapshot["configuration"][phase]["model"]
+            encrypted_key = keys[phase]
+            execution_policy = data.get("teacher_model_policy_snapshot")
+            if phase == "tutor" and data.get("teacher_model_override"):
+                # revalidate() checked this exact immutable approval and the
+                # current school-scoped connection before any send marker.
+                connection = execution_policy["connection_snapshot"]
+                selected_model = execution_policy["model"]
+                encrypted_key = db.get(Record, connection["id"]).value["key_cipher"]
+                maximum = min(maximum, execution_policy["policy"]["homework_max_output_tokens"])
             # Local credential decryption is pre-send admission: failure here
             # has no send marker and cannot be classified as external I/O.
-            key = auth.unseal(keys[phase])["api_key"]
+            key = auth.unseal(encrypted_key)["api_key"]
             reservation = len(canonical(prompt).encode()) + maximum + 1024
             # Reservations remain charged on uncertain outcomes. Across sessions,
             # no new student send may pass another unresolved message barrier.
@@ -233,7 +244,9 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                 if isinstance(content, list):
                     content = [part if part["type"] == "text" else {"type": "image_reference", "images": data["images"]} for part in content]
                 safe_prompt.append({"role": entry["role"], "content": content})
-            marker = {"phase": phase, "marked_at": now(), "prompt": safe_prompt, "prompt_sha256": digest(prompt), "connection_snapshot": connection, "model": snapshot["configuration"][phase]["model"], "max_output_tokens": maximum, "reservation": reservation, "teacher_authority": teacher_authority}
+            marker = {"phase": phase, "marked_at": now(), "prompt": safe_prompt, "prompt_sha256": digest(prompt), "connection_snapshot": connection, "model": selected_model, "max_output_tokens": maximum, "reservation": reservation, "teacher_authority": teacher_authority}
+            if phase == "tutor" and "teacher_model_policy_snapshot" in data:
+                marker.update(teacher_model_policy_snapshot=data["teacher_model_policy_snapshot"], teacher_model_override=data["teacher_model_override"], routing_preview=data.get("teacher_model_routing"))
             data["phases"][phase] = {"send_marker": marker, "response": None, "usage": None}
             data["reservation"] += reservation
             row.set(data)
@@ -252,7 +265,7 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                 bind_scope(db, evidence_row, data["school_id"])
                 audit_actor(db, identity, "homework_ai.provider_result", {"school_id": data["school_id"], "homework_session_id": row.parent_id, "homework_message_id": row.id, "phase": phase, "response": response, "usage": usage, "model_snapshot": connection, "policy_snapshot": snapshot, "late_after_terminal": True, "evidence_id": evidence_id, "error_code": error_code}, row.parent_id)
         try:
-            result = app.state.classify(connection, key, snapshot["configuration"][phase]["model"], prompt, maximum)
+            result = app.state.classify(connection, key, selected_model, prompt, maximum)
             selected, usage, evidence = visible_response(result, key, maximum, reservation)
         except (provider.ProviderFailure, HTTPException, ValueError, KeyError, TypeError, IndexError, RecursionError) as error:
             # Closing an in-flight operation never cancels an already sent
@@ -415,6 +428,15 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                         data["triage"].update(responder="school_assistant", teacher_profile_id=None, teacher_name=config["name"], handoff_unavailable=True)
                 profile = teacher["id"] if teacher else assistant_preference_id(identity, selected_school)
                 data.update(teacher_profile_id=profile, assistant_name=teacher["name"] if teacher else config["name"])
+                if teacher and config.get("allow_teacher_models", False):
+                    execution_policy = model_policy_context(db, identity, teacher["id"], selected_school, "homework")
+                    data["teacher_model_policy_snapshot"] = execution_policy
+                    data["teacher_model_override"] = bool(execution_policy and not images)
+                    if execution_policy:
+                        # Homework photo consent names the school models only.
+                        # A text override cannot add a new image destination.
+                        routing_policy = execution_policy["policy"]
+                        data["teacher_model_routing"] = preview_model_policy(routing_policy, body.message, bool(images)) if len(body.message) <= routing_policy["routing"]["max_question_chars"] else {"task": None, "reason_code": "preview_limit_exceeded", "suggested": None}
                 data["learning_preferences_snapshot"] = preference_snapshot(db, identity, profile, triage["course_id"])
                 fresh(request, identity)
                 revalidate(db, identity, settings, data)

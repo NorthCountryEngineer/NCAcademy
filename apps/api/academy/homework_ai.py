@@ -22,6 +22,7 @@ from .permissions import require_school, scope_id
 from .standards import corpus_descriptor, retrieve_corpus
 from .teacher_schemas import AIBehavior
 from .teacher_api import _approved, _assignments, _planned_context
+from .teacher_models import require_model_policy_snapshot
 
 VERSION = "homework-ai-v1"
 BOUNDARY_VERSION = "homework-ai-v2"
@@ -47,6 +48,7 @@ class Configuration(Strict):
     biography: str = Field(default="A school-approved AI learning assistant.", max_length=4000)
     behavior: AIBehavior = Field(default_factory=AIBehavior)
     use_school_teacher_personas: bool = Field(default=True, strict=True)
+    allow_teacher_models: bool = Field(default=False, strict=True)
     triage: ModelRef
     tutor: ModelRef
     safety: ModelRef
@@ -97,6 +99,10 @@ def resolve_configuration(db, identity, school_id, settings, *, live=True):
     if digest(data["configuration"]) != data.get("configuration_sha256") or data["version"] != value["version"]:
         raise HTTPException(409, "Homework Help configuration integrity check failed")
     configuration = Configuration.model_validate(data["configuration"]).model_dump()
+    # Preserve the exact projection of pre-model-policy snapshots. The new
+    # privilege is opt-in and missing means false, including retained history.
+    if "allow_teacher_models" not in data["configuration"]:
+        configuration.pop("allow_teacher_models")
     approval = db.get(Record, value.get("approval_id") or "")
     approved = bool(approval and approval.kind == "homework_ai_approval" and approval.tenant_id == identity["tenant_id"] and approval.parent_id == revision.id and approval.value.get("configuration_sha256") == data["configuration_sha256"])
     connections, keys = {}, {}
@@ -248,6 +254,7 @@ def revalidate(db, identity, settings, data):
     if canonical(snapshot) != canonical(data["configuration_snapshot"]):
         raise HTTPException(409, "Homework Help configuration, approval or connection changed")
     validate_course_scope(db, identity, settings, data)
+    validate_teacher_execution(db, identity, data)
     require_preference_snapshot(db, identity, data["learning_preferences_snapshot"], data.get("teacher_profile_id"), data.get("course_id"))
     grounding = data.get("grounding_snapshot")
     if grounding:
@@ -256,6 +263,38 @@ def revalidate(db, identity, settings, data):
         if not current.get("ready_for_teaching") or current.get("id") != grounding["corpus_id"] or current.get("snapshot_sha256") != grounding["snapshot_sha256"]:
             raise HTTPException(409, "Course grounding approval or source review changed")
     return snapshot, keys
+
+
+def validate_teacher_execution(db, identity, data, *, current=True):
+    if "teacher_model_policy_snapshot" in data:
+        return require_model_policy_snapshot(db, identity, data["teacher_profile_id"], data["school_id"], "homework", data["teacher_model_policy_snapshot"], current=current)
+    return None
+
+
+def execution_receipt(data):
+    """Public execution evidence deliberately excludes endpoints and credentials."""
+    phases = []
+    policy = data.get("teacher_model_policy_snapshot")
+    for phase in PHASES:
+        entry = data.get("phases", {}).get(phase)
+        if not entry:
+            continue
+        marker = entry["send_marker"]
+        uses_teacher = phase == "tutor" and bool(data.get("teacher_model_override"))
+        usage = entry.get("usage") or {}
+        phases.append({"phase": phase, "model": marker["model"],
+                       "connection_name": marker["connection_snapshot"].get("name", "School integration"),
+                       "source": "teacher_policy" if uses_teacher else "school_policy",
+                       "policy_revision_id": policy["revision_id"] if uses_teacher else data["configuration_snapshot"]["revision_id"],
+                       "usage": {key: value for key, value in usage.items() if key in {"prompt_tokens", "completion_tokens", "total_tokens"} and type(value) is int and value >= 0}})
+    routing = data.get("teacher_model_routing")
+    suggestion = routing.get("suggested") if routing else None
+    return {"phases": phases, "mode": policy["policy"]["routing"]["mode"] if policy else "fixed",
+            "selection_reason": "homework_photos_use_school_models" if policy and data.get("images") else "approved_teacher_primary" if data.get("teacher_model_override") else "approved_school_models",
+            "preview": {"task": routing.get("task"), "reason_code": routing.get("reason_code"),
+                        "suggested_model": suggestion.get("model") if suggestion else None,
+                        "suggested_label": suggestion.get("label") if suggestion else None} if routing else None,
+            "automatic_routing_enabled": False, "estimated_cost": None, "pricing_status": "unknown"}
 
 
 def optional_grounding(db, identity, settings, course_id, message, audit_actor, session_id):
@@ -385,6 +424,7 @@ def project_message(db, identity, row, settings, *, app=None):
                 raise HTTPException(409)
             validate_course_scope(db, identity, settings, data)
             revalidate_teacher(db, identity, settings, data, app)
+            validate_teacher_execution(db, identity, data, current=False)
             if data.get("grounding_snapshot"):
                 course, school = course_for_student(db, identity, data["course_id"], settings)
                 corpus = corpus_descriptor(db, course, school)
@@ -396,7 +436,7 @@ def project_message(db, identity, row, settings, *, app=None):
     images = [{**item, "url": f"/api/homework-help/ai/sessions/{row.parent_id}/messages/{row.id}/images/{item['id']}"} for item in data.get("images", [])] if data.get("images_cipher") else data.get("images", [])
     teacher_id = data.get("teacher_context_snapshot", {}).get("id")
     triage = {**data.get("triage", {}), "teacher_name": data.get("assistant_name"), "teacher_profile_id": teacher_id, "responder": "teacher" if teacher_id else "school_assistant"}
-    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), "images": images, "resume_available": False, "activity": VERSION}
+    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), "execution": execution_receipt(data), "images": images, "resume_available": False, "activity": VERSION}
 
 
 def feedback_context(db, identity, row, settings, *, app=None):

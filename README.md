@@ -2,7 +2,7 @@
 
 An independent NCE Core education application with schools, classes, assignments, student-authored work and instructor-controlled tutoring. Its administrative workspace follows Proposal Studio's layout and integration-management conventions. Admin, School, Teacher and Student access is enforced by the API. Teachers may be human, managed AI personas or explicitly approved Core agent accounts. Assignment tutoring and Lesson Q&A select approved hints/questions or exact public-source excerpts. Separately approved Homework Help generates explanations through configured triage, tutor and safety models, while students retain authorship of submitted work.
 
-The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. The current schema-11 source adds generative Homework Help, metadata-only Core delivery and independent archive monitoring. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
+The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. The current schema-12 source adds independent teacher model policies and routing previews alongside generative Homework Help, metadata-only Core delivery and independent archive monitoring. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
 
 ## Local preview
 
@@ -24,6 +24,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [All 2,030 official NYSED course options and custom classes](docs/ny-course-catalog.md)
 - [New York standards planning and tutoring coverage](docs/ny-curriculum-2026-review.md)
 - [Teacher onboarding and standards corpora](docs/teachers-and-standards.md)
+- [Teacher model assignment and cost-aware routing plan](docs/teacher-models.md)
 - [Student-curated multimedia lessons](docs/student-curated-lessons.md)
 - [Student learning preferences and feedback](docs/student-learning-preferences.md)
 - [Local student/parent accounts, PII encryption and testing](docs/family-accounts.md)

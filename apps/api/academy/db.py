@@ -51,7 +51,11 @@ def homework_ai_schema_id(tenant_id):
     return "homework-ai-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
 
 
-IMMUTABLE_RECORD_KINDS = {"homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
+def teacher_models_schema_id(tenant_id):
+    return "teacher-models-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
+IMMUTABLE_RECORD_KINDS = {"teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
 SEALED_JOB_KINDS = {"homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"}
 
 
