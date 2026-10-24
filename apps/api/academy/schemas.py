@@ -47,8 +47,17 @@ class CourseInput(Strict):
     description: str = Field(default="", max_length=10000)
     school_id: str | None = Field(default=None, min_length=1, max_length=64)
     teacher_id: str | None = Field(default=None, min_length=1, max_length=64)
+    teacher_profile_ids: list[str] = Field(default_factory=list, max_length=100)
+    expected_teacher_profile_ids: list[str] = Field(default_factory=list, max_length=100)
     curriculum: CurriculumInput | None = None
     course_catalog: CourseCatalogSelectionInput | None = None
+
+    @field_validator("teacher_profile_ids", "expected_teacher_profile_ids")
+    @classmethod
+    def unique_teacher_profiles(cls, value):
+        if len(set(value)) != len(value) or any(not item or len(item) > 64 for item in value):
+            raise ValueError("Provide unique exact teacher profile IDs")
+        return value
 
 
 class AssignmentInput(Strict):

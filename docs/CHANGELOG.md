@@ -1,5 +1,12 @@
 # Changelog
 
+## Course teacher selection — October 23, 2026
+
+- Fixed course configuration listing staff accounts as the only teacher choices. Class teachers now selects reusable school human/AI profiles and reflects assignments already made in Teachers, including profiles with pending teaching preparation.
+- Kept the responsible staff account under Class administration. Profile selection shares the existing class-assignment and knowledge-workflow path without granting an AI persona account permissions or publishing authority.
+- Unchanged selections preserve approvals, model policies and other class assignments. Changed assignments retain the existing review requirements; no profile, corpus or model is automatically approved.
+
+
 ## Teacher model policies and routing foundations — October 23, 2026
 
 - Added a prominent AI-teacher Models workspace with independently saved/reviewed/approved school-integrated primary models and per-activity limits. Model swaps preserve teacher metadata, profile approval, assigned classes, student preferences and course corpora.

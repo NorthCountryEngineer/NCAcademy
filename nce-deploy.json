@@ -6,7 +6,7 @@
     "output": "dist"
   },
   "backend": {
-    "image": "015454941623.dkr.ecr.us-east-1.amazonaws.com/nce-family-academy-api@sha256:15350f4804fa077cf758f94236c5442f350b14a651c9aaa4055e0feec7a9b840"
+    "image": "015454941623.dkr.ecr.us-east-1.amazonaws.com/nce-family-academy-api@sha256:2701d2d983dd668254e0c61b12d8333a857d505ecc9c8e7029cd062d1bc6ded2"
   },
   "identity": {
     "callback_path": "/api/auth/core/callback",

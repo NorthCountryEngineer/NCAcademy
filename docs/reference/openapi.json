@@ -987,6 +987,14 @@
             "title": "Description",
             "type": "string"
           },
+          "expected_teacher_profile_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Expected Teacher Profile Ids",
+            "type": "array"
+          },
           "school_id": {
             "anyOf": [
               {
@@ -1012,6 +1020,14 @@
               }
             ],
             "title": "Teacher Id"
+          },
+          "teacher_profile_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Teacher Profile Ids",
+            "type": "array"
           },
           "title": {
             "maxLength": 200,

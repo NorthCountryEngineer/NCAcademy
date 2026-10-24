@@ -22,7 +22,7 @@ from .chat_api import register_chat_api
 from .core_chat_transport import CoreChatTransport
 from .classroom_api import register_classroom_api
 from .google_classroom_transport import GoogleClassroomTransport
-from .teacher_api import register_teacher_api, course_teacher_cards, resolve_teacher_context
+from .teacher_api import register_teacher_api, course_teacher_cards, resolve_teacher_context, course_teacher_profile_descriptors, assign_course_teacher_profiles
 from .teacher_authority import authorize_teacher
 from .teacher_models import register_teacher_model_api
 from .lesson_api import register_lesson_api, lesson_session_id
@@ -199,7 +199,11 @@ def create_app(settings=None):
             can_manage = True
         except HTTPException:
             can_manage = False
-        return {**dump(row), "school_id": school_id, "teacher_id": teacher_id, "teacher_name": user_name(db, teacher_id), "teacher_principal_kind": "agent" if teacher_id and teacher_id.startswith("agent:") else "human", "course_role": school_role(db, identity, school_id, settings), "can_manage": can_manage, "teachers": course_teacher_cards(db, identity, row, school_id, settings)}
+        role = school_role(db, identity, school_id, settings)
+        cards = course_teacher_cards(db, identity, row, school_id, settings)
+        planned = course_teacher_profile_descriptors(db, row, school_id, {card["id"] for card in cards}) if role in {"admin", "school", "teacher"} else []
+        profile_ids = [profile["id"] for profile in planned] if role in {"admin", "school", "teacher"} else [card["id"] for card in cards]
+        return {**dump(row), "school_id": school_id, "teacher_id": teacher_id, "teacher_name": user_name(db, teacher_id), "teacher_principal_kind": "agent" if teacher_id and teacher_id.startswith("agent:") else "human", "teacher_profile_ids": profile_ids, "assigned_teacher_profiles": planned, "course_role": role, "can_manage": can_manage, "teachers": cards}
 
     def audit_actor(db, identity, operation, payload, session_id=""):
         context = {key: identity.get(key) for key in ("principal_kind", "account_id", "binding_id", "consumer_service_id", "environment", "task_id", "placement_id") if key in identity}
@@ -379,6 +383,10 @@ def create_app(settings=None):
         with database.write() as db:
             sid = selected_school(db, identity, body.school_id, {"admin", "school", "teacher"})
             role = school_role(db, identity, sid, settings)
+            if "expected_teacher_profile_ids" in body.model_fields_set and "teacher_profile_ids" not in body.model_fields_set:
+                raise HTTPException(422, "Expected teacher profiles require a teacher profile selection")
+            if "teacher_profile_ids" in body.model_fields_set:
+                require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
             owner = body.teacher_id or identity["id"]
             if role == "teacher" and owner != identity["id"]:
                 raise HTTPException(403, "Teachers create their own classes")
@@ -399,6 +407,8 @@ def create_app(settings=None):
             audit_actor(db, identity, "course.created", {"course_id": row.id, "school_id": sid, "teacher_id": owner, **row.value})
             if body.curriculum:
                 build_course_corpus(db, identity, row, sid, audit_actor)
+            if "teacher_profile_ids" in body.model_fields_set:
+                assign_course_teacher_profiles(db, identity, row, sid, body.teacher_profile_ids, settings, audit_actor, expected_profile_ids=body.expected_teacher_profile_ids if "expected_teacher_profile_ids" in body.model_fields_set else None)
             ensure_class_group(db, identity, row, sid, audit_actor)
             return course_dict(db, row, identity)
 
@@ -430,6 +440,10 @@ def create_app(settings=None):
             sid = scope_id(db, row)
             if body.school_id and body.school_id != sid:
                 raise HTTPException(403, "Class school is immutable")
+            if "expected_teacher_profile_ids" in body.model_fields_set and "teacher_profile_ids" not in body.model_fields_set:
+                raise HTTPException(422, "Expected teacher profiles require a teacher profile selection")
+            if "teacher_profile_ids" in body.model_fields_set:
+                require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
             owner = body.teacher_id or row.owner_id
             if owner != row.owner_id:
                 require_school(db, identity, sid, settings, {"admin", "school"}, human=True)
@@ -456,6 +470,8 @@ def create_app(settings=None):
             audit_actor(db, identity, "course.updated", {"course_id": row.id, "school_id": sid, "teacher_id": owner, **row.value})
             if curriculum or "curriculum" in body.model_fields_set:
                 build_course_corpus(db, identity, row, sid, audit_actor)
+            if "teacher_profile_ids" in body.model_fields_set:
+                assign_course_teacher_profiles(db, identity, row, sid, body.teacher_profile_ids, settings, audit_actor, expected_profile_ids=body.expected_teacher_profile_ids if "expected_teacher_profile_ids" in body.model_fields_set else None)
             return course_dict(db, row, identity)
 
     @app.post("/api/courses/{course_id}/enrollments")

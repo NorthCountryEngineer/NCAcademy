@@ -204,6 +204,79 @@ def course_teacher_cards(db, identity, course, school_id, settings):
     return result
 
 
+def course_teacher_profile_ids(db, course, school_id):
+    """Planning links for staff configuration, independent of runtime readiness."""
+    result = []
+    for profile in _rows(db, course.tenant_id, "teacher_profile", school_id):
+        if scope_id(db, profile) != school_id:
+            continue
+        if any(link.value.get("course_id") == course.id and scope_id(db, link) == school_id for link in _assignments(db, profile)):
+            result.append(profile.id)
+    return result
+
+
+def course_teacher_profile_descriptors(db, course, school_id, ready_ids):
+    """Minimal staff-only planning labels; never private profile configuration."""
+    result = []
+    for profile_id in course_teacher_profile_ids(db, course, school_id):
+        profile = _find(db, course.tenant_id, profile_id, "teacher_profile", school_id)
+        result.append({"id": profile.id, "kind": profile.value["kind"], "name": profile.value["name"], "status": profile.value["status"], "approval_current": _approval_current(db, profile, school_id), "context_ready": profile.id in ready_ids})
+    return result
+
+
+def assign_course_teacher_profiles(db, identity, course, school_id, profile_ids, settings, audit_actor, *, expected_profile_ids=None):
+    """Synchronize one class's profile links without changing its principal owner.
+
+    Call within the course write transaction. Planning assignment never creates
+    principal authority, profile approval, corpus approval or a model policy.
+    """
+    from .school_curriculum import record_teacher_workflow
+    from .standards import build_course_corpus, corpus_descriptor
+
+    require_school(db, identity, school_id, settings, {"admin", "school"}, human=True)
+    selected = {}
+    for profile_id in profile_ids:
+        profile = _find(db, identity["tenant_id"], profile_id, "teacher_profile", school_id)
+        if profile.value.get("status") == "archived":
+            raise HTTPException(409, "Restore the teacher profile before assigning classes")
+        selected[profile.id] = profile
+    current = set(course_teacher_profile_ids(db, course, school_id))
+    if expected_profile_ids is not None and current != set(expected_profile_ids):
+        raise HTTPException(409, "Class teacher assignments changed; reload before saving")
+    changed = current.symmetric_difference(selected)
+    # In particular, opening and saving an already assigned teacher must not
+    # revoke the profile's independent approval or rebuild its course corpus.
+    if not changed:
+        return
+    if any(len(_assignments(db, selected[profile_id])) >= 100 for profile_id in set(selected) - current):
+        raise HTTPException(422, "A teacher profile may have at most 100 assigned classes")
+    corpus = build_course_corpus(db, identity, course, school_id, audit_actor) if set(selected) - current else None
+    for profile_id in sorted(changed):
+        profile = selected.get(profile_id) or _find(db, identity["tenant_id"], profile_id, "teacher_profile", school_id)
+        links = [link for link in _rows(db, course.tenant_id, "teacher_profile_course", profile.id) if link.value.get("course_id") == course.id]
+        if len(links) > 1 or any(scope_id(db, link) != school_id for link in links):
+            raise HTTPException(409, "Teacher class assignment integrity check failed")
+        if profile_id in selected:
+            value = {"course_id": course.id, "active": True, "curriculum": course.value.get("curriculum"), "corpus": _corpus_reference(corpus)}
+            if links:
+                links[0].set(value)
+            else:
+                link = Record(id=uid(), tenant_id=course.tenant_id, kind="teacher_profile_course", parent_id=profile.id, owner_id=identity["id"], data=canonical(value))
+                db.add(link)
+                db.flush()
+                bind_scope(db, link, school_id)
+        else:
+            links[0].set({**links[0].value, "active": False})
+        profile.set({**profile.value, "version": profile.value["version"] + 1, "approved_revision_id": None, "approved_version": None, "approved_hash": None, "updated_at": now()})
+        assigned = []
+        for link in _assignments(db, profile):
+            target = _find(db, course.tenant_id, link.value["course_id"], "course", school_id)
+            current_corpus = corpus_descriptor(db, target, school_id)
+            assigned.append({"course_id": target.id, "title": target.value["title"], "curriculum": target.value.get("curriculum"), "corpus": {**_corpus_reference(current_corpus), "ready_for_teaching": current_corpus.get("ready_for_teaching", False), "gaps": current_corpus.get("gaps", [])}})
+        audit_actor(db, identity, "teacher_profile.courses_assigned", {"school_id": school_id, "course_id": course.id, "teacher_profile_id": profile.id, "kind": profile.value["kind"], "version": profile.value["version"], "status": profile.value["status"], "course_ids": [item["course_id"] for item in assigned], "authority_granted": False})
+        record_teacher_workflow(db, identity, school_id, profile, assigned, audit_actor, reason="course_configuration")
+
+
 def register_teacher_api(app, database, auth, settings, actor, audit_actor):
     def manage(db, identity, school_id):
         require_school(db, identity, school_id, settings, {"admin", "school"}, human=True)

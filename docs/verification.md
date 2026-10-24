@@ -1,5 +1,13 @@
 # Verification record
 
+## Course teacher selection — October 23, 2026
+
+The 19 new backend cases cover human and AI profile assignment during course creation and editing, exact preselection before teaching readiness, multiple classes, same-school and tenant validation, rollback, explicit removal, archived profiles, the 100-class bound and stale-selection conflicts. Unrelated saves and an unchanged selection retain existing profile approvals, model policies, corpus bytes and workflow history. Agents and ordinary teachers cannot alter profile assignments through the course endpoint or its proposal path. Student responses retain the existing approved teaching-card boundary.
+
+All 308 frontend tests passed. The interaction suite adds 10 cases covering the actual form handlers, including pending AI profiles, preselection, create/edit/removal payloads, failed profile loading, staff ownership, safe text rendering and a server conflict without retry. TypeScript and the normal production build passed. An actual-component browser rehearsal showed Jim already selected for Grade 3 Mathematics, saved a synthetic co-teacher while retaining the responsible staff account, then reopened the form with both teachers selected. The fixture used only loopback synthetic data and no provider calls or real school changes.
+
+No database schema, infrastructure, identity grant or model-gate change is required. The release uses exact-commit CI and the normal Core migration/API/frontend recipe. Production verification retains individual stored-record fingerprints alongside historical audit, ciphertext, PII binding and schema-12 protection checks.
+
 ## Teacher model policies and routing foundations — October 23, 2026
 
 The 12 new backend model-policy cases and seven Homework teacher-model cases passed against synthetic, isolated records and mocked providers. They verify exact nonempty teacher/profile/class/corpus record-byte preservation across swaps, draft-versus-active approval, actual primary execution, output caps, current in-flight revalidation, retained Homework replay, school/photo opt-in boundaries and no preview/provider retry. The expanded schema/role group passed 96 cases with its opt-in real PostgreSQL case skipped locally; exact-commit CI provisions the isolated PostgreSQL fixture and checks both new immutable kinds under restricted runtime grants.

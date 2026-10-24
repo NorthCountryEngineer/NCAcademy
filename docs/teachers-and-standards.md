@@ -1,5 +1,14 @@
 # Teacher onboarding and course knowledge
 
+## Assign teachers while configuring a class
+
+School/Admin users can select **Class teachers** in **Create course** or **Configure course**. The list contains the school's active human and AI teacher profiles, including profiles whose teaching approval or corpus is still pending. Profiles already assigned from the Teachers workspace are selected automatically. A reusable profile may teach several classes and grades; changing one class's team preserves its other class assignments, personality and separately approved model policy.
+
+**Class administration → Responsible staff member** identifies the existing account responsible for managing the class and publishing coursework. Selecting an AI teaching profile does not replace that account, create a Core identity or grant administrative access. The displayed teaching team and the course editor use the same profile/class assignments as the Teachers workspace.
+
+Saving an unchanged teaching team preserves current profile approvals. Adding or removing an assignment records the existing knowledge-preparation workflow and invalidates affected AI profile approval for review of the new class context. Assignment is separate from approval: this form cannot approve a profile, corpus or model, and pending materials remain unavailable for automatic teaching.
+
+
 AI teachers have a separate **Models** workspace for assigning integrated school models. Saving/swapping/approving a model policy preserves the exact teacher personality, profile approval, class assignments and knowledge corpus. Fixed-primary execution and no-call routing previews are implemented; automatic cost-aware switching is planned. See [teacher model settings and implementation plan](teacher-models.md).
 
 Teacher onboarding and corpora are part of the released October 18, 2026 baseline. The current local source extends them with school-wide curriculum setup, grade/year course planning and visible corpus-build receipts; its production release still requires a matching image and exact-source checks. See [school setup](school-onboarding.md).
