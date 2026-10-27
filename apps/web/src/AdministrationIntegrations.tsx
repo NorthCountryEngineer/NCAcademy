@@ -1,0 +1,27 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Plug, Plus, ArrowLeft } from 'lucide-react';
+import { errorText } from './api';
+import { Badge, Empty, Notice, Spinner, Tabs } from './components';
+import { AdministrationCatalog } from './AdministrationCatalog';
+import { ModelIntegrations } from './ModelIntegrations';
+import { VoiceSettings } from './VoiceSettings';
+import { HomeworkAISettings } from './HomeworkAISettings';
+import { AuditAgent } from './AuditAgent';
+import { administrativeWorkspace, type AdministrativeIntegration } from './administration-api';
+import type { School } from './api';
+export const integrationStatusLabel=(status:string)=>({configured:'Configured',enabled:'Enabled',disabled:'Disabled',not_configured:'Not configured',operator_required:'Deployment configuration required'}[status]||'Status unavailable');
+export function IntegrationMarketplace({school}:{school:School}){
+ const [catalog,setCatalog]=useState<AdministrativeIntegration[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[view,setView]=useState('catalog'),[selected,setSelected]=useState<AdministrativeIntegration|null>(null);
+ const load=useCallback(async()=>{try{const value=await administrativeWorkspace(school.id);setCatalog(value.integration_catalog);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[school.id]);
+ useEffect(()=>{void load();},[load]);
+ const cards=catalog.map(item=>({...item,type:item.action==='models'?'Model interface':'Application integration',tags:[item.category],enabled:item.status==='enabled'||item.status==='configured'}));
+ if(selected)return <><button className="text-button back-button" onClick={()=>{setSelected(null);void load();}}><ArrowLeft size={14}/>All integrations</button>{selected.action==='models'?<ModelIntegrations key={`add:${school.id}`} schoolId={school.id} initialAdd/>:selected.action==='voice'?<VoiceSettings schoolId={school.id}/>:selected.action==='homework'?<HomeworkAISettings schoolId={school.id}/>:selected.action==='external_audit'?<AuditAgent school={school}/>:<IntegrationSetupStatus integration={selected}/>}</>;
+ return <><section className="panel"><div className="panel-head"><div><h2>Integrations</h2><p>School model interfaces and supported application connections.</p></div><Plug size={20}/></div><Tabs items={[{id:'catalog',label:'Connector catalog'},{id:'configured',label:'Configured integrations'}]} value={view} change={setView} label="Integration views"/></section><Notice error={error}/>{loading?<Spinner text="Loading integration catalog…"/>:view==='configured'?<><ModelIntegrations schoolId={school.id}/><section className="panel"><div className="panel-head"><h2>Application integrations</h2></div></section><AdministrationCatalog items={cards.filter(item=>item.action!=='models')} noun="integrations" renderItem={item=><IntegrationCard item={item} configured open={()=>setSelected(item)}/ >}/></>:!cards.length?<section className="panel"><Empty title="Integration catalog unavailable"/></section>:<AdministrationCatalog items={cards} noun="integrations" renderItem={item=><IntegrationCard item={item} open={()=>setSelected(item)}/ >}/>}</>;
+}
+export function IntegrationCard({item,configured=false,open}:{item:AdministrativeIntegration;configured?:boolean;open:()=>void}){
+ return <section className="panel administrative-card"><div className="profile-heading"><Plug size={20}/><Badge tone={['enabled','configured'].includes(item.status)?'green':item.status==='not_configured'?'amber':''}>{integrationStatusLabel(item.status)}</Badge></div><h3>{item.name}</h3><p>{item.description}</p><div className="scope-line"><Badge>{item.category}</Badge></div><button className="button secondary" onClick={open}>{item.action==='models'&&!configured?<><Plus size={14}/>Add integration</>:['models','voice','homework','external_audit'].includes(item.action)?'Configure':'View setup'}</button></section>;
+}
+export function IntegrationSetupStatus({integration}:{integration:AdministrativeIntegration}){
+ const instructions={classroom:'Google Classroom links are configured by the deployment operator. Eligible users connect their own account from the Classroom workspace. Platform-local student and parent accounts cannot link external accounts.',chat:'Core Chat requires the existing application installation and operator-configured runtime connection. School and class groups retain their current membership checks. Platform-local student and parent accounts cannot use Core Chat.',curriculum:'Open School settings → School setup to choose the reviewed curriculum, create draft plans and review classes. Course creation and teaching approval remain separate.',archive:'Transcript archiving uses independently configured encrypted storage and a separate worker. Metadata delivery is separate from transcript retention. Runtime status alone does not establish a verified archive or recovery test.'};
+ return <section className="panel"><div className="panel-head"><div><h2>{integration.name}</h2><p>{integration.description}</p></div><Badge>{integrationStatusLabel(integration.status)}</Badge></div><div className="panel-body"><p>{instructions[integration.action as keyof typeof instructions]||'This integration uses deployment configuration. Saving an administrative agent does not activate it.'}</p><p className="help-text">No external service request is made by opening this setup view.</p></div></section>;
+}

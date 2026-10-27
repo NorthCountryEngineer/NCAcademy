@@ -1,5 +1,12 @@
 # Changelog
 
+## Administrative workspace — October 26, 2026
+
+- Reworked administrative settings around Proposal Studio's searchable integration marketplace, administrative agent and skill catalogs, while retaining Academy's tutoring, Homework Help, audit and deployment policy controls.
+- Added versioned administrative job profiles and reusable skills over fixed school-readiness, reviewed-curriculum planning and advisory model-review actions. Saving starts no work; runs retain accepted definitions and cannot publish teaching content, change policy or grant authority.
+- Added school-scoped Agent activity for recorded administration and existing agent workflows. Legacy student work stays protected behind the separate authorized audit views.
+- Added schema-13 revision/run protections, safe operational projections, explicit pricing/budget admission and no automatic resend after uncertain provider calls.
+
 ## Course teacher selection — October 23, 2026
 
 - Fixed course configuration listing staff accounts as the only teacher choices. Class teachers now selects reusable school human/AI profiles and reflects assignments already made in Teachers, including profiles with pending teaching preparation.

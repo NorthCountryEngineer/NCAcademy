@@ -1,5 +1,26 @@
 # API and data contracts
 
+## Administrative workspace
+
+`/api/schools/{school_id}/administration` requires a current human Admin/School role for the exact school on every read and write. The administrative page and sidebar navigation remain application-Admin features. Profiles are job definitions and never create Core identities, roles or grants.
+
+| Route below the workspace base | Operation |
+| --- | --- |
+| `GET /` or `GET /catalog` | Integration setup descriptors, built-in skills and current execution capabilities. |
+| `GET/POST /agents`, `GET/PUT /agents/{id}` | List, create, read or replace a declarative administrative profile. |
+| `GET/POST /skills`, `GET/PUT /skills/{id}` | Manage custom definitions over registered fixed actions. Built-ins cannot be replaced. |
+| `GET /{agents\|skills}/{id}/versions` | Read retained immutable configuration revisions. |
+| `POST /{agents\|skills}/{id}/{archive\|restore}` | Change lifecycle with the exact expected version. |
+| `POST /agents/{id}/runs` | Explicit launch with `expected_version` and a bounded opaque `idempotency_key`. |
+| `GET /runs/{id}` | Read scoped steps, status and the retained advisory result. |
+| `GET /activity` | Bounded school-scoped operational metadata, with kind/status filtering and offset/limit pagination. |
+
+Create uses `expected_version: 0`; edits and lifecycle changes must match the current version. Every saved configuration appends a protected revision. Only `readiness.inspect`, `curriculum.plan` and `model.review` effects are registered. Local review has no provider call. Model review requires its registered skill, a selected enabled school model, explicitly confirmed recent input/output prices, run budget and input/output/daily limits. The deployment gate remains authoritative.
+
+Accepted model work commits a send marker before external I/O, rechecks current authority/configuration and records a sealed outcome before release. Reusing a launch key reads the prior accepted run; it never resends an uncertain request. Reports cannot execute tools, approve/publish materials, change policy or read learner content. Legacy activity projection reads only allowlisted structural metadata from stored JSON and does not decrypt student sessions. Existing session-audit APIs remain separate. See [administrative settings](administrative-settings.md) and the generated [OpenAPI reference](reference/openapi.json).
+
+## Course and teaching contracts
+
 Course create/update accepts an optional `teacher_profile_ids` list for the school's reusable human/AI teaching profiles, independently of `teacher_id` (the existing responsible account). Omitting the profile list preserves assignments; an explicit empty list removes this class's profile assignments. Explicit null, duplicate IDs and invalid ID shapes are rejected with 422. Editors may send `expected_teacher_profile_ids` with an explicit selection; a changed current team returns 409 and rolls back the entire course update. Staff course responses include planned `teacher_profile_ids` and minimal `assigned_teacher_profiles` labels even before teaching readiness; students receive only existing approved teaching cards. Selection does not grant Core access or approve teaching materials. Only human School/Admin users can change the list. Same-school active-profile validation and all assignment/workflow changes are atomic. See [course teacher assignment](teachers-and-standards.md).
 
 

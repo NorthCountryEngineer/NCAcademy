@@ -144,6 +144,148 @@
         "title": "AIMessageInput",
         "type": "object"
       },
+      "AgentInput": {
+        "additionalProperties": false,
+        "properties": {
+          "archived": {
+            "default": false,
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "context": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Context",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "execution_mode": {
+            "default": "local_review",
+            "enum": [
+              "local_review",
+              "model_review"
+            ],
+            "title": "Execution Mode",
+            "type": "string"
+          },
+          "expected_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "instructions": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "max_daily_runs": {
+            "default": 10,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Max Daily Runs",
+            "type": "integer"
+          },
+          "max_daily_tokens": {
+            "default": 200000,
+            "maximum": 1000000.0,
+            "minimum": 10000.0,
+            "title": "Max Daily Tokens",
+            "type": "integer"
+          },
+          "max_input_chars": {
+            "default": 12000,
+            "maximum": 20000.0,
+            "minimum": 1000.0,
+            "title": "Max Input Chars",
+            "type": "integer"
+          },
+          "max_output_tokens": {
+            "default": 700,
+            "maximum": 1500.0,
+            "minimum": 200.0,
+            "title": "Max Output Tokens",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "per_run_budget_usd": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 10.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Run Budget Usd"
+          },
+          "pricing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pricing"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "primary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "purpose": {
+            "default": "school_readiness",
+            "enum": [
+              "school_readiness",
+              "curriculum_planning",
+              "administrative_review"
+            ],
+            "title": "Purpose",
+            "type": "string"
+          },
+          "skill_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Skill Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "AgentInput",
+        "type": "object"
+      },
       "AgentPlacementInput": {
         "additionalProperties": false,
         "properties": {
@@ -2297,6 +2439,55 @@
         "title": "PreviewInput",
         "type": "object"
       },
+      "Pricing": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmed": {
+            "const": true,
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "input_per_million": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Input Per Million"
+          },
+          "output_per_million": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Output Per Million"
+          },
+          "verified_on": {
+            "format": "date",
+            "title": "Verified On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_per_million",
+          "output_per_million",
+          "verified_on",
+          "confirmed"
+        ],
+        "title": "Pricing",
+        "type": "object"
+      },
       "ResetInput": {
         "additionalProperties": false,
         "properties": {
@@ -2466,6 +2657,29 @@
         "title": "Rule",
         "type": "object"
       },
+      "RunInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 100,
+            "minLength": 16,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Idempotency Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_version",
+          "idempotency_key"
+        ],
+        "title": "RunInput",
+        "type": "object"
+      },
       "SchoolCurriculumInput": {
         "additionalProperties": false,
         "properties": {
@@ -2613,6 +2827,60 @@
           "value"
         ],
         "title": "SchoolMetadata",
+        "type": "object"
+      },
+      "SkillInput": {
+        "additionalProperties": false,
+        "properties": {
+          "archived": {
+            "default": false,
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "base_action": {
+            "default": "readiness.inspect",
+            "enum": [
+              "readiness.inspect",
+              "curriculum.plan",
+              "model.review"
+            ],
+            "title": "Base Action",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "expected_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "instructions": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SkillInput",
         "type": "object"
       },
       "SpeechInput": {
@@ -3380,6 +3648,21 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VersionInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "VersionInput",
         "type": "object"
       },
       "VoiceConfigurationInput": {
@@ -9376,6 +9659,818 @@
           }
         },
         "summary": "Update School"
+      }
+    },
+    "/api/schools/{school_id}/administration": {
+      "get": {
+        "operationId": "workspace_api_schools__school_id__administration_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Workspace"
+      }
+    },
+    "/api/schools/{school_id}/administration/activity": {
+      "get": {
+        "operationId": "activity_api_schools__school_id__administration_activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activity"
+      }
+    },
+    "/api/schools/{school_id}/administration/agents": {
+      "get": {
+        "operationId": "agents_api_schools__school_id__administration_agents_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agents"
+      },
+      "post": {
+        "operationId": "create_agent_api_schools__school_id__administration_agents_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Agent"
+      }
+    },
+    "/api/schools/{school_id}/administration/agents/{identifier}": {
+      "get": {
+        "operationId": "detail_api_schools__school_id__administration_agents__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detail"
+      },
+      "put": {
+        "operationId": "update_agent_api_schools__school_id__administration_agents__identifier__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Agent"
+      }
+    },
+    "/api/schools/{school_id}/administration/agents/{identifier}/runs": {
+      "post": {
+        "operationId": "run_api_schools__school_id__administration_agents__identifier__runs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run"
+      }
+    },
+    "/api/schools/{school_id}/administration/catalog": {
+      "get": {
+        "operationId": "workspace_api_schools__school_id__administration_catalog_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Workspace"
+      }
+    },
+    "/api/schools/{school_id}/administration/runs/{identifier}": {
+      "get": {
+        "operationId": "get_run_api_schools__school_id__administration_runs__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Run"
+      }
+    },
+    "/api/schools/{school_id}/administration/skills": {
+      "get": {
+        "operationId": "skills_api_schools__school_id__administration_skills_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Skills"
+      },
+      "post": {
+        "operationId": "create_skill_api_schools__school_id__administration_skills_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Skill"
+      }
+    },
+    "/api/schools/{school_id}/administration/skills/{identifier}": {
+      "get": {
+        "operationId": "detail_api_schools__school_id__administration_skills__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detail"
+      },
+      "put": {
+        "operationId": "update_skill_api_schools__school_id__administration_skills__identifier__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Skill"
+      }
+    },
+    "/api/schools/{school_id}/administration/{collection}/{identifier}/archive": {
+      "post": {
+        "operationId": "archive_api_schools__school_id__administration__collection___identifier__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collection",
+            "required": true,
+            "schema": {
+              "title": "Collection",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive"
+      }
+    },
+    "/api/schools/{school_id}/administration/{collection}/{identifier}/restore": {
+      "post": {
+        "operationId": "archive_api_schools__school_id__administration__collection___identifier__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collection",
+            "required": true,
+            "schema": {
+              "title": "Collection",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive"
+      }
+    },
+    "/api/schools/{school_id}/administration/{collection}/{identifier}/versions": {
+      "get": {
+        "operationId": "versions_api_schools__school_id__administration__collection___identifier__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collection",
+            "required": true,
+            "schema": {
+              "title": "Collection",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Versions"
       }
     },
     "/api/schools/{school_id}/agents": {

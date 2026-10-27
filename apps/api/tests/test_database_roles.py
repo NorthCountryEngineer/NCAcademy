@@ -18,6 +18,7 @@ from academy.config import Settings
 from academy.database_roles import runtime_credentials
 from academy.main import create_app
 from academy.migrate import migrate
+from academy.permissions import default_school_id
 
 
 def test_core_postgres_migration_requires_separate_runtime_identity(monkeypatch):
@@ -66,12 +67,22 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
         headers = {"Origin": settings.app_url, "X-CSRF-Token": response.json()["csrf_token"]}
         assert client.post("/api/courses", json={"title": "Synthetic restricted-role course"}, headers=headers).status_code == 201
         assert client.get("/api/admin/audit/export").status_code == 200
+        # Real restricted-role administrative CRUD, local execution and JSONB
+        # metadata pagination. No provider or student content enters this report.
+        admin_base = "/api/schools/" + default_school_id(runtime_settings.tenant_id) + "/administration"
+        admin_created = client.post(admin_base + "/agents", json={"name": "Synthetic PostgreSQL setup reviewer"}, headers=headers)
+        assert admin_created.status_code == 201, admin_created.text
+        admin_agent = admin_created.json()
+        admin_run = client.post(admin_base + "/agents/" + admin_agent["id"] + "/runs", json={"expected_version": admin_agent["version"], "idempotency_key": "postgres-administrative-" + uuid4().hex}, headers=headers)
+        assert admin_run.status_code == 201 and admin_run.json()["status"] == "complete", admin_run.text
+        admin_activity = client.get(admin_base + "/activity", params={"kind": "administrative", "status": "complete", "limit": 1})
+        assert admin_activity.status_code == 200 and admin_activity.json()["total"] >= 1, admin_activity.text
+        assert set(admin_activity.json()["items"][0]) == {"id", "kind", "status", "name", "created_at", "completed_at", "agent_id", "can_open"}
         # Exercise PostgreSQL JSON ->> eligibility and required-class ordering
         # under the actual restricted runtime login. Core is explicitly mocked;
         # the student has a separate cookie jar and gains no native membership.
         from conftest import login
         from test_chat_groups import FakeCoreChat
-        from academy.permissions import default_school_id
         runtime_settings.core_chat_enabled = True
         runtime_settings.core_issuer = "https://core.example.test"
         runtime_settings.core_chat_installation_id = "33333333-3333-4333-8333-333333333333"
@@ -144,7 +155,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             for field,index_name in (("idempotency_key","academy_voice_key"),("budget_day","academy_voice_day"),("status","academy_voice_status")):
                 plan = connection.execute(text(f"EXPLAIN SELECT id FROM records WHERE kind='voice_operation' AND tenant_id='local-academy' AND owner_id='synthetic-student' AND CAST(CAST(data AS JSON)->>'{field}' AS VARCHAR)='synthetic-value'")).all()
                 assert any(index_name in str(row) for row in plan), plan
-        for kind in ("homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"):
+        for kind in ("admin_run", "homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"):
             identifier = "pending-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"status":"pending"}'})
@@ -155,7 +166,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})

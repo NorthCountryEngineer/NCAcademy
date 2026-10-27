@@ -12,7 +12,7 @@ from academy.migrate import migrate
 from academy.permissions import migrate_school_scopes
 
 
-PROTECTED = ('teacher_model_revision', 'teacher_model_approval', 'classroom_link_event', 'academy_chat_command', 'academy_chat_receipt', 'academy_chat_proposal', 'academy_chat_membership_event', 'school_curriculum_run', 'school_curriculum_publication', 'knowledge_workflow_run', 'homework_session', 'homework_message', 'homework_outcome', 'student_voice_preference', 'student_preference_revision', 'student_agent_feedback', 'submission', 'teacher_profile_revision', 'course_corpus', 'corpus_approval', 'external_resource_snapshot', 'external_audit_agent_revision', 'external_review_result', 'external_publication')
+PROTECTED = ('admin_agent_revision', 'admin_skill_revision', 'admin_run_send', 'admin_run_result', 'teacher_model_revision', 'teacher_model_approval', 'classroom_link_event', 'academy_chat_command', 'academy_chat_receipt', 'academy_chat_proposal', 'academy_chat_membership_event', 'school_curriculum_run', 'school_curriculum_publication', 'knowledge_workflow_run', 'homework_session', 'homework_message', 'homework_outcome', 'student_voice_preference', 'student_preference_revision', 'student_agent_feedback', 'submission', 'teacher_profile_revision', 'course_corpus', 'corpus_approval', 'external_resource_snapshot', 'external_audit_agent_revision', 'external_review_result', 'external_publication')
 
 
 def test_upgrade_preserves_legacy_records_and_audit_prefix_and_is_idempotent(tmp_path):
@@ -34,7 +34,7 @@ def test_upgrade_preserves_legacy_records_and_audit_prefix_and_is_idempotent(tmp
         assert all((db.get(Record,k).kind,db.get(Record,k).parent_id,db.get(Record,k).owner_id,db.get(Record,k).data,db.get(Record,k).created_at)==v for k,v in before_records.items())
         after = [(r.id,r.sequence,r.payload,r.hash,r.previous_hash,r.created_at) for r in db.scalars(select(Audit).order_by(Audit.sequence))]
         assert after[:len(before_events)] == before_events
-        assert len(after) == len(before_events)+10
+        assert len(after) == len(before_events)+11
         marker = db.get(Record,teaching_schema_id(settings.tenant_id))
         assert marker.value == {'version':3,'immutable_teaching_snapshots':True}
         assert db.get(Record,external_review_schema_id(settings.tenant_id)).value == {'version':4,'immutable_external_reviews':True}
@@ -81,7 +81,7 @@ def test_new_api_readiness_requires_teaching_schema_marker(app, client):
     assert client.get('/api/ready').status_code==200
 
 
-@pytest.mark.parametrize('kind', ['classroom_operation','academy_chat_attempt','turn','lesson_turn','external_review_job','voice_operation'])
+@pytest.mark.parametrize('kind', ['admin_run','classroom_operation','academy_chat_attempt','turn','lesson_turn','external_review_job','voice_operation'])
 def test_tutor_send_marker_and_completion_allowed_then_terminal_turn_is_sealed(app,kind):
     database=app.state.database
     with database.write() as db:
@@ -114,7 +114,7 @@ def test_schema4_upgrade_keeps_schema3_marker_and_requires_owner_migration(app, 
     assert client.get('/api/ready').status_code == 200
     from conftest import login
     login(client,'demo-admin')
-    assert client.get('/api/admin/settings').json()['schema_version'] == 12
+    assert client.get('/api/admin/settings').json()['schema_version'] == 13
 
 
 def test_schema6_requires_owner_migration_and_preserves_prior_evidence(app, client):

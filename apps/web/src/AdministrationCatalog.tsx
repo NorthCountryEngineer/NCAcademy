@@ -1,0 +1,14 @@
+import { useState, type ReactNode } from 'react';
+import { Search } from 'lucide-react';
+import { Empty } from './components';
+export type AdministrativeCatalogItem={id:string;name:string;description?:string;category?:string;tags?:string[];type?:string;enabled?:boolean;archived?:boolean;updated_at?:string};
+const normalized=(value:string)=>value.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+export function filterAdministrativeCatalog<T extends AdministrativeCatalogItem>(items:T[],query='',category='',type='',sort='name'){
+ const terms=(normalized(query).match(/"[^"]+"|\S+/g)||[]).map(term=>term.replace(/^"|"$/g,''));
+ return items.filter(item=>(!category||item.category===category||item.tags?.includes(category))&&(!type||item.type===type)&&terms.every(term=>normalized([item.name,item.description,item.category,item.type,...item.tags||[]].filter(Boolean).join(' ')).includes(term))).sort((a,b)=>sort==='updated'?(b.updated_at||'').localeCompare(a.updated_at||'')||a.name.localeCompare(b.name):a.name.localeCompare(b.name));
+}
+export function AdministrationCatalog<T extends AdministrativeCatalogItem>({items,noun,renderItem,filters}:{items:T[];noun:string;renderItem:(item:T)=>ReactNode;filters?:ReactNode}){
+ const [query,setQuery]=useState(''),[category,setCategory]=useState(''),[type,setType]=useState(''),[sort,setSort]=useState('name');
+ const categories=[...new Set(items.flatMap(item=>[item.category,...item.tags||[]].filter((value):value is string=>!!value)))].sort(),types=[...new Set(items.map(item=>item.type).filter((value):value is string=>!!value))].sort(),visible=filterAdministrativeCatalog(items,query,category,type,sort);
+ return <><div className="administration-catalog-toolbar"><label className="administration-search"><span>Search {noun}</span><div><Search size={16}/><input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Name, category or description"/></div></label><label>Category<select value={category} onChange={e=>setCategory(e.target.value)}><option value="">All categories</option>{categories.map(value=><option key={value} value={value}>{value}</option>)}</select></label>{types.length>0&&<label>Type<select value={type} onChange={e=>setType(e.target.value)}><option value="">All types</option>{types.map(value=><option key={value} value={value}>{value}</option>)}</select></label>}<label>Sort<select value={sort} onChange={e=>setSort(e.target.value)}><option value="name">Name</option><option value="updated">Recently updated</option></select></label>{filters}</div><p className="help-text" role="status">{visible.length} of {items.length} {noun}</p>{visible.length?<div className="administration-catalog-grid">{visible.map(item=><div key={item.id}>{renderItem(item)}</div>)}</div>:<section className="panel"><Empty title={`No matching ${noun}`}>Change the search or filters.</Empty></section>}</>;
+}
