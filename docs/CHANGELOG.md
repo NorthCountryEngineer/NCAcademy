@@ -1,5 +1,12 @@
 # Changelog
 
+## October 26, 2026 — Game Studio integration
+
+- Add a school-scoped public Game Studio connection, explicit catalog/descriptor checks and separate top-level authoring navigation.
+- Import exact published game data into immutable Academy packages; associate drafts with class learning objectives and lesson labels, and require human review before student use.
+- Play approved snapshots in Academy's fixed opaque-origin sandbox without external accounts, nickname boards, scores, storage or arbitrary game code. Recheck current publication and class authority before student playback.
+- Document the next steps for course-aware conversational authoring, educational engine extensions and reviewed game selection in curated lessons.
+
 ## Administrative workspace — October 26, 2026
 
 - Reworked administrative settings around Proposal Studio's searchable integration marketplace, administrative agent and skill catalogs, while retaining Academy's tutoring, Homework Help, audit and deployment policy controls.

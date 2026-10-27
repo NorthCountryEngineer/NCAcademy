@@ -19,6 +19,25 @@ Create uses `expected_version: 0`; edits and lifecycle changes must match the cu
 
 Accepted model work commits a send marker before external I/O, rechecks current authority/configuration and records a sealed outcome before release. Reusing a launch key reads the prior accepted run; it never resends an uncertain request. Reports cannot execute tools, approve/publish materials, change policy or read learner content. Legacy activity projection reads only allowlisted structural metadata from stored JSON and does not decrypt student sessions. Existing session-audit APIs remain separate. See [administrative settings](administrative-settings.md) and the generated [OpenAPI reference](reference/openapi.json).
 
+## Game Studio and class practice games
+
+These routes use the existing school/class session authority. Local student accounts stay local; the integration reads public Game Studio data without forwarding credentials or student details.
+
+| Method and route | Contract |
+| --- | --- |
+| `GET /api/schools/{school_id}/game-studio` | Current connection and runtime contract; defaults disabled. Human school staff only. |
+| `PUT /api/schools/{school_id}/game-studio` | Human Admin/School saves origins, host ID and enabled state with `expected_version`; no network request. |
+| `POST /api/schools/{school_id}/game-studio/verify` | Explicit public descriptor check with `expected_version`; creator navigation and optional host-return readiness are separate. |
+| `GET /api/schools/{school_id}/game-studio/catalog` | One bounded public catalog page; optional opaque `cursor`, no automatic all-pages fetch. |
+| `GET /api/courses/{course_id}/games` | Staff drafts or currently approved student metadata; no student game definition in this response. |
+| `POST /api/courses/{course_id}/games` | Prepare a draft from exact `game_id`, `published_revision`, `spec_sha256`, `learning_objective`, `lesson_label` and `idempotency_key`; refetch and validate server-side. |
+| `GET /api/courses/{course_id}/games/{resource_id}` | Authorized staff preview of the retained package. |
+| `POST /api/courses/{course_id}/games/{resource_id}/approve` | Human Admin/School attests `reviewed: true`, all exact `reviewed_level_ids` and `expected_version`. |
+| `POST /api/courses/{course_id}/games/{resource_id}/revoke` | Human Admin/School revocation with `expected_version`; prior package and approval evidence remain immutable. |
+| `POST /api/courses/{course_id}/games/{resource_id}/play` | Empty object body; fresh upstream edition/hash and current class/session/approval checks before audited local snapshot delivery. |
+
+GameSpec versions 1 and 2 are data-only fixed-engine inputs. Unknown fields, executable content and unsupported mechanics are rejected. Human approval is bound to the package, school connection revision, class context and `game-studio-data-v1` implementation digest. An upstream update or withdrawal blocks a new play request; it cannot silently replace the approved definition. Gameplay has no account federation, public scores, private student export or grade submission. See [the integration and extension plan](game-studio.md).
+
 ## Course and teaching contracts
 
 Course create/update accepts an optional `teacher_profile_ids` list for the school's reusable human/AI teaching profiles, independently of `teacher_id` (the existing responsible account). Omitting the profile list preserves assignments; an explicit empty list removes this class's profile assignments. Explicit null, duplicate IDs and invalid ID shapes are rejected with 422. Editors may send `expected_teacher_profile_ids` with an explicit selection; a changed current team returns 409 and rolls back the entire course update. Staff course responses include planned `teacher_profile_ids` and minimal `assigned_teacher_profiles` labels even before teaching readiness; students receive only existing approved teaching cards. Selection does not grant Core access or approve teaching materials. Only human School/Admin users can change the list. Same-school active-profile validation and all assignment/workflow changes are atomic. See [course teacher assignment](teachers-and-standards.md).

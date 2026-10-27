@@ -1,0 +1,50 @@
+# Game Studio integration and learning games
+
+Game Studio owns conversational game design and publication. NCAcademy owns the relationship between a game, a class and its intended lesson, plus approval for student use. Students keep their Academy accounts; this integration creates no Game Studio or Core identity for them.
+
+## First workflow
+
+1. Open **Administrative settings → Integrations → Game Studio** for the selected school. Set the Game Studio website origin, public API origin and optional configured host ID. Saving settings makes no external request and enables no model.
+2. Choose **Verify public connection** to inspect the service's public integration descriptor. Catalog connectivity and the configured return link are separate checks. **Open Game Studio** opens its normal top-level creator workspace, where its own Core permissions apply.
+3. Create and refine a game in Game Studio, playtest it and publish it there. Its existing guided designer works without a model. A separately enabled Game Studio assistant follows that application's model configuration and execution limits.
+4. In an Academy class, open **Practice games**, explicitly load the published catalog and choose a game. Add the learning objective and a lesson label. Importing creates a class draft with the exact published game definition and edition; it does not publish to students.
+5. A human School/Admin previews the retained game, reviews every level and its instructional fit, and approves that exact draft. A teacher can prepare a draft; an AI teacher cannot approve or publish it.
+6. Enrolled students can choose **Play** for an approved game. Academy checks current class access, local approval and the upstream publication before returning the retained game to its local isolated player.
+
+If Game Studio has an exact configured Academy host and return path, its selection return can prefill a review. Returned `gameStudioOrigin`, `gameStudioGameId` and `gameStudioRevision` values are untrusted public navigation data. They never import a game, choose a tenant, grant permissions or save a lesson automatically. An unconfigured host can still use normal top-level creation and manually return to Academy's catalog.
+
+The existing standalone service's public descriptor and catalog were read on October 26, 2026. It then had no published games and configured an Axolotl News return host only. These observations are operational evidence, not defaults or a promise that a particular installation remains available. School configuration stays explicit. The public service origins observed were `https://production.d2z19juex5y7z7.amplifyapp.com` and `https://go95sum8ni.execute-api.us-east-1.amazonaws.com`.
+
+## Reviewed snapshots and playback
+
+The remote Game Studio embed follows its canonical game ID. A later publication can therefore change that remote player. Academy instead imports strictly validated GameSpec version 1 or 2 data, retains an immutable package and runs its own pinned copy of the fixed engine. An approval binds the exact package hash, published edition, school connection revision, class context and Academy runtime contract. Editing that context, disabling the connection or revoking the approval blocks new student playback.
+
+Before a new student play request succeeds, Academy reads the current public game through its backend and compares the edition and definition hash. A changed, withdrawn, unavailable or unsupported publication cannot silently replace an approved snapshot. A changed edition must be imported and reviewed again. An already running browser game has its fixed local snapshot; there is no remote kill or real-time revocation channel in this version.
+
+The player uses an opaque-origin iframe with `sandbox="allow-scripts"`, a restrictive no-network document policy and validated messages bound to the exact frame and a random per-play nonce. Game data cannot supply scripts, HTML, remote assets, URLs or new executable mechanics. The frame receives no Academy tokens, account identifiers, questions, assignment photographs or private records. It has no app storage, account prompts, public nickname boards or score submission. Published Game Studio content remains public in its original service; Academy's lesson association does not make that original publication private.
+
+Imported authored text, level order, saved seeds and supported mechanics are preserved. The source engine provenance and implementation hash are retained under `apps/web/src/game-studio-runtime/`. The first runtime contract is `game-studio-data-v1`. Changing its implementation requires matching source evidence and new approvals; it must not silently inherit earlier playtest attestations.
+
+Current games support collection, dodge/Asteroids and platform mechanics, up to eight seeded levels and the existing fixed arcade options. Their schema has no question bank, standard identifiers, educational assessment or arbitrary assets. A learning objective beside a game is a teacher's intended association, not proof that the game teaches or assesses that objective. Gameplay is optional practice. Completion and points are client-reported observations, not grades or proof of learning. This first integration saves no individual gameplay scores or progress; normal authorized-play access remains audited. Local-family audit evidence uses the existing independent PII encryption key.
+
+## Integration and policy boundaries
+
+Only public Game Studio data endpoints are read by Academy. The transport accepts exact public HTTPS origins, checks all DNS results and pins the selected address with verified TLS. It rejects private addresses, redirects, cookies, proxy configuration, unsupported routes, duplicate JSON fields and oversized responses. No Academy bearer token or student data is forwarded. Settings and imports are school-scoped; class preparation, approval and student access are enforced by the API.
+
+Game Studio authoring remains a separate top-level sign-in using that installation's `games-create` and `games-publish` authority. An Academy administrator role is not a Game Studio permission grant. Adding the optional host return requires Game Studio's normal deployment-owned exact-origin/return-path configuration. Do not copy another service's credentials or add student SSO to make the link work.
+
+The existing audit agent can review supplied text and supported media evidence; it cannot certify arbitrary executable game behavior. Game imports therefore require an explicit human content review and all-level playtest attestation before Academy publication. They cannot use text-only automatic approval to bypass that step. This adds a separate reviewed game resource without widening the current assignment, Lesson Q&A, Homework Help or curated-lesson output contracts.
+
+## Next extensions
+
+1. **Course-aware design briefs.** Add a versioned educational brief containing reviewed curriculum references, grade range, learning objectives, supported interaction type and accessibility needs. Keep it separate from the executable game schema. Send only administrator-approved public teaching context; student profiles, work and chat remain in Academy.
+2. **Conversational authoring in Academy.** Add a reviewed Game Studio delegation contract with an explicit service audience, authoring scopes, school ownership, budgets and current authority checks. Each requested change should produce a private draft, retain prompt/model/usage/send evidence and preserve uncertain-operation recovery. Neither a teacher persona nor a model can grant itself publication authority.
+3. **Educational mechanics.** Extend Game Studio's versioned validated schema and fixed engine for curriculum-appropriate interactions such as classification, sequencing or question practice. Include answer disclosure rules, source citations, accessibility alternatives and tests for each new mechanic. Prompt text alone cannot add a mechanic to the current engine.
+4. **Curated-lesson selection.** Let a lesson agent select only IDs from the class's current approved game pool, with exact snapshot references and human-approved sequencing rules. Extend lesson bundles, replay and revocation checks explicitly; do not insert arbitrary iframe HTML into a lesson response.
+5. **Private learning evidence.** If gameplay progress is needed, bind advisory outcomes to Academy's own current student session and exact lesson/game version, encrypt and retain that evidence locally, and document its limits. Keep public arcade boards and identities separate. Educational assessment needs its own server-side evidence and review policy.
+
+## Validation and deployment
+
+Run the focused backend, transport and player/UI suites with the locked project dependencies. Tests use synthetic state and mocked public HTTP; no live model or student records are needed. Browser acceptance should cover configuration, explicit catalog import, draft preview, human approval, enrolled-student play and withholding after republishing, disabling or revocation. Verify that the player makes no network requests and cannot reach app storage or score APIs.
+
+Schema 14 adds immutable Game Studio connection revisions, imported packages and publication evidence while preserving schema 2–13 protections and historical ciphertext. Use the normal Core migration and exact-commit release process; do not run an older owner migration afterwards. A code release, configured connection, published game and human-approved class attachment are distinct milestones. No lesson game becomes available merely because its integration card exists.

@@ -78,6 +78,21 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
         admin_activity = client.get(admin_base + "/activity", params={"kind": "administrative", "status": "complete", "limit": 1})
         assert admin_activity.status_code == 200 and admin_activity.json()["total"] >= 1, admin_activity.text
         assert set(admin_activity.json()["items"][0]) == {"id", "kind", "status", "name", "created_at", "completed_at", "agent_id", "can_open"}
+        # Game Studio snapshots and human approvals also run under the real
+        # restricted login. The transport is synthetic, public-data-only JSON;
+        # no external origin or provider is contacted by this test.
+        from test_game_studio import API, STUDIO, published, import_game, approve
+        game_base = "/api/schools/" + default_school_id(runtime_settings.tenant_id) + "/game-studio"
+        game_settings = client.get(game_base).json()
+        saved_game_settings = client.put(game_base, json={"expected_version": game_settings["version"], "enabled": True, "studio_origin": STUDIO, "api_origin": API}, headers=headers)
+        assert saved_game_settings.status_code == 200, saved_game_settings.text
+        public_game_calls = []
+        def public_game(origin, path):
+            public_game_calls.append((origin, path))
+            assert origin == API and path == "/games/published/" + published()["id"]
+            return published()
+        application.state.game_studio_fetch = public_game
+        game_item = approve(client, headers, import_game(client, application, headers, key="postgres-game-" + uuid4().hex))
         # Exercise PostgreSQL JSON ->> eligibility and required-class ordering
         # under the actual restricted runtime login. Core is explicitly mocked;
         # the student has a separate cookie jar and gains no native membership.
@@ -141,6 +156,9 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             assert submitted.status_code == 201, submitted.text
             assert local_student.get("/api/assignments/demo-assignment").json()["draft"]["content"] == private_work
             assert local_student.get("/api/chat/groups").status_code == 403
+            local_game = local_student.post("/api/courses/demo-course/games/" + game_item["id"] + "/play", json={}, headers=local_headers)
+            assert local_game.status_code == 200 and local_game.json()["spec"] == published()["spec"], local_game.text
+            assert len(public_game_calls) == 2
             with application.state.database.factory() as db:
                 raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
                 assert all(secret not in raw for secret in (private_name, private_password, private_work, family.json()["username"]))
@@ -166,7 +184,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("game_studio_revision", "game_package", "game_publication", "admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})

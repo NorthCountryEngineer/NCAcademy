@@ -7,3 +7,7 @@ Runtime dependencies retain their respective licenses. Python dependencies inclu
 The 2024 NCAcademy download is a reference only. None of its Terraform implementation or license has been relicensed into this project.
 
 YouTube embeds and public oEmbed metadata are fetched only on explicit authorized actions under YouTube service terms. This source package contains no downloaded YouTube video, audio, captions, thumbnail or player HTML. Teachers supply transcripts and teaching notes with permission confirmation. See docs/external-media-review.md for official embedding references and coverage boundaries.
+
+## Game Studio engine provenance
+
+The Academy learning-game player adapts the fixed engine and strict data schema from NorthCountryEngineer/Game_Studio at source `f09860b9973b0359ea36684aad66618bf7a67bbf`. That service extracted its original game foundation from NorthCountryEngineer/Axolotl_News at `38719feef155e068ae8566fe21b3918f0809488b`. Only engine/schema code is adapted; stories, artwork, private conversations, credentials and production data are excluded. Exact source hashes and Academy runtime adaptations are recorded in `apps/web/src/game-studio-runtime/provenance.json` and `SOURCE-NOTICE.md`. Existing dependency notices and licenses remain applicable.
