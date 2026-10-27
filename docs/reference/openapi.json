@@ -505,6 +505,288 @@
         "title": "AuditAgentInput",
         "type": "object"
       },
+      "AvatarCloseScan": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_version",
+          "reason"
+        ],
+        "title": "AvatarCloseScan",
+        "type": "object"
+      },
+      "AvatarDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_version",
+          "decision",
+          "reason"
+        ],
+        "title": "AvatarDecision",
+        "type": "object"
+      },
+      "AvatarImage": {
+        "additionalProperties": false,
+        "properties": {
+          "data_base64": {
+            "maxLength": 266668,
+            "minLength": 1,
+            "title": "Data Base64",
+            "type": "string"
+          },
+          "mime_type": {
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "title": "Mime Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mime_type",
+          "data_base64"
+        ],
+        "title": "AvatarImage",
+        "type": "object"
+      },
+      "AvatarPolicyApproval": {
+        "additionalProperties": false,
+        "properties": {
+          "revision_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id"
+        ],
+        "title": "AvatarPolicyApproval",
+        "type": "object"
+      },
+      "AvatarPolicyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_image_processing": {
+            "default": false,
+            "title": "Allow Image Processing",
+            "type": "boolean"
+          },
+          "connection_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id"
+          },
+          "enabled": {
+            "default": false,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "image_capable": {
+            "default": false,
+            "title": "Image Capable",
+            "type": "boolean"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "minLength": 1,
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "other_threshold": {
+            "default": 0.35,
+            "maximum": 0.95,
+            "minimum": 0.05,
+            "title": "Other Threshold",
+            "type": "number"
+          },
+          "sexual_threshold": {
+            "default": 0.2,
+            "maximum": 0.95,
+            "minimum": 0.05,
+            "title": "Sexual Threshold",
+            "type": "number"
+          },
+          "violence_threshold": {
+            "default": 0.35,
+            "maximum": 0.95,
+            "minimum": 0.05,
+            "title": "Violence Threshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "AvatarPolicyInput",
+        "type": "object"
+      },
+      "AvatarReveal": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledge_sensitive_content": {
+            "const": true,
+            "title": "Acknowledge Sensitive Content",
+            "type": "boolean"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version",
+          "acknowledge_sensitive_content"
+        ],
+        "title": "AvatarReveal",
+        "type": "object"
+      },
+      "AvatarScan": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_to_scan": {
+            "const": true,
+            "title": "Consent To Scan",
+            "type": "boolean"
+          },
+          "expected_policy_approval_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Expected Policy Approval Id",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version",
+          "consent_to_scan",
+          "expected_policy_approval_id"
+        ],
+        "title": "AvatarScan",
+        "type": "object"
+      },
+      "AvatarUpload": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_to_scan": {
+            "default": false,
+            "title": "Consent To Scan",
+            "type": "boolean"
+          },
+          "expected_policy_approval_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Policy Approval Id"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 100,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/AvatarImage"
+          }
+        },
+        "required": [
+          "expected_version",
+          "idempotency_key",
+          "image"
+        ],
+        "title": "AvatarUpload",
+        "type": "object"
+      },
+      "AvatarVersion": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "AvatarVersion",
+        "type": "object"
+      },
       "Candidate": {
         "additionalProperties": false,
         "properties": {
@@ -11210,6 +11492,443 @@
         "summary": "School Audit Export"
       }
     },
+    "/api/schools/{school_id}/avatar-policy": {
+      "get": {
+        "operationId": "get_policy_api_schools__school_id__avatar_policy_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Policy"
+      },
+      "put": {
+        "operationId": "save_policy_api_schools__school_id__avatar_policy_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarPolicyInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Policy"
+      }
+    },
+    "/api/schools/{school_id}/avatar-policy/approve": {
+      "post": {
+        "operationId": "approve_policy_api_schools__school_id__avatar_policy_approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarPolicyApproval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Policy"
+      }
+    },
+    "/api/schools/{school_id}/avatar-reviews": {
+      "get": {
+        "operationId": "review_queue_api_schools__school_id__avatar_reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "pending",
+              "pattern": "^(pending|all)$",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Queue"
+      }
+    },
+    "/api/schools/{school_id}/avatar-reviews/{avatar_id}": {
+      "get": {
+        "operationId": "review_detail_api_schools__school_id__avatar_reviews__avatar_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Detail"
+      }
+    },
+    "/api/schools/{school_id}/avatar-reviews/{avatar_id}/close-scan": {
+      "post": {
+        "operationId": "close_scan_api_schools__school_id__avatar_reviews__avatar_id__close_scan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarCloseScan"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Scan"
+      }
+    },
+    "/api/schools/{school_id}/avatar-reviews/{avatar_id}/decision": {
+      "post": {
+        "operationId": "decision_api_schools__school_id__avatar_reviews__avatar_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decision"
+      }
+    },
+    "/api/schools/{school_id}/avatar-reviews/{avatar_id}/reveal": {
+      "post": {
+        "operationId": "reveal_api_schools__school_id__avatar_reviews__avatar_id__reveal_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarReveal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reveal"
+      }
+    },
+    "/api/schools/{school_id}/avatars/{avatar_id}/image": {
+      "get": {
+        "operationId": "avatar_image_api_schools__school_id__avatars__avatar_id__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Avatar Image"
+      }
+    },
     "/api/schools/{school_id}/changes": {
       "get": {
         "operationId": "changes_api_schools__school_id__changes_get",
@@ -11597,6 +12316,189 @@
           }
         },
         "summary": "Verify"
+      }
+    },
+    "/api/schools/{school_id}/me/avatar": {
+      "delete": {
+        "operationId": "remove_avatar_api_schools__school_id__me_avatar_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarVersion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Avatar"
+      },
+      "get": {
+        "operationId": "own_avatar_api_schools__school_id__me_avatar_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Own Avatar"
+      },
+      "post": {
+        "operationId": "upload_avatar_api_schools__school_id__me_avatar_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Avatar"
+      }
+    },
+    "/api/schools/{school_id}/me/avatar/{avatar_id}/scan": {
+      "post": {
+        "operationId": "scan_avatar_api_schools__school_id__me_avatar__avatar_id__scan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "school_id",
+            "required": true,
+            "schema": {
+              "title": "School Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "avatar_id",
+            "required": true,
+            "schema": {
+              "title": "Avatar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvatarScan"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scan Avatar"
       }
     },
     "/api/schools/{school_id}/members": {

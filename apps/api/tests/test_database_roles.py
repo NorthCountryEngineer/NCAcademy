@@ -159,6 +159,23 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             local_game = local_student.post("/api/courses/demo-course/games/" + game_item["id"] + "/play", json={}, headers=local_headers)
             assert local_game.status_code == 200 and local_game.json()["spec"] == published()["spec"], local_game.text
             assert len(public_game_calls) == 2
+            # Avatar pixels, quarantine and human review use the real restricted
+            # PostgreSQL role and independent PII key for this local identity.
+            from test_student_avatars import picture
+            avatar_base = "/api/schools/" + school_id
+            uploaded_avatar = local_student.post(avatar_base + "/me/avatar", json={"expected_version": 0, "idempotency_key": "postgres-avatar-" + uuid4().hex, "consent_to_scan": False, "image": picture()}, headers=local_headers)
+            assert uploaded_avatar.status_code == 201, uploaded_avatar.text
+            avatar = uploaded_avatar.json()
+            avatar_id = avatar["latest"]["id"]
+            assert avatar["current"] is None and avatar["latest"]["status"] == "manual_review"
+            assert local_student.get(avatar_base + "/avatars/" + avatar_id + "/image").status_code == 404
+            avatar_detail = client.get(avatar_base + "/avatar-reviews/" + avatar_id)
+            assert avatar_detail.status_code == 200 and avatar_detail.json()["student_name"] == private_name, avatar_detail.text
+            revealed_avatar = client.post(avatar_base + "/avatar-reviews/" + avatar_id + "/reveal", json={"expected_version": avatar_detail.json()["version"], "acknowledge_sensitive_content": True}, headers=headers)
+            assert revealed_avatar.status_code == 200 and revealed_avatar.content.startswith(b"\xff\xd8"), revealed_avatar.text
+            approved_avatar = client.post(avatar_base + "/avatar-reviews/" + avatar_id + "/decision", json={"expected_version": avatar_detail.json()["version"], "decision": "approve", "reason": "Synthetic human approval of exact PostgreSQL avatar pixels."}, headers=headers)
+            assert approved_avatar.status_code == 200 and approved_avatar.json()["status"] == "approved", approved_avatar.text
+            assert local_student.get(avatar_base + "/avatars/" + avatar_id + "/image").status_code == 200
             with application.state.database.factory() as db:
                 raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
                 assert all(secret not in raw for secret in (private_name, private_password, private_work, family.json()["username"]))
@@ -184,7 +201,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("game_studio_revision", "game_package", "game_publication", "admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("avatar_policy_revision", "avatar_policy_approval", "avatar_upload", "avatar_scan_send", "avatar_scan_result", "avatar_review", "avatar_scan_closure", "game_studio_revision", "game_package", "game_publication", "admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})

@@ -23,16 +23,17 @@ export type Replay = {turns?:Turn[];events?:Record<string,unknown>[];session?:Re
 let csrf='';
 export function setCsrf(value:string){csrf=value;}
 export class ApiError extends Error {constructor(message:string,public status:number){super(message);}}
-export async function request<T>(path:string,options:RequestInit={}):Promise<T>{
+async function authenticatedResponse(path:string,options:RequestInit={}):Promise<Response>{
  const method=(options.method||'GET').toUpperCase();
  const headers=new Headers(options.headers);
  if(options.body)headers.set('Content-Type','application/json');
  if(!['GET','HEAD','OPTIONS'].includes(method)&&csrf)headers.set('X-CSRF-Token',csrf);
  const response=await fetch(`/api${path}`,{...options,method,headers,credentials:'same-origin',cache:'no-store'});
  if(!response.ok){let message=`Request failed (${response.status})`;try{const body=await response.json();const detail=body.detail||body.error;message=typeof detail==='string'?detail:detail?JSON.stringify(detail):message;}catch{/* Empty errors have a status fallback. */}throw new ApiError(message,response.status);}
- if(response.status===204)return undefined as T;
- return response.json() as Promise<T>;
+ return response;
 }
+export async function request<T>(path:string,options:RequestInit={}):Promise<T>{const response=await authenticatedResponse(path,options);return response.status===204?undefined as T:response.json() as Promise<T>;}
+export async function requestBlob(path:string,options:RequestInit={}):Promise<Blob>{const response=await authenticatedResponse(path,options);return response.blob();}
 export const send=<T,>(path:string,value:unknown,method='POST')=>request<T>(path,{method,body:JSON.stringify(value)});
 export const errorText=(error:unknown)=>error instanceof Error?error.message:'The request could not be completed.';
 export const roleLabel=(role:string)=>({admin:'Admin',school:'School admin',teacher:'Teacher',instructor:'Teacher',student:'Student',parent:'Parent'}[role]||'No school access');

@@ -142,3 +142,22 @@ Human school managers use `GET/PUT /api/schools/{school_id}/audit-agent` and `GE
 `/api/homework-help` provides the enrolled routing catalog and own conversation index. Student mutations create immutable sessions/messages; an explicit same-key resume can recover a request interrupted before lesson admission. Photo-aware messages alone accept 400,000 HTTP bytes. School/Admin humans discover and review conversations through separate audited catalog/review endpoints, including pre-triage evidence. See [the complete Homework contract](homework-help.md).
 
 `/api/admin/voice` exposes scoped status/configuration with write-only key replacement. Course voice routes maintain personal stock-voice choices, accept consentful bounded WAV transcription and synthesize only a server-derived owned released reply. The transcription route alone has a 4,300,000-byte HTTP cap; real PCM remains capped at 3 MiB/30 seconds. Receipt lookup never resends uncertain work. Schema 6 preserves immutable Homework/voice evidence. See [the complete voice contract](homework-voice.md).
+
+
+## Student avatars and moderation
+
+All routes below begin `/api/schools/{school_id}`. Avatar images, state and decision evidence use the independent family PII key for every Student identity. Student routes enforce current enrollment in the school; review and policy routes require a current human Admin or School administrator. Teachers, agents and parents have no review or private-image authority.
+
+| Route | Contract |
+| --- | --- |
+| `GET/PUT /avatar-policy` | Read or save a versioned school image-scanner draft, exact integrated model, image-processing permission and risk thresholds. |
+| `POST /avatar-policy/approve` | Human approval of the exact immutable `revision_id`. Configuration changes require fresh approval and student consent. |
+| `GET/POST /me/avatar`, `DELETE /me/avatar` | Read status, upload a bounded normalized image with optimistic version/idempotency controls, or remove the current display pointer. Upload consent binds `expected_policy_approval_id`; no approval means private manual review. |
+| `POST /me/avatar/{avatar_id}/scan` | Explicitly admit a retained upload to the exact approved scanner. Pending/uncertain sends cannot be retried automatically. |
+| `GET /avatars/{avatar_id}/image` | Private JPEG for the current approved avatar only; no public or unreviewed image URLs. |
+| `GET /avatar-reviews`, `GET /avatar-reviews/{avatar_id}` | Metadata-only queue and retained admission, scanner, threshold, policy, model and human decision evidence. |
+| `POST /avatar-reviews/{avatar_id}/reveal` | Explicit acknowledged sensitive-image reveal, with `expected_version`; never a queue thumbnail. |
+| `POST /avatar-reviews/{avatar_id}/decision` | Human approve/reject of the exact current version with a reason of at least ten characters. |
+| `POST /avatar-reviews/{avatar_id}/close-scan` | Explicitly close an interrupted scan before manual review, retaining the uncertain send and any late report. |
+
+Sexual findings quarantine the image; violence and other inappropriate-content findings require human review. Unscanned, invalid and uncertain results remain hidden. A late unsafe report re-hides that exact candidate even after an earlier human approval, preserving the earlier decision and requiring renewed review. The API records fixed category/rule evidence, not provider free text or hidden chain of thought. See [student avatars](student-avatars.md) and the [typed OpenAPI reference](reference/openapi.json) for exact inputs, privacy boundaries and limits.

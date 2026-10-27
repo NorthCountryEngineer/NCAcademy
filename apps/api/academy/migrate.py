@@ -2,7 +2,7 @@
 import json
 from sqlalchemy import text, select
 from .config import Settings
-from .db import Base, Database, Audit, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, teacher_models_schema_id, administration_schema_id, game_studio_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
+from .db import Base, Database, Audit, AuditHead, Record, audit, canonical, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, teacher_models_schema_id, administration_schema_id, game_studio_schema_id, student_avatar_schema_id, IMMUTABLE_RECORD_KINDS, SEALED_JOB_KINDS
 from .database_roles import configure_runtime_role, runtime_credentials
 from .permissions import migrate_school_scopes
 
@@ -123,6 +123,10 @@ def migrate(settings=None):
         if not db.get(Record, game_studio_marker):
             db.add(Record(id=game_studio_marker, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 14, "immutable_reviewed_practice_games": True})))
             audit(db, settings.tenant_id, "deployment-migration", "schema.game_studio_initialized", {"version": 14, "historical_records_preserved": True, "local_student_data_only": True})
+        student_avatar_marker = student_avatar_schema_id(settings.tenant_id)
+        if not db.get(Record, student_avatar_marker):
+            db.add(Record(id=student_avatar_marker, tenant_id=settings.tenant_id, kind="schema", data=canonical({"version": 15, "encrypted_reviewed_student_avatars": True})))
+            audit(db, settings.tenant_id, "deployment-migration", "schema.student_avatars_initialized", {"version": 15, "historical_records_preserved": True, "independent_pii_key": True})
     database.engine.dispose()
 
 

@@ -12,7 +12,7 @@ from sqlalchemy import select, text
 
 from .auth import Auth
 from .config import Settings
-from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, teacher_models_schema_id, administration_schema_id, game_studio_schema_id
+from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, teacher_models_schema_id, administration_schema_id, game_studio_schema_id, student_avatar_schema_id
 from .family_accounts import register_family_api, record_enrollment_change
 from .permissions import normalized_role, global_admin, scope_id, bind_scope, school_role, require_school, default_school_id, membership_id
 from .school_api import register_school_api
@@ -28,6 +28,8 @@ from .teacher_models import register_teacher_model_api
 from .administration import register_administration_api
 from .game_studio import register_game_studio_api
 from .game_studio_transport import fetch_public as fetch_game_studio_public
+from .student_avatars import register_student_avatar_api
+from .avatar_scanner import scan_avatar as scan_student_avatar
 from .lesson_api import register_lesson_api, lesson_session_id
 from .curated_lesson_api import register_curated_lesson_api, safe_lesson_data
 from .standards_api import register_standards_api
@@ -50,6 +52,8 @@ def request_body_limit(method, path):
         return 4300000
     if method == "POST" and (re.fullmatch(r"/api/courses/[^/]{1,64}/curated-lessons", path) or re.fullmatch(r"/api/homework-help/(?:ai/)?sessions/[^/]{1,64}/messages", path)):
         return 400000
+    if method == "POST" and re.fullmatch(r"/api/schools/[^/]{1,64}/me/avatar", path):
+        return 280000
     return 150000
 
 
@@ -100,6 +104,7 @@ def create_app(settings=None):
     app.state.settings, app.state.database, app.state.auth = settings, database, auth
     app.state.classify = provider.classify
     app.state.game_studio_fetch = fetch_game_studio_public
+    app.state.scan_avatar = scan_student_avatar
     app.state.fetch_youtube_metadata = fetch_youtube_metadata
     app.state.authorize_teacher = lambda profile_id, school_id, course_id: authorize_teacher(auth, profile_id, school_id, course_id)
     app.state.core_chat_transport = CoreChatTransport(auth, settings)
@@ -348,6 +353,9 @@ def create_app(settings=None):
                     raise ValueError()
                 game_studio_schema = db.get(Record, game_studio_schema_id(settings.tenant_id))
                 if not game_studio_schema or game_studio_schema.kind != "schema" or game_studio_schema.value.get("version") != 14:
+                    raise ValueError()
+                avatar_schema = db.get(Record, student_avatar_schema_id(settings.tenant_id))
+                if not avatar_schema or avatar_schema.kind != "schema" or avatar_schema.value.get("version") != 15:
                     raise ValueError()
                 from .audit_delivery import AuditDeliveryOutbox, AuditDeliveryState, AuditDeliveryReceipt
                 for table in (AuditDeliveryOutbox, AuditDeliveryState, AuditDeliveryReceipt):
@@ -635,7 +643,7 @@ def create_app(settings=None):
     @app.get("/api/admin/settings")
     def settings_status(identity=Depends(actor)):
         admin(identity)
-        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 14, "administrative_reviews": "fixed local checks or separately configured model advisory reports; no automatic actions", "homework_help_output": "separately approved generated tutoring; independent safety review; no student-work completion"}
+        return {"auth_mode": settings.auth_mode, "live_models_enabled": settings.allow_live_models, "student_output": "instructor-approved text only", "provider_protocol": "openai_compatible", "automatic_retry": False, "student_streaming": False, "audit": "append-only SHA-256 chain; external retention required for production", "core_token_refresh": "sign in again on expiry", "model_credentials": "encrypted, status-only", "schema_version": 15, "administrative_reviews": "fixed local checks or separately configured model advisory reports; no automatic actions", "homework_help_output": "separately approved generated tutoring; independent safety review; no student-work completion"}
 
     @app.get("/api/admin/connections")
     def connections(school_id: str | None = None, identity=Depends(actor)):
@@ -994,6 +1002,7 @@ def create_app(settings=None):
     register_teacher_model_api(app, database, settings, actor, audit_actor)
     register_administration_api(app, database, auth, settings, actor, audit_actor)
     register_game_studio_api(app, database, auth, settings, actor, audit_actor)
+    register_student_avatar_api(app, database, auth, settings, actor, audit_actor)
     register_lesson_api(app, database, auth, settings, actor, audit_actor)
     curate_lesson = register_curated_lesson_api(app, database, auth, settings, actor, audit_actor, review_session=review_session)
     register_homework_api(app, database, auth, settings, actor, audit_actor, curate_lesson)

@@ -1,5 +1,12 @@
 # Changelog
 
+## October 27, 2026 — student avatars and moderation
+
+- Added private student avatar uploads and approved-only workspace display with bounded, metadata-free raster normalization.
+- Added a school-approved image-scanning interface, exact provider/policy consent, fixed quarantine rules and bounded single-send execution. Sexual content remains hidden; violence, other safety concerns and uncertainty require human review.
+- Added an administrator review queue with explicit sensitive-image reveal, risk-score/threshold explanations, immutable model/policy/image evidence, reasoned decisions and interrupted/late-scan handling.
+- Added independent PII encryption for all student avatar evidence and additive schema-15 SQL protections; earlier identities, ciphertext and audit history are preserved.
+
 ## October 26, 2026 — Game Studio integration
 
 - Add a school-scoped public Game Studio connection, explicit catalog/descriptor checks and separate top-level authoring navigation.
