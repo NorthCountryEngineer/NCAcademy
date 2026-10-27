@@ -25,6 +25,14 @@ PUBLIC_GAME_FIELDS = {"id", "spec", "revision", "status", "publishedRevision", "
 ROUTES = {"games": "/games", "game": "/games/{gameId}", "embed": "/embed/games/{gameId}", "studio": "/game-studio"}
 
 
+def _creator_url(config, host_configured):
+    # This asks Studio to start its own Core PKCE flow. No Academy credential
+    # or role is transferred, and automatic entry requires a verified host.
+    return config["studio_origin"] + "/game-studio" + (
+        "?" + urlencode({"host": config["host_id"], "login": "auto"}) if host_configured else ""
+    )
+
+
 def configuration_id(tenant, school):
     return "game-studio:" + digest([tenant, school])[:48]
 
@@ -191,7 +199,7 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
 
     def settings_descriptor(db, identity, school, role):
         row = db.get(Record, configuration_id(identity["tenant_id"], school))
-        manager = role in {"admin", "school"}
+        manager = role in {"admin", "school"} and identity.get("principal_kind", "human") == "human" and identity.get("auth_provider") != "academy"
         result = {"school_id": school, "version": 0, "enabled": False, "studio_origin": "", "api_origin": "", "host_id": "academy", "revision_id": None, "can_manage": manager, "can_browse": True, "creator_url": None, "host_configured": False, "creator_ready": False, "runtime_contract": RUNTIME_CONTRACT}
         if row:
             _found, config = _connection(db, identity, school, enabled=False, require_origins=False)
@@ -199,7 +207,7 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
             verified = row.value.get("verification") or {}
             if config["enabled"] and manager and verified.get("connection_revision_id") == config["revision_id"]:
                 result.update(creator_ready=True, host_configured=bool(verified.get("host_configured")))
-                result["creator_url"] = config["studio_origin"] + "/game-studio" + ("?" + urlencode({"host": config["host_id"]}) if result["host_configured"] else "")
+                result["creator_url"] = _creator_url(config, result["host_configured"])
         return result
 
     def resource(db, identity, course, school, identifier):
@@ -270,7 +278,7 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
                 raise HTTPException(409, "Game Studio settings changed during verification")
             row.set({**row.value, "verification": {"connection_revision_id": config["revision_id"], "host_configured": mapped, "verified_at": now(), "integration_sha256": digest(raw)}})
             audit_actor(db, current, "game_studio.connection_verified", {"school_id": school_id, "revision_id": config["revision_id"], "host_configured": mapped, "integration_sha256": digest(raw)})
-        creator = config["studio_origin"] + "/game-studio" + ("?" + urlencode({"host": config["host_id"]}) if mapped else "")
+        creator = _creator_url(config, mapped)
         return {"verified": True, "creator_url": creator, "creator_ready": True, "public_catalog_ready": True, "host_configured": mapped, "return_path": "/" if mapped else None, "connection_version": config["version"], "detail": "Game Studio creator and Academy return are configured." if mapped else "The public catalog is available. Open Game Studio separately, then return to Academy and import the published game manually; the Academy return host is not configured."}
 
     @app.get("/api/schools/{school_id}/game-studio/catalog")

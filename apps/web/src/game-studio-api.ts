@@ -1,6 +1,6 @@
 import { request, schoolPath, send } from './api';
 import { GAME_STUDIO_RUNTIME_CONTRACT, GAME_STUDIO_RUNTIME_DIGEST, validateGameSpec, type GameSpec, type GameResult } from './game-studio-runtime';
-export type GameStudioSettings={school_id:string;version:number;enabled:boolean;studio_origin:string;api_origin:string;host_id:string;revision_id:string|null;can_manage:boolean;can_browse:boolean;creator_url:string|null};
+export type GameStudioSettings={school_id:string;version:number;enabled:boolean;studio_origin:string;api_origin:string;host_id:string;revision_id:string|null;can_manage:boolean;can_browse:boolean;creator_url:string|null;creator_ready?:boolean;host_configured?:boolean};
 export type GameStudioSettingsDraft=Pick<GameStudioSettings,'enabled'|'studio_origin'|'api_origin'|'host_id'>;
 export type GameStudioVerification={verified:boolean;creator_url:string|null;creator_ready:boolean;public_catalog_ready:boolean;host_configured:boolean;return_path:string|null;connection_version:number;detail:string};
 export type GameStudioCatalogGame={game_id:string;published_revision:number;title:string;description:string;spec_sha256:string;level_ids:string[];genre:string;theme:string};
@@ -14,11 +14,22 @@ export type CourseGamePlay={spec:GameSpec;game_id:string;published_revision:numb
 export type CourseGamePreparation={game_id:string;published_revision:number;spec_sha256:string;learning_objective:string;lesson_label:string;idempotency_key:string;scoring_policy?:ScoringPolicy|null};
 export type GameStudioSelection={studio_origin:string;game_id:string;published_revision:number};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const settingsListeners=new Map<string,Set<()=>void>>();
+/** Notify only mounted consumers of this school's local connection metadata. */
+export function subscribeGameStudioSettings(schoolId:string,listener:()=>void):()=>void{
+ const listeners=settingsListeners.get(schoolId)||new Set<()=>void>();listeners.add(listener);settingsListeners.set(schoolId,listeners);
+ return ()=>{listeners.delete(listener);if(!listeners.size&&settingsListeners.get(schoolId)===listeners)settingsListeners.delete(schoolId);};
+}
+function settingsChanged(schoolId:string){for(const listener of settingsListeners.get(schoolId)||[])listener();}
 export const gameStudioPath=(schoolId:string,suffix='')=>`/schools/${encodeURIComponent(schoolId)}/game-studio${suffix}`;
 export const courseGamesPath=(schoolId:string,courseId:string,id?:string,action='')=>schoolPath(`/courses/${encodeURIComponent(courseId)}/games${id?`/${encodeURIComponent(id)}`:''}${action}`,schoolId);
 export const gameStudioSettings=(schoolId:string)=>request<GameStudioSettings>(gameStudioPath(schoolId));
-export const saveGameStudioSettings=(schoolId:string,value:GameStudioSettingsDraft,version:number)=>send<GameStudioSettings>(gameStudioPath(schoolId),{expected_version:version,enabled:value.enabled,studio_origin:value.studio_origin.trim(),api_origin:value.api_origin.trim(),host_id:value.host_id.trim()},'PUT');
-export const verifyGameStudio=(schoolId:string,version:number)=>send<GameStudioVerification>(gameStudioPath(schoolId,'/verify'),{expected_version:version});
+export async function saveGameStudioSettings(schoolId:string,value:GameStudioSettingsDraft,version:number){
+ const saved=await send<GameStudioSettings>(gameStudioPath(schoolId),{expected_version:version,enabled:value.enabled,studio_origin:value.studio_origin.trim(),api_origin:value.api_origin.trim(),host_id:value.host_id.trim()},'PUT');settingsChanged(schoolId);return saved;
+}
+export async function verifyGameStudio(schoolId:string,version:number){
+ const verified=await send<GameStudioVerification>(gameStudioPath(schoolId,'/verify'),{expected_version:version});settingsChanged(schoolId);return verified;
+}
 export const gameStudioCatalog=(schoolId:string,cursor?:string)=>request<GameStudioCatalog>(gameStudioPath(schoolId,`/catalog${cursor?`?cursor=${encodeURIComponent(cursor)}`:''}`));
 export const courseGames=(schoolId:string,courseId:string)=>request<CourseGameIndex>(courseGamesPath(schoolId,courseId));
 export const courseGameDetail=(schoolId:string,courseId:string,id:string)=>request<CourseGameDetail>(courseGamesPath(schoolId,courseId,id));
@@ -46,8 +57,14 @@ export function assertCourseGameSnapshot(value:CourseGameDetail|CourseGamePlay,e
 }
 export function gameStudioOrigin(value:string):string|null{try{const parsed=new URL(value);if((parsed.protocol!=='https:'&&!(parsed.protocol==='http:'&&['127.0.0.1','localhost'].includes(parsed.hostname)))||parsed.origin!==value||parsed.username||parsed.password||parsed.search||parsed.hash)return null;return parsed.origin;}catch{return null;}}
 export function gameStudioCreatorURL(value:GameStudioVerification,settings:GameStudioSettings):string|null{
- if(!settings.enabled||!value.verified||!value.creator_ready||value.connection_version!==settings.version||!value.creator_url||!gameStudioOrigin(settings.studio_origin))return null;
- try{const url=new URL(value.creator_url);if(url.origin!==settings.studio_origin||url.pathname!=='/game-studio'||url.hash||url.username||url.password)return null;if(!url.search)return url.href;if(!value.host_configured||[...url.searchParams.keys()].some(key=>key!=='host')||url.searchParams.getAll('host').length!==1||url.searchParams.get('host')!==settings.host_id)return null;return url.href;}catch{return null;}
+ if(!settings.can_manage||!settings.enabled||!value.verified||!value.creator_ready||value.connection_version!==settings.version||!value.creator_url||!gameStudioOrigin(settings.studio_origin))return null;
+ try{const url=new URL(value.creator_url);if(url.origin!==settings.studio_origin||url.pathname!=='/game-studio'||url.hash||url.username||url.password)return null;if(!url.search)return url.href;if(!value.host_configured||[...url.searchParams.keys()].some(key=>key!=='host'&&key!=='login')||url.searchParams.getAll('host').length!==1||url.searchParams.get('host')!==settings.host_id||url.searchParams.getAll('login').length>1||(url.searchParams.has('login')&&url.searchParams.get('login')!=='auto'))return null;return url.href;}catch{return null;}
+}
+/** Saved verification is scoped by the API to this exact connection revision. */
+export function savedGameStudioVerification(settings:GameStudioSettings):GameStudioVerification|null{
+ if(!settings.can_manage||!settings.enabled||settings.creator_ready!==true||!settings.creator_url)return null;
+ const value:GameStudioVerification={verified:true,creator_ready:true,creator_url:settings.creator_url,public_catalog_ready:true,host_configured:settings.host_configured===true,return_path:settings.host_configured===true?'/':null,connection_version:settings.version,detail:settings.host_configured===true?'The saved connection is verified. Game Studio uses your NCE Core sign-in and checks its own administrative access.':'The saved public connection is verified. Open Game Studio separately, then return to Academy manually.'};
+ return gameStudioCreatorURL(value,settings)?value:null;
 }
 export function readGameStudioSelection(locationURL:string,expectedStudioOrigin?:string):GameStudioSelection|null{
  try{const query=new URL(locationURL).searchParams,keys=['gameStudioOrigin','gameStudioGameId','gameStudioRevision'];if(keys.some(key=>query.getAll(key).length!==1))return null;const origin=query.get(keys[0])||'',id=query.get(keys[1])||'',revision=query.get(keys[2])||'';if(!gameStudioOrigin(origin)||(expectedStudioOrigin!==undefined&&origin!==expectedStudioOrigin)||!uuid.test(id)||!/^([1-9][0-9]{0,9})$/.test(revision)||Number(revision)>1000000000)return null;return {studio_origin:origin,game_id:id.toLowerCase(),published_revision:Number(revision)};}catch{return null;}

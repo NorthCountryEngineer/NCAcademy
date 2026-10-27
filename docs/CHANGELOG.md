@@ -1,5 +1,12 @@
 # Changelog
 
+## October 27, 2026 — administrative Game Studio launch
+
+- Added persistent Game Studio shortcuts to human Admin/School settings after exact school-connection verification; saved creator readiness survives reloads and scoped save/verify actions refresh the same-page shortcut without external automatic requests.
+- Connected creator links request Game Studio's own Core PKCE sign-in automatically through an exact host and `login=auto`, without forwarding Academy tokens, roles or local family identities.
+- Restricted creator links to human administrators and reject duplicate, foreign or token-bearing launch parameters. Teachers retain public-catalog draft preparation only.
+- Preserved imported game definitions, approvals, the existing player/runtime contract and encrypted scoring history; this navigation change adds no migration or game/score rewrite.
+
 ## October 27, 2026 — host-owned game assignment points
 
 - Added independent per-class game scoring policies with 25/100/custom scales, proportional/completion/explicit arcade-target rules, rounding and repeat-attempt settings.

@@ -1,5 +1,11 @@
 # Verification record
 
+## Administrative Game Studio launch — October 27, 2026
+
+The focused Game Studio, public-transport and assignment-scoring backend suites passed **161 tests** with synthetic records and outbound network access blocked. They include persisted verified creator descriptors for human Admin/School administrators, exact-host automatic sign-in URLs, local Student/Parent denial, teacher/agent boundaries and unchanged imported game/approval records during creator reads. Existing scoring encryption, attempt admission and historical evidence regressions remain passing.
+
+All **459 frontend tests across 33 files** passed, along with TypeScript and the production Vite build, using bundled Node 24.19.0. Tests cover restored creator readiness after reload, persistent admin shortcuts, current administrative capabilities, disabled/unverified/foreign-school settings, same-page invalidation after saving or verifying the scoped connection, stale refresh rejection and rejection of unknown, duplicate or token-bearing launch parameters. No schema, migration, game engine, runtime contract or scoring implementation changed. These are local automated results; deployment, live Core SSO and production preservation are verified separately by the release process. No live provider or real student session was used.
+
 ## Student avatars and administrator moderation — October 27, 2026
 
 The complete backend/archive/script suite passed **1,881 tests with zero skips**, including all three isolated real PostgreSQL cases. The new avatar checks include **43 application tests**, **40 image-scanner transport tests** and **13 independent adversarial security tests**. They use only synthetic records, harmless image fixtures and mocked provider transports. Coverage includes image normalization and metadata stripping, independent PII encryption for local and Core Student identities, strict score parsing, exact approved-policy consent, quota/idempotency/uncertain-send controls, current school authority, interrupted scans and late unsafe reports, explicit private reveal, human decisions and retention. Full CI additionally runs all three isolated real PostgreSQL cases, including actual restricted-role avatar upload/reveal/approval/image access and SQL rejection of mutation to every new immutable evidence kind.

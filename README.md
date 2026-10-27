@@ -4,6 +4,8 @@ An independent NCE Core education application with schools, classes, assignments
 
 The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. The current schema-16 source adds configurable game assignment points, encrypted attempt history and human-reviewed awards alongside private student avatars, quarantine review, Game Studio connections, reviewed class games and the administrative marketplace, configurable agents, bounded skills, activity, teacher model policies, generative Homework Help and protected audit retention. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
 
+Human Admin/School administrators can open the standalone Game Studio from their administrative settings header after verifying the school's connection. Exact configured hosts start Game Studio's own Core sign-in automatically, reusing the Core browser session when available. Academy keeps its own session and student accounts; existing imported games, approvals and scores stay in Academy. See [Game Studio setup](docs/game-studio.md).
+
 ## Local preview
 
 Docker Compose is the supported self-contained preview. Run from this directory:

@@ -91,11 +91,55 @@ def test_verify_supports_bare_creator_and_exact_host_return_without_tokens(clien
     assert client.get(base(app)).json()["creator_url"] == STUDIO + "/game-studio"
     monkeypatch.setattr(app.state, "game_studio_fetch", lambda *_: {"version": 1, "routes": ROUTES, "hosts": [{"id": "academy", "name": "Academy", "origin": app.state.settings.app_url, "returnPath": "/"}]})
     mapped = client.post(base(app) + "/verify", json={"expected_version": 1}, headers=headers).json()
-    assert mapped["host_configured"] and mapped["creator_url"] == STUDIO + "/game-studio?host=academy" and mapped["return_path"] == "/"
+    assert mapped["host_configured"] and mapped["creator_url"] == STUDIO + "/game-studio?host=academy&login=auto" and mapped["return_path"] == "/"
     assert calls == [(API, "/integration")]
     login(client, "demo-instructor")
     assert client.get(base(app)).json()["creator_url"] is None
     assert client.post(base(app) + "/verify", json={"expected_version": 1}, headers=login(client, "demo-instructor")).status_code == 403
+
+
+def test_saved_creator_entry_is_admin_only_and_reads_preserve_game_records_without_external_requests(client, app, monkeypatch):
+    hosts = [{"id": "academy", "name": "Academy", "origin": app.state.settings.app_url, "returnPath": "/"}]
+    headers, game, calls = setup(client, app, monkeypatch, hosts=hosts)
+    approve(client, headers, import_game(client, app, headers, game))
+    assert client.post(base(app) + "/verify", json={"expected_version": 1}, headers=headers).status_code == 200
+    before = [row for row in records(app) if row[1].startswith("game_") or row[1] == "course_game"]
+    for account in ["demo-admin", "demo-school"]:
+        login(client, account)
+        value = client.get(base(app)).json()
+        assert value["can_manage"] and value["creator_ready"] and value["host_configured"]
+        assert value["creator_url"] == STUDIO + "/game-studio?host=academy&login=auto"
+        assert "token" not in value["creator_url"]
+    login(client, "demo-instructor")
+    value = client.get(base(app)).json()
+    assert not value["can_manage"] and not value["creator_ready"] and value["creator_url"] is None
+    login(client, "demo-student")
+    assert client.get(base(app)).status_code == 403
+    assert calls == [(API, "/games/published/" + GAME_ID), (API, "/integration")]
+    assert [row for row in records(app) if row[1].startswith("game_") or row[1] == "course_game"] == before
+
+
+@pytest.mark.parametrize("change", ["origin", "return_path", "duplicate_host"])
+def test_automatic_creator_entry_requires_exact_verified_host(client, app, monkeypatch, change):
+    host = {"id": "academy", "name": "Academy", "origin": app.state.settings.app_url, "returnPath": "/"}
+    if change == "origin": host["origin"] = "https://foreign.example.test"
+    if change == "return_path": host["returnPath"] = "/other"
+    headers, _game, _calls = setup(client, app, monkeypatch, hosts=[host] * (2 if change == "duplicate_host" else 1))
+    verified = client.post(base(app) + "/verify", json={"expected_version": 1}, headers=headers).json()
+    assert not verified["host_configured"] and verified["creator_url"] == STUDIO + "/game-studio"
+    assert client.get(base(app)).json()["creator_url"] == STUDIO + "/game-studio"
+
+
+def test_local_family_sessions_cannot_read_a_verified_creator_entry(client, app, monkeypatch):
+    from test_family_accounts import parent, password_login, student
+    headers, _game, calls = setup(client, app, monkeypatch, hosts=[{"id": "academy", "name": "Academy", "origin": app.state.settings.app_url, "returnPath": "/"}])
+    assert client.post(base(app) + "/verify", json={"expected_version": 1}, headers=headers).status_code == 200
+    child = student(client, app, headers)
+    parent(client, headers, child)
+    for username in ["sample.student", "sample.parent"]:
+        password_login(client, username)
+        assert client.get(base(app)).status_code == 403
+    assert calls == [(API, "/integration")]
 
 
 def test_catalog_and_teacher_import_are_explicit_public_reads_without_class_profile_mutation(client, app, monkeypatch):

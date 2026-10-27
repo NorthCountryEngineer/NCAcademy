@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { GameStudioIntegration, GameStudioCatalogList, GameStudioConnectionReview } from './GameStudioIntegration';
+import { GameStudioIntegration, GameStudioCatalogList, GameStudioConnectionReview, GameStudioAdminLaunch, canLaunchGameStudio } from './GameStudioIntegration';
 import { CourseGames, CourseGameReview, CourseGamePreparationForm } from './CourseGames';
 import { GameStudioPlayer } from './GameStudioPlayer';
 import { GameScoringFields, GameScoringSettings, GameAttemptHistory, GameAttemptAwardForm, defaultGameScoringPolicy, parseGameScoringPolicy } from './GameScoring';
@@ -9,10 +9,10 @@ import { Notice } from './components';
 import { GameStudioIntegration as IntegrationView } from './GameStudioIntegration';
 import { IntegrationMarketplace } from './AdministrationIntegrations';
 import { GAME_STUDIO_RUNTIME_CONTRACT, GAME_STUDIO_RUNTIME_DIGEST, type GameSpec } from './game-studio-runtime';
-import type { CourseGame, GameAttempt, GameStudioSettings, GameStudioVerification } from './game-studio-api';
-import type { School } from './api';
-const hooks=vi.hoisted(()=>({states:[] as unknown[],dependencies:[] as (readonly unknown[]|undefined)[],memos:[] as {dependencies:readonly unknown[];value:unknown}[],index:0,effectIndex:0,memoIndex:0,pending:[] as (()=>void)[],dirty:false}));
-vi.mock('react',async importOriginal=>({...await importOriginal<typeof import('react')>(),useState:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push(typeof initial==='function'?initial():initial);return [hooks.states[index],(value:unknown)=>{const next=typeof value==='function'?value(hooks.states[index]):value;if(!Object.is(next,hooks.states[index])){hooks.states[index]=next;hooks.dirty=true;}}];},useRef:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push({current:initial});return hooks.states[index];},useCallback:(value:unknown,dependencies:readonly unknown[])=>{const index=hooks.memoIndex++,previous=hooks.memos[index];if(!previous||dependencies.length!==previous.dependencies.length||dependencies.some((item,i)=>!Object.is(item,previous.dependencies[i])))hooks.memos[index]={dependencies,value};return hooks.memos[index].value;},useEffect:(effect:()=>void,dependencies?:readonly unknown[])=>{const index=hooks.effectIndex++,previous=hooks.dependencies[index];if(!previous||!dependencies||previous.length!==dependencies.length||dependencies.some((value,i)=>!Object.is(value,previous[i]))){hooks.dependencies[index]=dependencies;hooks.pending.push(effect);}}}));
+import { saveGameStudioSettings, verifyGameStudio, type CourseGame, type GameAttempt, type GameStudioSettings, type GameStudioVerification } from './game-studio-api';
+import type { School, User } from './api';
+const hooks=vi.hoisted(()=>({states:[] as unknown[],dependencies:[] as (readonly unknown[]|undefined)[],memos:[] as {dependencies:readonly unknown[];value:unknown}[],index:0,effectIndex:0,memoIndex:0,pending:[] as (()=>void)[],cleanups:[] as ((()=>void)|undefined)[],dirty:false}));
+vi.mock('react',async importOriginal=>({...await importOriginal<typeof import('react')>(),useState:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push(typeof initial==='function'?initial():initial);return [hooks.states[index],(value:unknown)=>{const next=typeof value==='function'?value(hooks.states[index]):value;if(!Object.is(next,hooks.states[index])){hooks.states[index]=next;hooks.dirty=true;}}];},useRef:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push({current:initial});return hooks.states[index];},useCallback:(value:unknown,dependencies:readonly unknown[])=>{const index=hooks.memoIndex++,previous=hooks.memos[index];if(!previous||dependencies.length!==previous.dependencies.length||dependencies.some((item,i)=>!Object.is(item,previous.dependencies[i])))hooks.memos[index]={dependencies,value};return hooks.memos[index].value;},useEffect:(effect:()=>void|(()=>void),dependencies?:readonly unknown[])=>{const index=hooks.effectIndex++,previous=hooks.dependencies[index];if(!previous||!dependencies||previous.length!==dependencies.length||dependencies.some((value,i)=>!Object.is(value,previous[i]))){hooks.dependencies[index]=dependencies;hooks.pending.push(()=>{hooks.cleanups[index]?.();const cleanup=effect();hooks.cleanups[index]=typeof cleanup==='function'?cleanup:undefined;});}}}));
 
 type Element=ReactElement<{children?:ReactNode;disabled?:boolean;checked?:boolean;value?:unknown;error?:string;success?:string;items?:Record<string,unknown>[];filters?:ReactNode;change?:(value:string)=>void;renderItem?:(item:Record<string,unknown>)=>ReactNode;onChange?:(event:{target:{checked?:boolean;value?:string}})=>void;onClick?:()=>void|Promise<void>;onSubmit?:(event:{preventDefault:()=>void})=>Promise<void>}>;
 function nodes(node:ReactNode):Element[]{if(Array.isArray(node))return node.flatMap(nodes);if(!isValidElement<{children?:ReactNode}>(node))return [];return [node as Element,...nodes(node.props.children)];}
@@ -29,8 +29,57 @@ const spec:GameSpec={version:1,title:'Practice adventure',description:'Collect w
 const game:CourseGame={id:'attachment-a',course_id:'course-a',school_id:'school-a',version:2,status:'draft',game_id:'11111111-1111-4111-8111-111111111111',published_revision:4,spec_sha256:'a'.repeat(64),title:'Practice adventure',description:'Practice',level_ids:['level-1'],genre:'collect',theme:'pond',learning_objective:'Practice observation',lesson_label:'Observation',approval_id:null,can_manage:true,can_approve:true,can_play:true,can_revoke:false,runtime_contract:{id:GAME_STUDIO_RUNTIME_CONTRACT,sha256:GAME_STUDIO_RUNTIME_DIGEST}};
 const catalog={games:[game],cursor:null,connection_version:3};
 const school:School={id:'school-a',name:'School',description:'',core_resource_id:null,role:'admin',effective_role:'admin',capabilities:{manage_school:true,manage_members:true,manage_agents:true,manage_resources:true,create_course:true,approve_changes:true,manage_connections:true}};
-afterEach(()=>{hooks.states=[];hooks.dependencies=[];hooks.memos=[];hooks.pending=[];hooks.index=0;hooks.effectIndex=0;hooks.memoIndex=0;hooks.dirty=false;vi.unstubAllGlobals();});
+afterEach(()=>{hooks.cleanups.forEach(cleanup=>cleanup?.());hooks.cleanups=[];hooks.states=[];hooks.dependencies=[];hooks.memos=[];hooks.pending=[];hooks.index=0;hooks.effectIndex=0;hooks.memoIndex=0;hooks.dirty=false;vi.unstubAllGlobals();});
 describe('Game Studio integration settings',()=>{
+ it('restores a saved verified creator link after reload without verifying or importing automatically',async()=>{
+  const saved={...settings,creator_ready:true,host_configured:true,creator_url:settings.studio_origin+'/game-studio?host=academy&login=auto'},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify(saved)));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioIntegration({schoolId:'school-a'}));ui.render();await settle();
+  expect(ui.find(GameStudioConnectionReview)?.props).toMatchObject({creator:saved.creator_url});expect(fetcher).toHaveBeenCalledOnce();
+  change(ui.label('Configured host ID'),'other');expect(ui.find(GameStudioConnectionReview)?.props).toMatchObject({creator:null});
+ });
+ it('shows the persistent admin shortcut using only saved local settings',async()=>{
+  const saved={...settings,creator_ready:true,host_configured:true,creator_url:settings.studio_origin+'/game-studio?host=academy&login=auto'},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify(saved)));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioAdminLaunch({school,user:{id:'admin',name:'Admin',role:'admin',auth_provider:'core',principal_kind:'human'}}));ui.render();await settle();
+  expect(ui.find('a','Game Studio')?.props).toMatchObject({href:saved.creator_url,target:'_blank',rel:'noopener noreferrer'});expect(fetcher).toHaveBeenCalledOnce();expect(fetcher.mock.calls[0][0]).toBe('/api/schools/school-a/game-studio');
+ });
+ it('refreshes the same-page shortcut after disable, connection changes and explicit verification',async()=>{
+  let saved:GameStudioSettings={...settings,creator_ready:true,host_configured:true,creator_url:settings.studio_origin+'/game-studio?host=academy&login=auto'};
+  const fetcher=vi.fn().mockImplementation(async(path:string,options?:RequestInit)=>{
+   if(options?.method==='PUT'){const update=JSON.parse(String(options.body));saved={...saved,...update,version:saved.version+1,creator_url:null,creator_ready:false,host_configured:false};}
+   if(path.endsWith('/verify')){saved={...saved,creator_ready:true,host_configured:true,creator_url:saved.studio_origin+'/game-studio?host=academy&login=auto'};return new Response(JSON.stringify({...verification,creator_url:saved.creator_url,host_configured:true,connection_version:saved.version}));}
+   return new Response(JSON.stringify(saved));
+  });vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioAdminLaunch({school,user:{id:'admin',name:'Admin',role:'admin',auth_provider:'core',principal_kind:'human'}}));ui.render();await settle();expect(ui.find('a','Game Studio')).toBeDefined();
+  await saveGameStudioSettings(school.id,{...saved,enabled:false},saved.version);await settle();expect(ui.find('a','Game Studio')).toBeUndefined();
+  await saveGameStudioSettings(school.id,{...saved,enabled:true,studio_origin:'https://new-studio.example.org'},saved.version);await settle();expect(ui.find('a','Game Studio')).toBeUndefined();
+  await verifyGameStudio(school.id,saved.version);await settle();expect(ui.find('a','Game Studio')?.props).toMatchObject({href:'https://new-studio.example.org/game-studio?host=academy&login=auto'});
+  expect(fetcher.mock.calls.filter(call=>!call[1]?.method||call[1].method==='GET')).toHaveLength(4);expect(fetcher.mock.calls.every(call=>String(call[0]).startsWith('/api/schools/school-a/game-studio'))).toBe(true);
+ });
+ it('ignores an older shortcut refresh after a connection invalidation',async()=>{
+  const ready={...settings,creator_ready:true,host_configured:true,creator_url:settings.studio_origin+'/game-studio?host=academy&login=auto'};
+  let reads=0,finish!:(response:Response)=>void;
+  const fetcher=vi.fn().mockImplementation(async(_path:string,options?:RequestInit)=>{
+   if(options?.method==='PUT')return new Response(JSON.stringify({...settings,enabled:false,version:4}));
+   reads++;return reads===1?new Promise<Response>(resolve=>{finish=resolve;}):new Response(JSON.stringify({...settings,enabled:false,version:4}));
+  });vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioAdminLaunch({school,user:{id:'admin',name:'Admin',role:'admin',auth_provider:'core',principal_kind:'human'}}));ui.render();
+  await saveGameStudioSettings(school.id,{...settings,enabled:false},settings.version);await settle();expect(ui.find('a','Game Studio')).toBeUndefined();
+  finish(new Response(JSON.stringify(ready)));await settle();expect(ui.find('a','Game Studio')).toBeUndefined();
+ });
+ it.each([{enabled:false},{creator_ready:false},{can_manage:false},{school_id:'other-school'}])('withholds the shortcut for unavailable or mismatched saved settings %j',async change=>{
+  const saved={...settings,creator_ready:true,host_configured:true,creator_url:settings.studio_origin+'/game-studio?host=academy&login=auto',...change},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify(saved)));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioAdminLaunch({school,user:{id:'admin',name:'Admin',role:'admin',auth_provider:'core',principal_kind:'human'}}));ui.render();await settle();expect(ui.find('a','Game Studio')).toBeUndefined();expect(fetcher).toHaveBeenCalledOnce();
+ });
+ it.each([
+  {role:'teacher'}, {role:'student'}, {role:'parent'}, {role:'admin',principal_kind:'agent'}, {role:'admin',auth_provider:'academy'},
+ ])('does not request creator settings for an ineligible identity %j',async change=>{
+  const user={id:'restricted',name:'Restricted',auth_provider:'core',principal_kind:'human',...change} as User,restricted={...school,effective_role:user.role,capabilities:{...school.capabilities,manage_school:user.role==='admin'}} as School,fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameStudioAdminLaunch({school:restricted,user}));expect(ui.render()).toBeNull();await settle();expect(fetcher).not.toHaveBeenCalled();
+ });
+ it('requires both school administration capabilities and accepts a human School administrator',()=>{
+  const user:User={id:'school-admin',name:'School Admin',role:'school',auth_provider:'core',principal_kind:'human'},scoped={...school,effective_role:'school' as const};
+  expect(canLaunchGameStudio(user,scoped)).toBe(true);expect(canLaunchGameStudio(user,{...scoped,capabilities:{...scoped.capabilities,manage_connections:false}})).toBe(false);expect(canLaunchGameStudio(user,{...scoped,capabilities:{...scoped.capabilities,manage_school:false}})).toBe(false);
+ });
  it('loads only local connection settings on mount and calls verify/catalog only on explicit action',async()=>{const fetcher=vi.fn().mockImplementation(async(path:string)=>new Response(JSON.stringify(path.endsWith('/verify')?verification:path.includes('/catalog')?catalog:settings)));vi.stubGlobal('fetch',fetcher);const ui=view(()=>GameStudioIntegration({schoolId:'school-a'}));ui.render();await settle();expect(fetcher).toHaveBeenCalledOnce();expect(fetcher.mock.calls[0][0]).toBe('/api/schools/school-a/game-studio');await ui.find('button','Verify public connection')!.props.onClick!();await settle();expect(fetcher.mock.calls[1][0]).toContain('/verify');expect(ui.find(GameStudioConnectionReview)).toBeDefined();await ui.find('button','Load published games')!.props.onClick!();await settle();expect(fetcher.mock.calls[2][0]).toContain('/catalog');expect(ui.find(GameStudioCatalogList)?.props).toBeDefined();});
  it('saves configuration without verification or imports and invalidates prior verification',async()=>{const fetcher=vi.fn().mockImplementation(async(path:string,options?:RequestInit)=>new Response(JSON.stringify(path.endsWith('/verify')?verification:options?.method==='PUT'?{...settings,version:4}:settings)));vi.stubGlobal('fetch',fetcher);const ui=view(()=>GameStudioIntegration({schoolId:'school-a'}));ui.render();await settle();await ui.find('button','Verify public connection')!.props.onClick!();await settle();change(ui.label('Configured host ID'),'academy-new');expect(ui.find('button','Load published games')?.props.disabled).toBe(true);await submit(ui.find('form')!);expect(fetcher).toHaveBeenCalledTimes(3);expect(JSON.parse(fetcher.mock.calls[2][1].body).expected_version).toBe(3);expect(ui.find(GameStudioConnectionReview)).toBeUndefined();expect(ui.find(Notice)?.props.success).toContain('No external service or model was called');});
  it('shows a safe bare creator link and distinguishes manual return from connected-host readiness',()=>{const html=renderToStaticMarkup(GameStudioConnectionReview({verification,creator:verification.creator_url}));expect(html).toContain('Open Game Studio creator');expect(html).toContain('Manual return to Academy');expect(html).toContain('rel="noopener noreferrer"');expect(html).not.toContain('Creator host verified');});
