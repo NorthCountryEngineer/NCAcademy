@@ -159,6 +159,23 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             local_game = local_student.post("/api/courses/demo-course/games/" + game_item["id"] + "/play", json={}, headers=local_headers)
             assert local_game.status_code == 200 and local_game.json()["spec"] == published()["spec"], local_game.text
             assert len(public_game_calls) == 2
+            # Assignment admission, row locking, immutable terminal observations
+            # and reviewed credit also use the actual restricted runtime role.
+            from test_game_scoring import configure, LOST
+            game_item = approve(client, headers, configure(client, headers, game_item))
+            assignment_path = "/api/courses/demo-course/games/" + game_item["id"]
+            started = local_student.post(assignment_path + "/attempts", json={"idempotency_key": "postgres-game-attempt-" + uuid4().hex}, headers=local_headers)
+            assert started.status_code == 200, started.text
+            game_attempt = started.json()["attempt"]
+            observed = local_student.post(assignment_path + "/attempts/" + game_attempt["id"] + "/result", json={"result": LOST}, headers=local_headers)
+            assert observed.status_code == 200 and observed.json()["calculation"]["earned_points"] == 8.33, observed.text
+            assert observed.json()["award"] is None
+            game_reason = "Synthetic PostgreSQL private strategy credit review."
+            awarded = client.post(assignment_path + "/attempts/" + game_attempt["id"] + "/award", json={"points": 9, "reason": game_reason}, headers=headers)
+            assert awarded.status_code == 200 and awarded.json()["award"]["points"] == 9, awarded.text
+            attempts = local_student.get(assignment_path + "/attempts")
+            assert attempts.status_code == 200 and attempts.json()["summary"]["suggested_points"] == 8.33, attempts.text
+            assert attempts.json()["attempts"][0]["award"]["reason"] == game_reason
             # Avatar pixels, quarantine and human review use the real restricted
             # PostgreSQL role and independent PII key for this local identity.
             from test_student_avatars import picture
@@ -178,7 +195,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
             assert local_student.get(avatar_base + "/avatars/" + avatar_id + "/image").status_code == 200
             with application.state.database.factory() as db:
                 raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
-                assert all(secret not in raw for secret in (private_name, private_password, private_work, family.json()["username"]))
+                assert all(secret not in raw for secret in (private_name, private_password, private_work, family.json()["username"], game_reason))
             assert client.get("/api/audit/verify").json()["valid"] is True
         finally:
             local_student.close()
@@ -201,7 +218,7 @@ def test_real_postgres_runtime_can_operate_but_cannot_rewrite_audit_or_schema(mo
                     with engine.begin() as connection:
                         connection.execute(text(statement), {"id": identifier})
                 assert caught.value.orig.sqlstate == "P0001", kind
-        for kind in ("avatar_policy_revision", "avatar_policy_approval", "avatar_upload", "avatar_scan_send", "avatar_scan_result", "avatar_review", "avatar_scan_closure", "game_studio_revision", "game_package", "game_publication", "admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
+        for kind in ("avatar_policy_revision", "avatar_policy_approval", "avatar_upload", "avatar_scan_send", "avatar_scan_result", "avatar_review", "avatar_scan_closure", "game_studio_revision", "game_package", "game_publication", "game_scoring_revision", "game_attempt", "game_attempt_result", "game_attempt_award", "admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result", "teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"):
             identifier = "protected-" + uuid4().hex
             with engine.begin() as connection:
                 connection.execute(text("INSERT INTO records (id,tenant_id,kind,parent_id,owner_id,data,created_at) VALUES (:id,'local-academy',:kind,'','',:data,'2026-01-01')"), {"id": identifier, "kind": kind, "data": '{"original":true}'})

@@ -1416,6 +1416,16 @@
             "title": "Published Revision",
             "type": "integer"
           },
+          "scoring_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameScoringPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "spec_sha256": {
             "pattern": "^[a-f0-9]{64}$",
             "title": "Spec Sha256",
@@ -2423,10 +2433,171 @@
         "title": "GameApproval",
         "type": "object"
       },
+      "GameAttemptAward": {
+        "additionalProperties": false,
+        "properties": {
+          "points": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "number"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "points",
+          "reason"
+        ],
+        "title": "GameAttemptAward",
+        "type": "object"
+      },
+      "GameAttemptResult": {
+        "additionalProperties": false,
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "GameAttemptResult",
+        "type": "object"
+      },
+      "GameAttemptStart": {
+        "additionalProperties": false,
+        "properties": {
+          "idempotency_key": {
+            "maxLength": 100,
+            "minLength": 16,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Idempotency Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key"
+        ],
+        "title": "GameAttemptStart",
+        "type": "object"
+      },
       "GamePlay": {
         "additionalProperties": false,
         "properties": {},
         "title": "GamePlay",
+        "type": "object"
+      },
+      "GameScoringInput": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "scoring_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GameScoringPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "expected_version",
+          "scoring_policy"
+        ],
+        "title": "GameScoringInput",
+        "type": "object"
+      },
+      "GameScoringPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "arcade_target": {
+            "anyOf": [
+              {
+                "maximum": 1000000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arcade Target"
+          },
+          "attempt_policy": {
+            "enum": [
+              "first",
+              "latest",
+              "best"
+            ],
+            "title": "Attempt Policy",
+            "type": "string"
+          },
+          "max_attempts": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "max_points": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Points",
+            "type": "integer"
+          },
+          "method": {
+            "enum": [
+              "proportional",
+              "completion",
+              "arcade_target"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "reveal_policy": {
+            "default": "zero",
+            "enum": [
+              "zero",
+              "earned"
+            ],
+            "title": "Reveal Policy",
+            "type": "string"
+          },
+          "rounding": {
+            "enum": [
+              "whole",
+              "hundredth"
+            ],
+            "title": "Rounding",
+            "type": "string"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "max_points",
+          "method",
+          "rounding",
+          "attempt_policy",
+          "max_attempts"
+        ],
+        "title": "GameScoringPolicy",
         "type": "object"
       },
       "GameStudioSettings": {
@@ -7870,6 +8041,236 @@
         "summary": "Approve"
       }
     },
+    "/api/courses/{course_id}/games/{resource_id}/attempts": {
+      "get": {
+        "operationId": "list_attempts_api_courses__course_id__games__resource_id__attempts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Attempts"
+      },
+      "post": {
+        "operationId": "start_attempt_api_courses__course_id__games__resource_id__attempts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameAttemptStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Attempt"
+      }
+    },
+    "/api/courses/{course_id}/games/{resource_id}/attempts/{attempt_id}/award": {
+      "post": {
+        "operationId": "award_attempt_api_courses__course_id__games__resource_id__attempts__attempt_id__award_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameAttemptAward"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Award Attempt"
+      }
+    },
+    "/api/courses/{course_id}/games/{resource_id}/attempts/{attempt_id}/result": {
+      "post": {
+        "operationId": "save_result_api_courses__course_id__games__resource_id__attempts__attempt_id__result_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "attempt_id",
+            "required": true,
+            "schema": {
+              "title": "Attempt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameAttemptResult"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Result"
+      }
+    },
     "/api/courses/{course_id}/games/{resource_id}/play": {
       "post": {
         "operationId": "play_api_courses__course_id__games__resource_id__play_post",
@@ -7980,6 +8381,62 @@
           }
         },
         "summary": "Revoke"
+      }
+    },
+    "/api/courses/{course_id}/games/{resource_id}/scoring": {
+      "put": {
+        "operationId": "configure_scoring_api_courses__course_id__games__resource_id__scoring_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "required": true,
+            "schema": {
+              "title": "Resource Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameScoringInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Configure Scoring"
       }
     },
     "/api/courses/{course_id}/homework-help/review-sessions": {

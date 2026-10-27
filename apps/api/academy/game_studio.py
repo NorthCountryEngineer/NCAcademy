@@ -12,13 +12,14 @@ from sqlalchemy import select
 
 from .db import Record, canonical, now, uid
 from .game_spec import GameError, validate_spec, identifier
-from .game_studio_schemas import CourseGameInput, GameApproval, GamePlay, GameStudioSettings, GameStudioVersion
+from .game_studio_schemas import CourseGameInput, GameApproval, GamePlay, GameStudioSettings, GameStudioVersion, GameScoringInput, GameAttemptStart, GameAttemptResult, GameAttemptAward
+from .game_scoring import scoring_policy, calculate_points, select_attempt, validate_award
 from .game_studio_transport import validate_origin
 from .permissions import bind_scope, normalized_role, require_school, scope_id
 from .standards import digest
 
 
-RUNTIME_CONTRACT = {"id": "game-studio-data-v1", "sha256": "67964345866e0dffbb6ffb37c9e0ab30fc471a6284ffda32cd9ce0ccbc0c041d"}
+RUNTIME_CONTRACT = {"id": "game-studio-data-v2", "sha256": "8a95fdf521faa262ff8ef2b59d5311dac1c556713e679404621cb2d1324cd176"}
 CONFIG_FIELDS = ("enabled", "studio_origin", "api_origin", "host_id")
 PUBLIC_GAME_FIELDS = {"id", "spec", "revision", "status", "publishedRevision", "createdAt", "updatedAt", "publishedAt"}
 ROUTES = {"games": "/games", "game": "/games/{gameId}", "embed": "/embed/games/{gameId}", "studio": "/game-studio"}
@@ -91,7 +92,19 @@ def _course_context(course):
 
 
 def _teaching_context(resource):
-    return {key: resource.value.get(key) for key in ("learning_objective", "lesson_label")}
+    result = {key: resource.value.get(key) for key in ("learning_objective", "lesson_label")}
+    if resource.value.get("scoring_policy") is not None:
+        result.update(scoring_policy=resource.value["scoring_policy"], scoring_revision_id=resource.value.get("scoring_revision_id"))
+    return result
+
+
+def _scoring(db, identity, school, resource, spec):
+    policy = scoring_policy(resource.value.get("scoring_policy"), spec)
+    if policy is not None:
+        revision = _find(db, identity["tenant_id"], school, resource.value.get("scoring_revision_id", ""), "game_scoring_revision")
+        if revision.parent_id != resource.id or revision.value.get("scoring_policy") != policy or revision.value.get("sha256") != digest(policy):
+            raise HTTPException(409, "Assignment scoring does not match its immutable policy revision")
+    return policy
 
 
 def _package(db, identity, school, resource):
@@ -207,6 +220,7 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
         if role == "student" and not publication:
             raise HTTPException(404, "Approved practice game not found")
         result = {"id": row.id, "course_id": course.id, "school_id": school, "version": row.value["version"], "status": status, **_game_descriptor(package.value["game"]), "learning_objective": row.value["learning_objective"], "lesson_label": row.value["lesson_label"], "approval_id": publication.id if publication else None, "can_manage": staff, "can_approve": bool(manager and config), "can_revoke": manager and bool(row.value.get("approval_id")) and not row.value.get("revoked"), "can_play": bool(config and (staff or publication)), "runtime_contract": RUNTIME_CONTRACT}
+        result.update(scoring_policy=_scoring(db, identity, school, row, package.value["game"]["spec"]), can_configure_scoring=manager)
         if full and staff:
             result["spec"] = package.value["game"]["spec"]
         return result
@@ -292,7 +306,10 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
     @app.post("/api/courses/{course_id}/games", status_code=201)
     def import_game(course_id: str, body: CourseGameInput, request: Request, identity=Depends(actor)):
         key = "game-resource:" + digest([identity["tenant_id"], course_id, body.idempotency_key])[:48]
-        request_hash = digest(body.model_dump())
+        request_material = body.model_dump(exclude={"scoring_policy"})
+        if body.scoring_policy is not None:
+            request_material["scoring_policy"] = body.scoring_policy.snapshot()
+        request_hash = digest(request_material)
         with database.factory() as db:
             course, school, role = course_access(db, identity, course_id, True)
             existing = db.get(Record, key)
@@ -317,7 +334,11 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
                 if row.value.get("request_sha256") != request_hash:
                     raise HTTPException(409, "Game import key belongs to different input")
                 return describe(db, current, course, school, role, row, package)
-            row = _add(db, current, school, "course_game", {"version": 1, "learning_objective": body.learning_objective, "lesson_label": body.lesson_label, "request_sha256": request_hash, "approval_id": None, "revoked": False, "source_stale": False}, course.id, key)
+            policy = scoring_policy(body.scoring_policy.snapshot() if body.scoring_policy else None, game["spec"])
+            row = _add(db, current, school, "course_game", {"version": 1, "learning_objective": body.learning_objective, "lesson_label": body.lesson_label, "request_sha256": request_hash, "approval_id": None, "revoked": False, "source_stale": False, "scoring_policy": policy}, course.id, key)
+            if policy:
+                revision = _add(db, current, school, "game_scoring_revision", {"scoring_policy": policy, "sha256": digest(policy), "saved_by": current["id"], "saved_at": now()}, row.id)
+                row.set({**row.value, "scoring_revision_id": revision.id})
             material = {"game": game, "spec_sha256": body.spec_sha256, "studio_origin": config["studio_origin"], "api_origin": config["api_origin"], "connection_revision_id": config["revision_id"], "imported_at": now(), "source_commit": "f09860b9973b0359ea36684aad66618bf7a67bbf"}
             package = _add(db, current, school, "game_package", {**material, "package_sha256": digest(material)}, row.id)
             row.set({**row.value, "package_id": package.id})
@@ -336,6 +357,7 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
         with database.write() as db:
             course, school, role = course_access(db, identity, course_id, True); school_access(db, identity, school, True)
             row, package = resource(db, identity, course, school, resource_id); _record, config = _connection(db, identity, school)
+            _scoring(db, identity, school, row, package.value["game"]["spec"])
             if row.value["version"] != body.expected_version:
                 raise HTTPException(409, "Practice game changed; reload before approval")
             if set(body.reviewed_level_ids) != set(_levels(package.value["game"]["spec"])) or any(package.value[key] != config[key] for key in ("studio_origin", "api_origin")) or row.value.get("source_stale"):
@@ -357,12 +379,25 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
             audit_actor(db, identity, "game_studio.game_revoked", {"school_id": school, "course_id": course.id, "resource_id": row.id, "publication_id": row.value.get("approval_id")})
             return describe(db, identity, course, school, role, row, package)
 
-    @app.post("/api/courses/{course_id}/games/{resource_id}/play")
-    def play(course_id: str, resource_id: str, body: GamePlay, request: Request, identity=Depends(actor)):
+    def play_admission(course_id, resource_id, request, identity, start=None):
         with database.factory() as db:
             course, school, role = course_access(db, identity, course_id)
             row, package = resource(db, identity, course, school, resource_id); _record, config = _connection(db, identity, school)
             publication = _approval(db, identity, school, course, row, package, config)
+            if start is not None:
+                if role != "student":
+                    raise HTTPException(403, "Only enrolled students may start assignment attempts; staff use preview")
+                policy = _scoring(db, identity, school, row, package.value["game"]["spec"])
+                if policy is None:
+                    raise HTTPException(409, "This is an unscored practice game")
+                attempt_key = "game-attempt:" + digest([identity["tenant_id"], identity["id"], row.id, start.idempotency_key])[:48]
+                series = row.value.get("scoring_revision_id")
+                existing = db.get(Record, attempt_key)
+                attempts = list(db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "game_attempt", Record.parent_id == resource_id, Record.owner_id == identity["id"])))
+                if existing and (existing.value.get("scoring_revision_id") != series or existing.value.get("resource_version") != row.value["version"]):
+                    raise HTTPException(409, "Attempt key belongs to an earlier assignment publication")
+                if not existing and sum(item.value.get("scoring_revision_id") == series for item in attempts) >= policy["max_attempts"]:
+                    raise HTTPException(409, "This assignment's attempt limit has been reached")
             if role == "student" and not publication:
                 raise HTTPException(403, "A current human-approved practice game is required")
             wanted = package.value; version = row.value["version"]; context = _course_context(course)
@@ -388,4 +423,132 @@ def register_game_studio_api(app, database, auth, settings, actor, audit_actor):
                 raise HTTPException(409, "The practice game, approval, class or connection changed before play")
             audit_actor(db, current, "game_studio.game_play_admitted", {"school_id": school, "course_id": course.id, "resource_id": row.id, "student_id": current["id"] if role == "student" else None, "package_id": package.id, "publication_id": approval.id if approval else None, "spec_sha256": wanted["spec_sha256"], "runtime_contract": RUNTIME_CONTRACT, "preview": role != "student"})
             result = {"spec": package.value["game"]["spec"], "game_id": wanted["game"]["id"], "published_revision": wanted["game"]["publishedRevision"], "spec_sha256": wanted["spec_sha256"], "runtime_contract": RUNTIME_CONTRACT, "resource_id": row.id, "course_id": course.id, "preview": role != "student"}
+            if start is not None:
+                # Course row lock plus Database.write's transaction admission
+                # serialize the per-student ordinal and finite attempt budget.
+                db.scalar(select(Record).where(Record.id == course.id).with_for_update())
+                policy = _scoring(db, current, school, row, package.value["game"]["spec"])
+                existing = db.get(Record, attempt_key)
+                attempts = list(db.scalars(select(Record).where(Record.tenant_id == current["tenant_id"], Record.kind == "game_attempt", Record.parent_id == row.id, Record.owner_id == current["id"])))
+                same_series = [item for item in attempts if item.value.get("scoring_revision_id") == series]
+                if existing:
+                    if existing.tenant_id != current["tenant_id"] or existing.kind != "game_attempt" or existing.owner_id != current["id"] or existing.parent_id != row.id or existing.value.get("scoring_revision_id") != series or existing.value.get("resource_version") != version:
+                        raise HTTPException(409, "Attempt key belongs to different assignment input")
+                    attempt = existing
+                else:
+                    if len(same_series) >= policy["max_attempts"]:
+                        raise HTTPException(409, "This assignment's attempt limit has been reached")
+                    material = {"idempotency_key": start.idempotency_key, "course_id": course.id, "resource_id": row.id, "resource_version": version, "publication_id": approval.id, "package_id": package.id, "connection_revision_id": latest["revision_id"], "course_context": context, "game": package.value["game"], "spec_sha256": wanted["spec_sha256"], "runtime_contract": RUNTIME_CONTRACT, "scoring_policy": policy, "scoring_policy_sha256": digest(policy), "scoring_revision_id": series, "ordinal": len(same_series) + 1, "started_at": now()}
+                    attempt = _add(db, current, school, "game_attempt", {**material, "snapshot_sha256": digest(material)}, row.id, attempt_key)
+                    audit_actor(db, current, "game_studio.attempt_started", {"school_id": school, "course_id": course.id, "resource_id": row.id, "student_id": current["id"], "attempt_id": attempt.id, "snapshot_sha256": digest(material), "scoring_policy_sha256": digest(policy)})
+                result["attempt"] = attempt_descriptor(db, current, school, attempt)
         return result
+
+    @app.post("/api/courses/{course_id}/games/{resource_id}/play")
+    def play(course_id: str, resource_id: str, body: GamePlay, request: Request, identity=Depends(actor)):
+        return play_admission(course_id, resource_id, request, identity)
+
+    @app.put("/api/courses/{course_id}/games/{resource_id}/scoring")
+    def configure_scoring(course_id: str, resource_id: str, body: GameScoringInput, identity=Depends(actor)):
+        with database.write() as db:
+            course, school, role = course_access(db, identity, course_id, True); school_access(db, identity, school, True)
+            row, package = resource(db, identity, course, school, resource_id)
+            if row.value["version"] != body.expected_version:
+                raise HTTPException(409, "Game changed; reload before changing assignment points")
+            policy = scoring_policy(body.scoring_policy.snapshot() if body.scoring_policy else None, package.value["game"]["spec"])
+            revision = _add(db, identity, school, "game_scoring_revision", {"scoring_policy": policy, "sha256": digest(policy), "saved_by": identity["id"], "saved_at": now()}, row.id)
+            row.set({**row.value, "version": body.expected_version + 1, "scoring_policy": policy, "scoring_revision_id": revision.id, "approval_id": None})
+            audit_actor(db, identity, "game_studio.scoring_configured", {"school_id": school, "course_id": course.id, "resource_id": row.id, "scoring_revision_id": revision.id, "scoring_policy_sha256": digest(policy), "human_reapproval_required": True})
+            return describe(db, identity, course, school, role, row, package, True)
+
+    def attempt_row(db, identity, school, resource_id, attempt_id):
+        attempt = _find(db, identity["tenant_id"], school, attempt_id, "game_attempt")
+        value = attempt.value
+        if attempt.parent_id != resource_id or value.get("resource_id") != resource_id or value.get("snapshot_sha256") != digest({key: item for key, item in value.items() if key != "snapshot_sha256"}):
+            raise HTTPException(409, "Assignment attempt snapshot integrity check failed")
+        if value.get("spec_sha256") != digest(value.get("game", {}).get("spec")) or value.get("scoring_policy_sha256") != digest(value.get("scoring_policy")):
+            raise HTTPException(409, "Assignment attempt game or policy integrity check failed")
+        return attempt
+
+    def evidence_key(kind, identity, attempt):
+        return kind + ":" + digest([identity["tenant_id"], attempt.id])[:48]
+
+    def attempt_descriptor(db, identity, school, attempt):
+        value = attempt.value
+        result_row = db.get(Record, evidence_key("game-result", identity, attempt))
+        award_row = db.get(Record, evidence_key("game-award", identity, attempt))
+        for evidence, kind in ((result_row, "game_attempt_result"), (award_row, "game_attempt_award")):
+            if evidence and (evidence.tenant_id != identity["tenant_id"] or evidence.kind != kind or evidence.parent_id != attempt.id or evidence.owner_id != attempt.owner_id or scope_id(db, evidence) != school):
+                raise HTTPException(409, "Assignment evidence integrity check failed")
+        return {"id": attempt.id, "student_id": attempt.owner_id, "ordinal": value["ordinal"], "status": "observed" if result_row else "started", "resource_version": value["resource_version"], "scoring_revision_id": value["scoring_revision_id"], "scoring_policy": value["scoring_policy"], "scoring_policy_sha256": value["scoring_policy_sha256"], "started_at": value["started_at"], "result": result_row.value["result"] if result_row else None, "calculation": result_row.value["calculation"] if result_row else None, "award": award_row.value["award"] if award_row else None}
+
+    @app.post("/api/courses/{course_id}/games/{resource_id}/attempts")
+    def start_attempt(course_id: str, resource_id: str, body: GameAttemptStart, request: Request, identity=Depends(actor)):
+        return play_admission(course_id, resource_id, request, identity, body)
+
+    @app.post("/api/courses/{course_id}/games/{resource_id}/attempts/{attempt_id}/result")
+    def save_result(course_id: str, resource_id: str, attempt_id: str, body: GameAttemptResult, request: Request, identity=Depends(actor)):
+        identity = fresh(request, identity)
+        with database.write() as db:
+            course, school, role = course_access(db, identity, course_id)
+            if role != "student":
+                raise HTTPException(403, "Students submit only their own assignment observations")
+            row, package = resource(db, identity, course, school, resource_id)
+            attempt = attempt_row(db, identity, school, resource_id, attempt_id)
+            if attempt.owner_id != identity["id"]:
+                raise HTTPException(404, "Assignment attempt not found")
+            value = attempt.value
+            calculation = calculate_points(value["game"]["spec"], body.result, value["scoring_policy"])
+            key = evidence_key("game-result", identity, attempt)
+            existing = db.get(Record, key)
+            if existing:
+                if existing.value.get("result") != body.result:
+                    raise HTTPException(409, "This attempt already has a different terminal observation")
+                return attempt_descriptor(db, identity, school, attempt)
+            _config_row, config = _connection(db, identity, school)
+            publication = _approval(db, identity, school, course, row, package, config)
+            if not publication or publication.id != value["publication_id"] or row.value["version"] != value["resource_version"] or _course_context(course) != value["course_context"] or config["revision_id"] != value["connection_revision_id"] or value["runtime_contract"] != RUNTIME_CONTRACT:
+                raise HTTPException(409, "Assignment approval, policy, class or connection changed during play")
+            result = _add(db, identity, school, "game_attempt_result", {"attempt_id": attempt.id, "snapshot_sha256": value["snapshot_sha256"], "result": body.result, "calculation": calculation, "observed_at": now(), "client_reported": True}, attempt.id, key)
+            audit_actor(db, identity, "game_studio.attempt_observed", {"school_id": school, "course_id": course.id, "resource_id": row.id, "student_id": identity["id"], "attempt_id": attempt.id, "result_id": result.id, "result": body.result, "calculation": calculation, "automatic_grade": False})
+            return attempt_descriptor(db, identity, school, attempt)
+
+    @app.get("/api/courses/{course_id}/games/{resource_id}/attempts")
+    def list_attempts(course_id: str, resource_id: str, identity=Depends(actor)):
+        with database.write() as db:
+            course, school, role = course_access(db, identity, course_id)
+            row, package = resource(db, identity, course, school, resource_id)
+            policy = _scoring(db, identity, school, row, package.value["game"]["spec"])
+            query = select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "game_attempt", Record.parent_id == row.id)
+            if role == "student":
+                query = query.where(Record.owner_id == identity["id"])
+            attempts = [attempt_descriptor(db, identity, school, attempt_row(db, identity, school, row.id, item.id)) for item in db.scalars(query)]
+            attempts.sort(key=lambda item: (item["student_id"], item["started_at"], item["ordinal"]))
+            def summarize(student):
+                series = [item for item in attempts if item["student_id"] == student and item["scoring_revision_id"] == row.value.get("scoring_revision_id")]
+                selected = select_attempt(series, policy) if policy else None
+                return {"suggested_points": selected["calculation"]["earned_points"] if selected else None, "max_points": policy["max_points"] if policy else None, "selected_attempt_id": selected["id"] if selected else None, "attempt_count": len(series), "remaining_attempts": max(0, policy["max_attempts"] - len(series)) if policy else 0}
+            audit_actor(db, identity, "game_studio.attempts_reviewed", {"school_id": school, "course_id": course.id, "resource_id": row.id, "student_id": identity["id"] if role == "student" else None, "attempt_ids": [item["id"] for item in attempts], "private_evidence": True})
+            return {"attempts": attempts, "summary": summarize(identity["id"]) if role == "student" else None, "summaries": [] if role == "student" else [{"student_id": student, **summarize(student)} for student in sorted({item["student_id"] for item in attempts})], "can_award": role in {"admin", "school", "teacher"}}
+
+    @app.post("/api/courses/{course_id}/games/{resource_id}/attempts/{attempt_id}/award")
+    def award_attempt(course_id: str, resource_id: str, attempt_id: str, body: GameAttemptAward, identity=Depends(actor)):
+        with database.write() as db:
+            course, school, role = course_access(db, identity, course_id, True)
+            row, _package_row = resource(db, identity, course, school, resource_id)
+            attempt = attempt_row(db, identity, school, resource_id, attempt_id)
+            if not db.get(Record, evidence_key("game-result", identity, attempt)):
+                raise HTTPException(409, "A terminal gameplay observation is required before reviewing credit")
+            points = validate_award(body.points, attempt.value["scoring_policy"]["max_points"])
+            key = evidence_key("game-award", identity, attempt)
+            existing = db.get(Record, key)
+            if existing:
+                award = existing.value["award"]
+                if award["points"] != points or award["reason"] != body.reason:
+                    raise HTTPException(409, "This attempt already has a different immutable credit review")
+                return attempt_descriptor(db, identity, school, attempt)
+            award = {"points": points, "reason": body.reason, "awarded_by": identity["id"], "awarded_at": now()}
+            reviewer = {**identity, "id": attempt.owner_id}
+            receipt = _add(db, reviewer, school, "game_attempt_award", {"attempt_id": attempt.id, "snapshot_sha256": attempt.value["snapshot_sha256"], "award": award}, attempt.id, key)
+            audit_actor(db, identity, "game_studio.award_reviewed", {"school_id": school, "course_id": course.id, "resource_id": row.id, "student_id": attempt.owner_id, "attempt_id": attempt.id, "award_id": receipt.id, "award": award, "human_review": True})
+            return attempt_descriptor(db, identity, school, attempt)

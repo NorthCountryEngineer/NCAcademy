@@ -12,7 +12,7 @@ from academy.migrate import migrate
 from academy.permissions import migrate_school_scopes
 
 
-PROTECTED = ('avatar_policy_revision', 'avatar_policy_approval', 'avatar_upload', 'avatar_scan_send', 'avatar_scan_result', 'avatar_review', 'avatar_scan_closure', 'game_studio_revision', 'game_package', 'game_publication', 'admin_agent_revision', 'admin_skill_revision', 'admin_run_send', 'admin_run_result', 'teacher_model_revision', 'teacher_model_approval', 'classroom_link_event', 'academy_chat_command', 'academy_chat_receipt', 'academy_chat_proposal', 'academy_chat_membership_event', 'school_curriculum_run', 'school_curriculum_publication', 'knowledge_workflow_run', 'homework_session', 'homework_message', 'homework_outcome', 'student_voice_preference', 'student_preference_revision', 'student_agent_feedback', 'submission', 'teacher_profile_revision', 'course_corpus', 'corpus_approval', 'external_resource_snapshot', 'external_audit_agent_revision', 'external_review_result', 'external_publication')
+PROTECTED = ('avatar_policy_revision', 'avatar_policy_approval', 'avatar_upload', 'avatar_scan_send', 'avatar_scan_result', 'avatar_review', 'avatar_scan_closure', 'game_studio_revision', 'game_package', 'game_publication', 'game_scoring_revision', 'game_attempt', 'game_attempt_result', 'game_attempt_award', 'admin_agent_revision', 'admin_skill_revision', 'admin_run_send', 'admin_run_result', 'teacher_model_revision', 'teacher_model_approval', 'classroom_link_event', 'academy_chat_command', 'academy_chat_receipt', 'academy_chat_proposal', 'academy_chat_membership_event', 'school_curriculum_run', 'school_curriculum_publication', 'knowledge_workflow_run', 'homework_session', 'homework_message', 'homework_outcome', 'student_voice_preference', 'student_preference_revision', 'student_agent_feedback', 'submission', 'teacher_profile_revision', 'course_corpus', 'corpus_approval', 'external_resource_snapshot', 'external_audit_agent_revision', 'external_review_result', 'external_publication')
 
 
 def test_upgrade_preserves_legacy_records_and_audit_prefix_and_is_idempotent(tmp_path):
@@ -34,7 +34,7 @@ def test_upgrade_preserves_legacy_records_and_audit_prefix_and_is_idempotent(tmp
         assert all((db.get(Record,k).kind,db.get(Record,k).parent_id,db.get(Record,k).owner_id,db.get(Record,k).data,db.get(Record,k).created_at)==v for k,v in before_records.items())
         after = [(r.id,r.sequence,r.payload,r.hash,r.previous_hash,r.created_at) for r in db.scalars(select(Audit).order_by(Audit.sequence))]
         assert after[:len(before_events)] == before_events
-        assert len(after) == len(before_events)+13
+        assert len(after) == len(before_events)+14
         marker = db.get(Record,teaching_schema_id(settings.tenant_id))
         assert marker.value == {'version':3,'immutable_teaching_snapshots':True}
         assert db.get(Record,external_review_schema_id(settings.tenant_id)).value == {'version':4,'immutable_external_reviews':True}
@@ -54,13 +54,15 @@ def test_sql_snapshot_mutations_are_denied(app, kind, operation):
     database=app.state.database
     with database.write() as db:
         db.add(Record(id='protected', tenant_id=app.state.settings.tenant_id, kind=kind, data='{"original":true}'))
+    with database.factory() as db:
+        original_data = db.get(Record, 'protected').data
     statement={'update':"UPDATE records SET data = '{}' WHERE id = 'protected'",'delete':"DELETE FROM records WHERE id = 'protected'",'change_kind':"UPDATE records SET kind = 'draft' WHERE id = 'protected'"}[operation]
     with pytest.raises(DatabaseError,match='immutable'):
         with database.write() as db:
             db.execute(text(statement))
     with database.factory() as db:
         row=db.get(Record,'protected')
-        assert row.kind==kind and row.data=='{"original":true}'
+        assert row.kind==kind and row.data==original_data and row.value=={"original": True}
 
 
 def test_orm_cannot_disguise_immutable_revision_as_mutable(app):
@@ -114,7 +116,7 @@ def test_schema4_upgrade_keeps_schema3_marker_and_requires_owner_migration(app, 
     assert client.get('/api/ready').status_code == 200
     from conftest import login
     login(client,'demo-admin')
-    assert client.get('/api/admin/settings').json()['schema_version'] == 15
+    assert client.get('/api/admin/settings').json()['schema_version'] == 16
 
 
 def test_schema6_requires_owner_migration_and_preserves_prior_evidence(app, client):

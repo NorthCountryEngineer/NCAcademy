@@ -15,20 +15,20 @@
       "git_blob": "bdeee34133e1a71b5a21421446a2510bb7201404"
     }
   },
-  "contract": "game-studio-data-v1",
+  "contract": "game-studio-data-v2",
   "adaptations": [
     "Academy message channel and exact envelope",
     "Full immutable snapshot playback only",
     "Exact result key allowlist",
     "Opaque sandbox and no-network CSP",
-    "No accounts, nickname, leaderboard or persistence integration"
+    "No accounts, nickname, leaderboard, network or persistence inside the frame; host-owned provisional observations are stored separately"
   ],
   "implementation_files": {
-    "GameStudioPlayer.tsx": "e79ec058e9eac1a3f7eff7fb3f1bd605e517528f473f423cae57d1f411873b4a",
-    "game-studio-runtime/game-runtime.ts": "3e65108560b790ef7deffb34484b5b9023fbe4608ab198d0755ae0c5cc07f519",
+    "GameStudioPlayer.tsx": "b21709018276c8fc9ae35688a0bd5827cc534b347bd6999c0062691620f0317e",
+    "game-studio-runtime/game-runtime.ts": "815b8a1a1e5aa6bd7d132b61b5a448ea3925f17d648f1c979cdf2ef91474e779",
     "game-studio-runtime/game-spec.ts": "66bc6dd85212938ddf75bc22e402cf89b789ff6cecd1ad8c482308036839f327",
     "game-studio-runtime/game-types.ts": "e9df1e2fbde235f7b7c68315adfab1801c2633b16103c51d95f659623af19de8",
     "game-studio-runtime/player-messages.ts": "58c1e9d9a3a5f95dc9f37bbe3f21cf37a2f2a857224b57f983fe473d15ace6ef"
   },
-  "implementation_sha256": "67964345866e0dffbb6ffb37c9e0ab30fc471a6284ffda32cd9ce0ccbc0c041d"
+  "implementation_sha256": "8a95fdf521faa262ff8ef2b59d5311dac1c556713e679404621cb2d1324cd176"
 }

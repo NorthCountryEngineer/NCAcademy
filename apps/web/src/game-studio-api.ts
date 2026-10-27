@@ -1,16 +1,17 @@
 import { request, schoolPath, send } from './api';
-import { GAME_STUDIO_RUNTIME_CONTRACT, GAME_STUDIO_RUNTIME_DIGEST, validateGameSpec, type GameSpec } from './game-studio-runtime';
+import { GAME_STUDIO_RUNTIME_CONTRACT, GAME_STUDIO_RUNTIME_DIGEST, validateGameSpec, type GameSpec, type GameResult } from './game-studio-runtime';
 export type GameStudioSettings={school_id:string;version:number;enabled:boolean;studio_origin:string;api_origin:string;host_id:string;revision_id:string|null;can_manage:boolean;can_browse:boolean;creator_url:string|null};
 export type GameStudioSettingsDraft=Pick<GameStudioSettings,'enabled'|'studio_origin'|'api_origin'|'host_id'>;
 export type GameStudioVerification={verified:boolean;creator_url:string|null;creator_ready:boolean;public_catalog_ready:boolean;host_configured:boolean;return_path:string|null;connection_version:number;detail:string};
 export type GameStudioCatalogGame={game_id:string;published_revision:number;title:string;description:string;spec_sha256:string;level_ids:string[];genre:string;theme:string};
 export type GameStudioCatalog={games:GameStudioCatalogGame[];cursor:string|null;connection_version:number};
 export type GameStudioRuntime={id:string;sha256:string};
-export type CourseGame=GameStudioCatalogGame&{id:string;course_id:string;school_id:string;version:number;status:'draft'|'approved'|'stale'|'revoked';learning_objective:string;lesson_label:string;approval_id:string|null;can_manage:boolean;can_approve:boolean;can_play:boolean;can_revoke:boolean;runtime_contract:GameStudioRuntime};
+export type ScoringPolicy={version:1;max_points:number;method:'proportional'|'completion'|'arcade_target';arcade_target?:number;rounding:'whole'|'hundredth';attempt_policy:'first'|'latest'|'best';max_attempts:number;reveal_policy:'zero'|'earned'};
+export type CourseGame=GameStudioCatalogGame&{scoring_policy?:ScoringPolicy|null;can_configure_scoring?:boolean;id:string;course_id:string;school_id:string;version:number;status:'draft'|'approved'|'stale'|'revoked';learning_objective:string;lesson_label:string;approval_id:string|null;can_manage:boolean;can_approve:boolean;can_play:boolean;can_revoke:boolean;runtime_contract:GameStudioRuntime};
 export type CourseGameIndex={games:CourseGame[];can_prepare:boolean;can_approve:boolean};
 export type CourseGameDetail=CourseGame&{spec:GameSpec};
 export type CourseGamePlay={spec:GameSpec;game_id:string;published_revision:number;spec_sha256:string;runtime_contract:GameStudioRuntime;resource_id:string;course_id:string;preview:boolean};
-export type CourseGamePreparation={game_id:string;published_revision:number;spec_sha256:string;learning_objective:string;lesson_label:string;idempotency_key:string};
+export type CourseGamePreparation={game_id:string;published_revision:number;spec_sha256:string;learning_objective:string;lesson_label:string;idempotency_key:string;scoring_policy?:ScoringPolicy|null};
 export type GameStudioSelection={studio_origin:string;game_id:string;published_revision:number};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const gameStudioPath=(schoolId:string,suffix='')=>`/schools/${encodeURIComponent(schoolId)}/game-studio${suffix}`;
@@ -21,10 +22,23 @@ export const verifyGameStudio=(schoolId:string,version:number)=>send<GameStudioV
 export const gameStudioCatalog=(schoolId:string,cursor?:string)=>request<GameStudioCatalog>(gameStudioPath(schoolId,`/catalog${cursor?`?cursor=${encodeURIComponent(cursor)}`:''}`));
 export const courseGames=(schoolId:string,courseId:string)=>request<CourseGameIndex>(courseGamesPath(schoolId,courseId));
 export const courseGameDetail=(schoolId:string,courseId:string,id:string)=>request<CourseGameDetail>(courseGamesPath(schoolId,courseId,id));
-export const prepareCourseGame=(schoolId:string,courseId:string,value:CourseGamePreparation)=>send<CourseGame>(courseGamesPath(schoolId,courseId),{game_id:value.game_id,published_revision:value.published_revision,spec_sha256:value.spec_sha256,learning_objective:value.learning_objective.trim(),lesson_label:value.lesson_label.trim()||'Practice game',idempotency_key:value.idempotency_key});
+export const prepareCourseGame=(schoolId:string,courseId:string,value:CourseGamePreparation)=>send<CourseGame>(courseGamesPath(schoolId,courseId),{game_id:value.game_id,published_revision:value.published_revision,spec_sha256:value.spec_sha256,learning_objective:value.learning_objective.trim(),lesson_label:value.lesson_label.trim()||'Practice game',idempotency_key:value.idempotency_key,...(value.scoring_policy===undefined?{}:{scoring_policy:scoringPolicyPayload(value.scoring_policy)})});
 export const approveCourseGame=(schoolId:string,courseId:string,value:CourseGame,levels:string[])=>send<CourseGame>(courseGamesPath(schoolId,courseId,value.id,'/approve'),{expected_version:value.version,reviewed_level_ids:[...new Set(levels)],reviewed:true});
 export const revokeCourseGame=(schoolId:string,courseId:string,value:CourseGame)=>send<CourseGame>(courseGamesPath(schoolId,courseId,value.id,'/revoke'),{expected_version:value.version});
 export const playCourseGame=(schoolId:string,courseId:string,value:CourseGame)=>send<CourseGamePlay>(courseGamesPath(schoolId,courseId,value.id,'/play'),{});
+export type GameAttemptCalculation={earned_points:number;max_points:number;numerator:number;denominator:number;method:ScoringPolicy['method'];provisional:true};
+export type GameAttemptAward={points:number;reason:string;awarded_at:string;awarded_by:string};
+export type GameAttempt={id:string;student_id:string;ordinal:number;status:'started'|'observed';scoring_policy:ScoringPolicy;started_at:string;resource_version:number;scoring_revision_id:string;scoring_policy_sha256:string;result?:GameResult|null;calculation?:GameAttemptCalculation|null;award?:GameAttemptAward|null};
+export type GameAttemptSummary={suggested_points:number|null;max_points:number|null;selected_attempt_id:string|null;attempt_count:number;remaining_attempts:number};
+export type GameAttemptIndex={attempts:GameAttempt[];summary:GameAttemptSummary|null;summaries:({student_id:string}&GameAttemptSummary)[];can_award:boolean};
+export type GameAttemptPlay=CourseGamePlay&{attempt:GameAttempt};
+/** Only the public scoring fields are sent. Identity, points and approval remain server-owned. */
+export function scoringPolicyPayload(value:ScoringPolicy|null):ScoringPolicy|null{return value===null?null:{version:1,max_points:value.max_points,method:value.method,...(value.method==='arcade_target'?{arcade_target:value.arcade_target}:{}),rounding:value.rounding,attempt_policy:value.attempt_policy,max_attempts:value.max_attempts,reveal_policy:value.reveal_policy};}
+export const saveCourseGameScoring=(schoolId:string,courseId:string,value:CourseGame,policy:ScoringPolicy|null)=>send<CourseGame>(courseGamesPath(schoolId,courseId,value.id,'/scoring'),{expected_version:value.version,scoring_policy:scoringPolicyPayload(policy)},'PUT');
+export const courseGameAttempts=(schoolId:string,courseId:string,id:string)=>request<GameAttemptIndex>(courseGamesPath(schoolId,courseId,id,'/attempts'));
+export const startCourseGameAttempt=(schoolId:string,courseId:string,id:string,key:string)=>send<GameAttemptPlay>(courseGamesPath(schoolId,courseId,id,'/attempts'),{idempotency_key:key});
+export const submitCourseGameResult=(schoolId:string,courseId:string,id:string,attemptId:string,result:GameResult)=>send<GameAttempt>(courseGamesPath(schoolId,courseId,id,`/attempts/${encodeURIComponent(attemptId)}/result`),{result:{outcome:result.outcome,elapsed:result.elapsed,score:result.score,...(result.points===undefined?{}:{points:result.points}),reviewedLevelIds:[...result.reviewedLevelIds]}});
+export const awardCourseGameAttempt=(schoolId:string,courseId:string,id:string,attemptId:string,points:number,reason:string)=>send<GameAttempt>(courseGamesPath(schoolId,courseId,id,`/attempts/${encodeURIComponent(attemptId)}/award`),{points,reason:reason.trim()});
 export function assertCourseGameSnapshot(value:CourseGameDetail|CourseGamePlay,expected:CourseGame):GameSpec{
  if(value.game_id!==expected.game_id||value.published_revision!==expected.published_revision||value.spec_sha256!==expected.spec_sha256||value.runtime_contract?.id!==GAME_STUDIO_RUNTIME_CONTRACT||value.runtime_contract?.sha256!==GAME_STUDIO_RUNTIME_DIGEST)throw new Error('This game snapshot or player version changed. Reload the class before playing.');
  if(('resource_id' in value&&(value.resource_id!==expected.id||value.course_id!==expected.course_id))||('id' in value&&(value.id!==expected.id||value.course_id!==expected.course_id||value.school_id!==expected.school_id)))throw new Error('This game belongs to a different class attachment.');

@@ -244,7 +244,7 @@ export function validateGameResult(value: unknown, spec: GameSpec, levelId?: str
 }
 
 export function startGameSandbox(engine: ReturnType<typeof createGameEngine>, validate: typeof validateGameSpec, nonce: string) {
-  const channel = 'academy-game-studio', contract = 'game-studio-data-v1';
+  const channel = 'academy-game-studio', contract = 'game-studio-data-v2';
   const canvas = document.getElementById('game') as HTMLCanvasElement;
   const context = canvas.getContext('2d');
   const title = document.getElementById('title')!;

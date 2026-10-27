@@ -4,11 +4,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { GameStudioIntegration, GameStudioCatalogList, GameStudioConnectionReview } from './GameStudioIntegration';
 import { CourseGames, CourseGameReview, CourseGamePreparationForm } from './CourseGames';
 import { GameStudioPlayer } from './GameStudioPlayer';
+import { GameScoringFields, GameScoringSettings, GameAttemptHistory, GameAttemptAwardForm, defaultGameScoringPolicy, parseGameScoringPolicy } from './GameScoring';
 import { Notice } from './components';
 import { GameStudioIntegration as IntegrationView } from './GameStudioIntegration';
 import { IntegrationMarketplace } from './AdministrationIntegrations';
 import { GAME_STUDIO_RUNTIME_CONTRACT, GAME_STUDIO_RUNTIME_DIGEST, type GameSpec } from './game-studio-runtime';
-import type { CourseGame, GameStudioSettings, GameStudioVerification } from './game-studio-api';
+import type { CourseGame, GameAttempt, GameStudioSettings, GameStudioVerification } from './game-studio-api';
 import type { School } from './api';
 const hooks=vi.hoisted(()=>({states:[] as unknown[],dependencies:[] as (readonly unknown[]|undefined)[],memos:[] as {dependencies:readonly unknown[];value:unknown}[],index:0,effectIndex:0,memoIndex:0,pending:[] as (()=>void)[],dirty:false}));
 vi.mock('react',async importOriginal=>({...await importOriginal<typeof import('react')>(),useState:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push(typeof initial==='function'?initial():initial);return [hooks.states[index],(value:unknown)=>{const next=typeof value==='function'?value(hooks.states[index]):value;if(!Object.is(next,hooks.states[index])){hooks.states[index]=next;hooks.dirty=true;}}];},useRef:(initial:unknown)=>{const index=hooks.index++;if(index>=hooks.states.length)hooks.states.push({current:initial});return hooks.states[index];},useCallback:(value:unknown,dependencies:readonly unknown[])=>{const index=hooks.memoIndex++,previous=hooks.memos[index];if(!previous||dependencies.length!==previous.dependencies.length||dependencies.some((item,i)=>!Object.is(item,previous.dependencies[i])))hooks.memos[index]={dependencies,value};return hooks.memos[index].value;},useEffect:(effect:()=>void,dependencies?:readonly unknown[])=>{const index=hooks.effectIndex++,previous=hooks.dependencies[index];if(!previous||!dependencies||previous.length!==dependencies.length||dependencies.some((value,i)=>!Object.is(value,previous[i]))){hooks.dependencies[index]=dependencies;hooks.pending.push(effect);}}}));
@@ -44,4 +45,71 @@ describe('course game preparation and review',()=>{
  it('admits student play only on explicit click, without loading staff detail or recording outcomes',async()=>{const studentGame={...game,status:'approved' as const,can_manage:false,can_approve:false,can_revoke:false},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({...game,spec,resource_id:game.id,preview:false})));vi.stubGlobal('fetch',fetcher);const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:studentGame,staff:false,close:()=>{},changed:async()=>{}}));ui.render();expect(fetcher).not.toHaveBeenCalled();expect(ui.find(GameStudioPlayer)).toBeUndefined();await ui.find('button','Play approved game')!.props.onClick!();await settle();expect(fetcher).toHaveBeenCalledOnce();expect(fetcher.mock.calls[0][0]).toContain('/play?school_id=school-a');expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({});const player=ui.find(GameStudioPlayer) as ReactElement<Parameters<typeof GameStudioPlayer>[0]>;expect(player.props.spec).toEqual(spec);expect(player.props.onComplete).toBeUndefined();});
  it('withholds player for stale publication or unsupported runtime digest and surfaces errors',async()=>{const studentGame={...game,status:'approved' as const,can_manage:false,can_approve:false},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({...game,spec,resource_id:game.id,preview:false,runtime_contract:{...game.runtime_contract,sha256:'wrong'}})));vi.stubGlobal('fetch',fetcher);const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:studentGame,staff:false,close:()=>{},changed:async()=>{}}));await ui.find('button','Play approved game')!.props.onClick!();await settle();expect(ui.find(GameStudioPlayer)).toBeUndefined();expect(ui.find(Notice)?.props.error).toContain('player version changed');expect(fetcher).toHaveBeenCalledOnce();});
  it('surfaces failed fresh admission without reusing an old player or retrying',async()=>{const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({detail:'Published edition is no longer current'}),{status:409}));vi.stubGlobal('fetch',fetcher);const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:{...game,can_approve:false},staff:false,close:()=>{},changed:async()=>{}}));await ui.find('button','Play approved game')!.props.onClick!();await settle();expect(ui.find(GameStudioPlayer)).toBeUndefined();expect(ui.find(Notice)?.props.error).toContain('no longer current');expect(fetcher).toHaveBeenCalledOnce();});
+});
+
+const scoring=defaultGameScoringPolicy();
+const attempt=(id='attempt-1',ordinal=1):GameAttempt=>({id,student_id:'student-a',ordinal,status:'started',scoring_policy:scoring,started_at:'2026-10-27T12:00:00Z',resource_version:2,scoring_policy_sha256:'c'.repeat(64),scoring_revision_id:'scoring-1'});
+const completion={outcome:'won' as const,elapsed:9,score:10,reviewedLevelIds:['level-1']};
+const observed=(id='attempt-1'):GameAttempt=>({...attempt(id),status:'observed',result:completion,calculation:{earned_points:25,max_points:25,numerator:10,denominator:10,method:'proportional',provisional:true},award:null});
+const history={attempts:[observed()],summary:{suggested_points:25,max_points:25,selected_attempt_id:'attempt-1',attempt_count:1,remaining_attempts:2},summaries:[],can_award:false};
+const scoredGame:CourseGame={...game,status:'approved',scoring_policy:scoring,can_manage:false,can_approve:false,can_revoke:false};
+const playAttempt=(id='attempt-1',ordinal=1)=>({...game,spec,resource_id:game.id,preview:false,attempt:attempt(id,ordinal)});
+describe('host-owned assignment scoring',()=>{
+ it('offers 25/100/custom scales and rejects unsafe or ambiguous reusable policies',()=>{
+  const changed=vi.fn(),tree=GameScoringFields({value:scoring,change:changed});const buttons=nodes(tree).filter(node=>node.type==='button');buttons.find(node=>text(node)==='100 points')!.props.onClick!();expect(changed).toHaveBeenLastCalledWith({...scoring,max_points:100});
+  expect(parseGameScoringPolicy(JSON.stringify({...scoring,max_points:75})).max_points).toBe(75);const {reveal_policy,...defaultReveal}=scoring;expect(parseGameScoringPolicy(JSON.stringify(defaultReveal)).reveal_policy).toBe('zero');
+  for(const extra of [{...scoring,max_points:0},{...scoring,max_points:NaN},{...scoring,max_attempts:101},{...scoring,token:'private'},{...scoring,arcade_target:100},{...scoring,method:'arcade_target'},{...scoring,version:2}])expect(()=>parseGameScoringPolicy(JSON.stringify(extra))).toThrow();
+  expect(()=>parseGameScoringPolicy('x'.repeat(5001))).toThrow('5,000');
+ });
+ it('reuses a class scoring policy when preparing a separate draft',async()=>{
+  const fetcher=vi.fn().mockImplementation(async(_path:string,options?:RequestInit)=>new Response(JSON.stringify(options?.method==='POST'?game:catalog)));vi.stubGlobal('fetch',fetcher);
+  const saved=vi.fn(),ui=view(()=>CourseGamePreparationForm({schoolId:'school-a',courseId:'course-a',close:()=>{},saved,templates:[scoredGame]}));
+  await ui.find('button','Load published games')!.props.onClick!();await settle();(ui.find(GameStudioCatalogList) as ReactElement<Parameters<typeof GameStudioCatalogList>[0]>).props.select!(game);
+  change(ui.label('Learning objective'),'Observe carefully');change(ui.label('Reuse scoring from a class game'),game.id);await submit(ui.find('form')!);
+  expect(JSON.parse(fetcher.mock.calls[1][1].body).scoring_policy).toEqual(scoring);
+ });
+ it('saves human configuration with exact version and leaves publication to a separate review',async()=>{
+  const saved=vi.fn(),fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({...game,version:3,scoring_policy:scoring,status:'draft'})));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>GameScoringSettings({schoolId:'school-a',courseId:'course-a',game,saved}));
+  const fields=ui.find(GameScoringFields) as unknown as ReactElement<Parameters<typeof GameScoringFields>[0]>;fields.props.change(scoring);await submit(ui.find('form')!);
+  expect(fetcher.mock.calls[0][0]).toContain('/scoring?school_id=school-a');expect(fetcher.mock.calls[0][1].method).toBe('PUT');expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({expected_version:2,scoring_policy:scoring});expect(fetcher).toHaveBeenCalledOnce();expect(saved).toHaveBeenCalledOnce();
+ });
+ it('ignores intermediate and duplicate outcomes and preserves one terminal observation across manual retry',async()=>{
+  let resultRequests=0;
+  const fetcher=vi.fn().mockImplementation(async(path:string,options?:RequestInit)=>{
+   if(path.includes('/result')){resultRequests++;return resultRequests===1?new Response(JSON.stringify({detail:'Temporary save failure'}),{status:503}):new Response(JSON.stringify(observed()));}
+   return new Response(JSON.stringify(options?.method==='POST'?playAttempt():history));
+  });vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:scoredGame,staff:false,close:()=>{},changed:async()=>{}}));ui.render();expect(fetcher).not.toHaveBeenCalled();
+  await ui.find('button','Start scored attempt')!.props.onClick!();await settle();const player=ui.find(GameStudioPlayer) as ReactElement<Parameters<typeof GameStudioPlayer>[0]>;
+  player.props.onComplete!({...completion,outcome:'level-complete'});expect(fetcher).toHaveBeenCalledOnce();
+  player.props.onComplete!(completion);player.props.onComplete!({...completion,score:0,outcome:'lost'});await settle();
+  expect(fetcher).toHaveBeenCalledTimes(2);expect(ui.find(GameStudioPlayer)).toBeUndefined();expect(ui.find('button','Start scored attempt')?.props.disabled).toBe(true);expect(ui.find(Notice)?.props.error).toContain('Temporary save failure');
+  await ui.find('button','Retry saving this result')!.props.onClick!();await settle();
+  const requests=fetcher.mock.calls.filter(call=>call[0].includes('/result'));expect(requests).toHaveLength(2);expect(requests[0][0]).toEqual(requests[1][0]);expect(requests[0][1].body).toEqual(requests[1][1].body);expect(JSON.parse(requests[1][1].body)).toEqual({result:completion});
+  expect(ui.find(GameAttemptHistory)).toBeDefined();expect(ui.find('button','Start scored attempt')?.props.disabled).toBe(false);player.props.onComplete!(completion);expect(fetcher).toHaveBeenCalledTimes(4);
+ });
+ it('displays an already recorded admission receipt without reopening the game',async()=>{
+  const fetcher=vi.fn().mockImplementation(async(_path:string,options?:RequestInit)=>new Response(JSON.stringify(options?.method==='POST'?{...playAttempt(),attempt:observed()}:history)));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:scoredGame,staff:false,close:()=>{},changed:async()=>{}}));await ui.find('button','Start scored attempt')!.props.onClick!();await settle();expect(ui.find(GameStudioPlayer)).toBeUndefined();expect(ui.find(GameAttemptHistory)).toBeDefined();expect(ui.find(Notice)?.props.success).toContain('No new attempt was created');expect(fetcher).toHaveBeenCalledTimes(2);
+ });
+ it('binds callbacks to one attempt so an old frame cannot submit into a new attempt',async()=>{
+  let starts=0;const fetcher=vi.fn().mockImplementation(async(path:string,options?:RequestInit)=>new Response(JSON.stringify(path.includes('/result')?observed(path.includes('attempt-2')?'attempt-2':'attempt-1'):options?.method==='POST'?playAttempt(`attempt-${++starts}`,starts):history)));vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:scoredGame,staff:false,close:()=>{},changed:async()=>{}}));await ui.find('button','Start scored attempt')!.props.onClick!();await settle();const oldPlayer=ui.find(GameStudioPlayer) as ReactElement<Parameters<typeof GameStudioPlayer>[0]>;oldPlayer.props.onComplete!(completion);await settle();await ui.find('button','Start scored attempt')!.props.onClick!();await settle();const newPlayer=ui.find(GameStudioPlayer) as ReactElement<Parameters<typeof GameStudioPlayer>[0]>;expect(newPlayer.key).not.toBe(oldPlayer.key);const count=fetcher.mock.calls.length;oldPlayer.props.onComplete!(completion);expect(fetcher).toHaveBeenCalledTimes(count);newPlayer.props.onComplete!(completion);await settle();expect(fetcher.mock.calls.filter(call=>call[0].includes('/result')).map(call=>call[0])).toEqual(['/api/courses/course-a/games/attachment-a/attempts/attempt-1/result?school_id=school-a','/api/courses/course-a/games/attachment-a/attempts/attempt-2/result?school_id=school-a']);
+ });
+ it('uses the same admission key after an uncertain start and rejects changed scoring snapshots',async()=>{
+  let starts=0;const fetcher=vi.fn().mockImplementation(async()=>{starts++;return starts===1?new Response(JSON.stringify({detail:'Unavailable'}),{status:503}):new Response(JSON.stringify({...playAttempt(),attempt:{...attempt(),scoring_policy:{...scoring,max_points:100}}}));});vi.stubGlobal('fetch',fetcher);
+  const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:scoredGame,staff:false,close:()=>{},changed:async()=>{}}));await ui.find('button','Start scored attempt')!.props.onClick!();await settle();await ui.find('button','Start scored attempt')!.props.onClick!();await settle();
+  expect(JSON.parse(fetcher.mock.calls[0][1].body).idempotency_key).toEqual(JSON.parse(fetcher.mock.calls[1][1].body).idempotency_key);expect(ui.find(GameStudioPlayer)).toBeUndefined();expect(ui.find(Notice)?.props.error).toContain('scoring rules changed');expect(fetcher).toHaveBeenCalledTimes(2);
+ });
+ it('never records scores for a staff preview even when a scoring policy is attached',async()=>{
+  const staffGame={...game,scoring_policy:scoring},fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({...staffGame,spec})));vi.stubGlobal('fetch',fetcher);const ui=view(()=>CourseGameReview({schoolId:'school-a',courseId:'course-a',game:staffGame,staff:true,close:()=>{},changed:async()=>{}}));ui.render();await settle();await ui.find('button','Preview imported snapshot')!.props.onClick!();const player=ui.find(GameStudioPlayer) as ReactElement<Parameters<typeof GameStudioPlayer>[0]>;expect(player.props.onComplete).toBeUndefined();expect(fetcher).toHaveBeenCalledOnce();
+ });
+ it('requires a human explicit credit decision and keeps reviewed credit separate from provisional points',async()=>{
+  const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify({...observed(),award:{points:20,reason:'Reviewed classroom evidence',awarded_at:'2026-10-27',awarded_by:'teacher-a'}})));vi.stubGlobal('fetch',fetcher);const saved=vi.fn(async()=>{});
+  const ui=view(()=>GameAttemptAwardForm({schoolId:'school-a',courseId:'course-a',gameId:game.id,attempt:observed(),saved}));
+  expect(ui.find('button','Record human-reviewed credit')?.props.disabled).toBe(true);change(ui.label('Reviewed credit points'),'20');change(ui.label('Reason for credit decision'),'Reviewed classroom evidence');await submit(ui.find('form')!);expect(fetcher).not.toHaveBeenCalled();checked(ui.label('I reviewed the evidence'),true);await submit(ui.find('form')!);
+  expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({points:20,reason:'Reviewed classroom evidence'});expect(fetcher.mock.calls[0][0]).toContain('/attempts/attempt-1/award');expect(saved).toHaveBeenCalledOnce();expect(ui.find('button','Reviewed credit recorded')?.props.disabled).toBe(true);
+  const tree=GameAttemptHistory({schoolId:'school-a',courseId:'course-a',gameId:game.id,value:history,refresh:async()=>{}});expect(text(tree)).toContain('Selected provisional points: 25 / 25');expect(text(tree)).toContain('Human-reviewed credit: not awarded');expect(nodes(tree).some(node=>node.type===GameAttemptAwardForm)).toBe(false);
+ });
 });

@@ -128,11 +128,11 @@ test('sandbox document contains fixed executable code, restrictive CSP, and nonc
   };
   const parent = { postMessage(value: unknown) { messages.push(value); } };
   new Script(script).runInNewContext({ document: { getElementById: element, querySelectorAll: () => [], addEventListener() {} }, window: { addEventListener(name: string, fn: typeof listeners[string]) { listeners[name] = fn; } }, parent, requestAnimationFrame() {} });
-  assert.deepEqual(JSON.parse(JSON.stringify(messages)), [{ type: 'academy-game-ready', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce }]);
-  listeners.message({ source: {}, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce, spec: defaultGameSpec() } });
+  assert.deepEqual(JSON.parse(JSON.stringify(messages)), [{ type: 'academy-game-ready', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce }]);
+  listeners.message({ source: {}, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce, spec: defaultGameSpec() } });
   assert.equal(elements.get('start')!.disabled, true);
   // Structured clone from another realm is what postMessage provides in a real browser.
-  listeners.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce: 'wrong', spec: defaultGameSpec() } });
+  listeners.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce: 'wrong', spec: defaultGameSpec() } });
   assert.equal(elements.get('start')!.disabled, true);
   assert.throws(() => gameSandboxDocument('bad\"><script>'), /safe random/);
 });
@@ -244,7 +244,7 @@ function sandboxHarness(spec: GameSpec, _levelId?: string, finish: 'won' | 'lost
     window: { addEventListener(name: string, fn: typeof listeners[string]) { listeners[name] = fn; } },
     requestAnimationFrame(fn: (now: number) => void) { frames.push(fn); },
   });
-  listeners.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce: '1234567890abcdef', spec } });
+  listeners.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce: '1234567890abcdef', spec } });
   let clock = 1000;
   const tick = () => { const frame = frames.shift(); assert.ok(frame); frame!(clock += 1000 / 30); };
   const click = (id: string) => getElement(id).handlers.click();
@@ -417,7 +417,7 @@ function harness(spec: GameSpec) {
   const controls = ['left', 'right', 'up', 'down', 'fire', 'jump'].map(element), parent = { postMessage(value: { type: string; result?: GameResult }) { messages.push(JSON.parse(JSON.stringify(value))); } };
   const actual = createGameEngine(), engine = { ...actual, step(state: GameState, source: GameSpec, input: unknown) { recorded.push(input); state.elapsed = 3; state.score = actual.forLevel(source, state.levelIndex).rules.goal; state.points = (state.levelIndex + 1) * 120; state.outcome = 'won'; return state; } };
   new Script(`const __name = fn => fn; (${startGameSandbox.toString()})(engine, validate, '1234567890abcdef');`).runInNewContext({ engine, validate: (value: GameSpec) => value, parent, document: { getElementById: element, querySelectorAll: () => controls, addEventListener(name: string, fn: Handler) { documentHandlers[name] = fn; } }, window: { addEventListener(name: string, fn: Handler) { windowHandlers[name] = fn; } }, requestAnimationFrame(fn: (now: number) => void) { frames.push(fn); } });
-  windowHandlers.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce: '1234567890abcdef', spec } });
+  windowHandlers.message({ source: parent, data: { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce: '1234567890abcdef', spec } });
   let now = 1000; const tick = () => frames.shift()!(now += 1000 / 30);
   const click = (id: string) => element(id).handlers.click({});
   const complete = () => { const count = messages.filter(message => message.result).length; for (let i = 0; i < 5 && count === messages.filter(message => message.result).length; i++) tick(); };
@@ -549,7 +549,7 @@ test('serialized sandbox admits one exact parent snapshot and rejects extra fiel
   const script = gameSandboxDocument(nonce).match(/<script nonce="[^"]+">([\s\S]*)<\/script>/)![1];
   new Script(script).runInContext(context);
   const inFrame = (value: unknown) => new Script(`JSON.parse(${JSON.stringify(JSON.stringify(value))})`).runInContext(context);
-  const data = { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v1', nonce, spec: defaultGameSpec() };
+  const data = { type: 'academy-game-load', channel: 'academy-game-studio', contract: 'game-studio-data-v2', nonce, spec: defaultGameSpec() };
   for (const bad of [{ ...data, levelId: 'level-1' }, { ...data, nonce: 'wrong' }, { ...data, contract: 'other' }, { ...data, channel: 'other' }, { ...data, spec: { ...defaultGameSpec(), title: 'fetch(secret)' } }]) {
     listeners.message({ source: parent, data: inFrame(bad) });
     assert.equal(element('start').disabled, true);

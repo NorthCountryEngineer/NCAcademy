@@ -67,11 +67,16 @@ def student_avatar_schema_id(tenant_id):
     return "student-avatar-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
 
 
+def game_scoring_schema_id(tenant_id):
+    return "game-scoring-schema:" + hashlib.sha256(tenant_id.encode()).hexdigest()[:40]
+
+
 IMMUTABLE_RECORD_KINDS = {"teacher_model_revision", "teacher_model_approval", "homework_ai_config_revision", "homework_ai_approval", "homework_ai_session", "homework_ai_send", "family_event", "classroom_link_event", "academy_chat_command", "academy_chat_receipt", "academy_chat_proposal", "academy_chat_membership_event", "school_curriculum_run", "school_curriculum_publication", "knowledge_workflow_run", "homework_session", "homework_message", "homework_outcome", "student_voice_preference", "student_preference_revision", "student_agent_feedback", "submission", "teacher_profile_revision", "course_corpus", "corpus_approval", "external_resource_snapshot", "external_audit_agent_revision", "external_review_result", "external_publication"}
 SEALED_JOB_KINDS = {"homework_ai_message", "classroom_operation", "academy_chat_attempt", "turn", "lesson_turn", "external_review_job", "voice_operation"}
 IMMUTABLE_RECORD_KINDS.update({"admin_agent_revision", "admin_skill_revision", "admin_run_send", "admin_run_result"})
 SEALED_JOB_KINDS.add("admin_run")
 IMMUTABLE_RECORD_KINDS.update({"game_studio_revision", "game_package", "game_publication"})
+IMMUTABLE_RECORD_KINDS.update({"game_scoring_revision", "game_attempt", "game_attempt_result", "game_attempt_award"})
 IMMUTABLE_RECORD_KINDS.update({"avatar_policy_revision", "avatar_policy_approval", "avatar_upload", "avatar_scan_send", "avatar_scan_result", "avatar_review", "avatar_scan_closure"})
 
 

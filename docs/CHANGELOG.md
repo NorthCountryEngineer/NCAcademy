@@ -1,5 +1,12 @@
 # Changelog
 
+## October 27, 2026 — host-owned game assignment points
+
+- Added independent per-class game scoring policies with 25/100/custom scales, proportional/completion/explicit arcade-target rules, rounding and repeat-attempt settings.
+- Added server-admitted attempts, immutable encrypted observations and calculations, student history and separate human-reviewed point awards. Browser gameplay remains provisional evidence.
+- Bound scoring to exact game/publication/policy/runtime snapshots with idempotent result submission, current class authority and additive schema-16 protections.
+- Updated the retained player wrapper's runtime contract to require renewed human game review; the fixed arcade engine and existing evidence remain unchanged. See [configuration and verification](game-assignment-scoring.md).
+
 ## October 27, 2026 — student avatars and moderation
 
 - Added private student avatar uploads and approved-only workspace display with bounded, metadata-free raster normalization.

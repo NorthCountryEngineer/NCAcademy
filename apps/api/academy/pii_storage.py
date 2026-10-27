@@ -16,6 +16,7 @@ from .db import Audit, Record, SEALED_JOB_KINDS, canonical
 
 ENVELOPE = "__academy_pii__"
 PRIVATE_KINDS = {
+    "game_attempt", "game_attempt_result", "game_attempt_award",
     "homework_ai_session", "homework_ai_message", "homework_ai_send",
     "draft", "submission", "review", "turn", "lesson_turn", "homework_session",
     "homework_message", "homework_outcome", "student_voice_preference",
@@ -81,7 +82,7 @@ def protect_records(db, _context, _instances):
         if ENVELOPE in value:
             continue
         targeted = row.kind == "change_request" and local_owner(db, row.tenant_id, value.get("target_id"))
-        if not (targeted or local_owner(db, row.tenant_id, row.owner_id) or local_owner(db, row.tenant_id, row.parent_id)):
+        if not (row.kind in {"game_attempt", "game_attempt_result", "game_attempt_award"} or targeted or local_owner(db, row.tenant_id, row.owner_id) or local_owner(db, row.tenant_id, row.parent_id)):
             continue
         if crypto is None:
             raise HTTPException(503, "Protected student storage requires its encryption key")
@@ -110,7 +111,8 @@ def protect_audit(db, row, payload):
     crypto = db.info.get("family_crypto")
     keys = {"student_id", "user_id", "principal_id", "submission_id", "turn_id", "lesson_turn_id", "message_id", "homework_session_id", "change_id", "target_id"}
     related = [value for key, value in payload.items() if key in keys and isinstance(value, str)]
-    if not (local_owner(db, row.tenant_id, row.actor_id) or any(local_owner(db, row.tenant_id, key) for key in related)):
+    game_evidence = row.event_type.startswith(("game_studio.attempt_", "game_studio.attempts_", "game_studio.award_"))
+    if not (game_evidence or local_owner(db, row.tenant_id, row.actor_id) or any(local_owner(db, row.tenant_id, key) for key in related)):
         return payload
     if crypto is None:
         raise HTTPException(503, "Protected student audit requires its encryption key")

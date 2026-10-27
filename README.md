@@ -2,7 +2,7 @@
 
 An independent NCE Core education application with schools, classes, assignments, student-authored work and instructor-controlled tutoring. Its administrative workspace follows Proposal Studio's layout and integration-management conventions. Admin, School, Teacher and Student access is enforced by the API. Teachers may be human, managed AI personas or explicitly approved Core agent accounts. Assignment tutoring and Lesson Q&A select approved hints/questions or exact public-source excerpts. Separately approved Homework Help generates explanations through configured triage, tutor and safety models, while students retain authorship of submitted work.
 
-The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. The current schema-15 source adds private student avatars, configurable image moderation and administrator quarantine review alongside Game Studio connections, reviewed class practice games and the administrative marketplace, configurable agents, bounded skills, activity, teacher model policies, generative Homework Help and protected audit retention. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
+The owner has authorized publication to `NorthCountryEngineer/NCAcademy` and deployment through NCE Core. The canonical frontend is `https://ncacademy.app`, with `https://api.ncacademy.app` as the protected backend origin. The current schema-16 source adds configurable game assignment points, encrypted attempt history and human-reviewed awards alongside private student avatars, quarantine review, Game Studio connections, reviewed class games and the administrative marketplace, configurable agents, bounded skills, activity, teacher model policies, generative Homework Help and protected audit retention. Source preparation and test results are recorded below; public availability is established only by the deployment acceptance checks. The original NCAcademy archive contained infrastructure scaffolding; [requirements](docs/requirements.md) records the design's boundaries.
 
 ## Local preview
 
@@ -21,6 +21,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Architecture](docs/architecture.md)
 - [Administrative settings, integrations, skills and agent activity](docs/administrative-settings.md)
 - [Game Studio integration and reviewed learning games](docs/game-studio.md)
+- [Game assignment scales, attempts and reviewed points](docs/game-assignment-scoring.md)
 - [Student avatars, quarantine and administrator moderation](docs/student-avatars.md)
 - [School roles, resources and agent teachers](docs/permissions.md)
 - [School setup, curriculum and knowledge workflows](docs/school-onboarding.md)
