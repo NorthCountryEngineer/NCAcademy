@@ -72,6 +72,12 @@ No browser/search worker, vector database, content ingest or document generation
 
 ## Release order
 
+### Display-only frontend changes
+
+A change confined to the presentation around the attested game player can use a separately recorded Amplify frontend publication after successful exact-commit CI. Retain the current immutable API image, `nce-deploy.json`, all five attested player/runtime files and the `game-studio-data-v2` digest. Build the locked `apps/web` source, include the previously verified trusted `customHttp.yml` unchanged, and publish that artifact to the existing manual `production` branch. Preserve its API rewrites, domain association and headers. Verify every served asset against the artifact and compare the API task/image, CloudFormation bindings and Core identity/source baseline afterwards.
+
+This narrow path makes no ECS, database, permission, connection or approval changes and needs no owner migration or renewed game approval. Its source, CI, artifact, Amplify job and preservation receipts identify a frontend publication separately from Core's existing backend release metadata; it does not claim a new full Core-managed application release. Changes to the attested runtime, API, schema or contracts still require the normal matching release and review process below.
+
 1. Release the reviewed Core onboarding change through Core's source and deployment process. Pin its trusted runner revision and approve the NCAcademy recipe/repository configuration. Keep the exact CI gate; application manifests cannot supply arbitrary commands, templates or IAM roles.
 2. Build and verify the application, publish its API image to approved immutable ECR, pin that digest in the manifest, then publish the final source commit and require its successful CI. Preserve repository history when replacing application files.
 3. Provision NCAcademy's dedicated network, PostgreSQL, API and Amplify resources initially with API admission stopped. Keep the two database credentials, stable vault bootstrap and Core client credentials in the secret boundary.

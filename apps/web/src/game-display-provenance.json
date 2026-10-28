@@ -1,0 +1,12 @@
+{
+  "repository": "NorthCountryEngineer/Game_Studio",
+  "source_base_commit": "1a2921f246ece7a5e606b5306f0c763173537c21",
+  "source_file": "src/lib/game-fullscreen.ts",
+  "source_sha256": "a1b646081efa71488eef4ae53d7f8c3c2d60e1ab1e058922b82395f5ab2dea06",
+  "source_status": "Reviewed local fullscreen feature; exact source bytes identified by SHA-256",
+  "adaptations": [
+    "Remove the sandbox message bridge and nonce because Academy preserves its pinned runtime unchanged",
+    "Keep parent toolbar click and focused keyboard controls, ownership fences, display fallback and cleanup",
+    "No changes to Academy attested runtime, approval contract or result/scoring admission"
+  ]
+}
