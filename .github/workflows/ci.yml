@@ -63,7 +63,7 @@ jobs:
         run: |
           python scripts/setup_local.py
           docker compose config --quiet
-          docker compose build
+          docker compose build --build-arg PYTHON_REGISTRY=docker.io/library
           docker build -f apps/archive/Dockerfile -t ncacademy-archive:ci .
           docker compose up -d --wait --wait-timeout 120
           python scripts/smoke_local.py
