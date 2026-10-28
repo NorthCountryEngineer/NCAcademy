@@ -1,5 +1,10 @@
 # Changelog
 
+## October 27, 2026 — practice-game display controls
+
+- Added a full-screen toolbar and expanded-window fallback around the existing approved practice player, with an Exit button and native Escape handling. F and Alt+Enter shortcuts are available while the toolbar has focus; the pinned game's own focused keyboard behavior remains unchanged.
+- Kept every attested player/runtime byte, the runtime contract and digest, lesson approval, imported snapshot and scoring behavior unchanged. This presentation layer adds no schema migration, new approval or automatic game operation.
+
 ## October 27, 2026 — administrative Game Studio launch
 
 - Added persistent Game Studio shortcuts to human Admin/School settings after exact school-connection verification; saved creator readiness survives reloads and scoped save/verify actions refresh the same-page shortcut without external automatic requests.
