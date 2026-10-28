@@ -86,13 +86,16 @@ def plan_curriculum(configuration):
             for standard in catalog["standards"]:
                 grouped[standard["topic"]].append({"code": standard["code"], "title": standard["title"], "summary": standard["summary"], "source_id": catalog["sources"][0]["id"], "source_page": standard["source_page"], "pdf_page": standard["pdf_page"]})
             key = digest({"grade": grade, "subject": subject, "state": config["state"], "academic_year": config["academic_year"]})[:32]
-            partial = [{"code": "partial_standards_mapping", "message": catalog["mapping_note"]}, {"code": "course_sequence_requires_review", "message": "Topic groups are a planning draft derived from mapped standards, not a complete state-prescribed grade-year course. Review sequencing, investigations, accessibility and assessments before use."}]
+            complete = catalog.get("coverage") == "complete_standards"
+            partial = [{"code": "standards_mapping_review" if complete else "partial_standards_mapping", "message": catalog["mapping_note"]}, {"code": "course_sequence_requires_review", "message": "The local sequence and teaching references require human suitability review, practice tasks, accessibility and assessments. Standards coverage does not make this a state-authored curriculum." if complete else "Topic groups are a planning draft derived from mapped standards, not a complete state-prescribed grade-year course. Review sequencing, investigations, accessibility and assessments before use."}]
             title = f"{catalog['subject_name']} · {_grade_name(grade)} · {config['academic_year']}"
             course_plan = {"key": key, "title": title, "grade": grade, "academic_year": config["academic_year"], "subject": subject, "curriculum": curriculum, "description": "Partial reviewed-source curriculum plan. " + catalog["mapping_note"], "units": [{"title": topic.replace("_", " ").title(), "standard_codes": [item["code"] for item in standards], "objectives": standards} for topic, standards in sorted(grouped.items())], "source_ids": [source["id"] for source in catalog["sources"]], "sources": deepcopy(catalog["sources"]), "catalog_sha256": catalog["catalog_sha256"], "standards_version": catalog["standards_version"], "mapping_version": catalog["mapping_version"], "coverage": "partial", "alignment_mapping_available": True, "gaps": partial}
             if review:
                 course_plan.update(curriculum_review=deepcopy(review), curriculum_review_sha256=review["subject_review_sha256"])
                 for field in ("placement", "category", "limitations", "tutoring_scope", "frameworks"):
                     course_plan[field] = deepcopy(review[field])
+            if complete:
+                course_plan.update(coverage="complete_standards", description="Locally authored full-grade standards alignment and teaching references. " + catalog["mapping_note"], local_sequence=deepcopy(catalog.get("local_sequence", [])), coverage_counts=deepcopy(catalog.get("coverage_counts", {})))
             courses.append(course_plan)
     return {"adapter_version": PLANNER_VERSION, "configuration": config, "courses": courses, "gaps": gaps, "ingestion_supported": False, "status": "ready" if courses else "unavailable"}
 

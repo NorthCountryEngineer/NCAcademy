@@ -1,5 +1,13 @@
 # Verification record
 
+## Grade 3 mathematics readiness — October 28, 2026
+
+The focused standards/curriculum/corpus suite passed **129 tests** using synthetic records. It independently enumerates all 44 New York Grade 3 content/component codes and eight Mathematical Practices, verifies exact source hashes/pages, all 27 original teaching references and nine local units, exercises draft planning/corpus approval and stale-context rejection, and retains unreviewed-grade/year boundaries. The mocked provider suite passed **28 tests**, including exact OpenAI endpoint/model payloads, unchanged token caps and no retry or fallback. See [package scope and refresh](ny-grade3-mathematics.md) and [transport contract](openai-chat-compatibility.md).
+
+The complete frontend suite passed **469 tests across 35 files**, with TypeScript and the production Vite build passing. Actual component regressions cover exact-grade coverage labels, the complete local sequence and omission of earlier framework-only messaging for this complete package. Source/package validation, the generated framework register and all 2,030 official course/48 state-assessment source mappings passed unchanged. No provider or real student data was used. The existing large-bundle advisory and Starlette deprecation remain nonblocking.
+
+The release preserves the production frontend's fullscreen controls by starting from production commit `d542b8acddf7b01034ed1d57248bdc559c273669`. Normal exact-commit CI additionally runs the full backend/archive/script suite, isolated PostgreSQL privilege checks and container smoke. These source checks do not claim production release or teacher/corpus approval; exact native image/source, historical record/audit preservation, PII/key recovery and authenticated UI configuration are separately retained in private operator receipts. This package introduces no new schema or permission grant and does not change student authorship or publication approval.
+
 ## Administrative Game Studio launch — October 27, 2026
 
 The focused Game Studio, public-transport and assignment-scoring backend suites passed **161 tests** with synthetic records and outbound network access blocked. They include persisted verified creator descriptors for human Admin/School administrators, exact-host automatic sign-in URLs, local Student/Parent denial, teacher/agent boundaries and unchanged imported game/approval records during creator reads. Existing scoring encryption, attempt admission and historical evidence regressions remain passing.

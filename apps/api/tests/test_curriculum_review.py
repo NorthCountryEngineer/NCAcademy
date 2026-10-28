@@ -169,7 +169,7 @@ def test_public_catalog_preserves_real_partial_packages_and_labels_scope_only_su
         assert item["coverage"] == "partial" and item["standards_version"] == "nyssls-2016"
         assert item["alignment_mapping_available"] and item["versions"]
         assert item["curriculum_review"]["coverage"] == "framework_review"
-    for code in ("mathematics", "ela", "health_education", "world_languages_modern"):
+    for code in ("ela", "health_education", "world_languages_modern"):
         item = subjects[code]
         assert item["coverage"] == "framework_review" and not item["alignment_mapping_available"]
         assert item["standards_version"] is None and item["versions"] == []
@@ -184,7 +184,8 @@ def test_all_reviewed_grade_subject_combinations_plan_without_fabricated_standar
     assert {(c["grade"], c["subject"]) for c in plan["courses"]} == expected
     assert len(plan["courses"]) == len({c["key"] for c in plan["courses"]}) == 470
     mapped = [c for c in plan["courses"] if c["alignment_mapping_available"]]
-    assert len(mapped) == 8
+    assert len(mapped) == 9
+    assert {(c["grade"], c["subject"]) for c in mapped if c["coverage"] == "complete_standards"} == {(3, "mathematics")}
     for course in plan["courses"]:
         assert course["curriculum_review_sha256"]
         if course["coverage"] == "framework_review":

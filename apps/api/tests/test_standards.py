@@ -211,7 +211,7 @@ def test_standards_only_package_still_cannot_be_approved_as_subject_knowledge(co
         assert denied.value.status_code == 409
 
 
-@pytest.mark.parametrize("change,code", [({"state": "US-VT"}, "mapping_unavailable"), ({"subject": "mathematics"}, "mapping_unavailable"), ({"grades": [8]}, "grade_unreviewed"), ({"academic_year": "2027-2028"}, "year_unreviewed"), ({"standards_version": "fictional-2026"}, "version_unreviewed")])
+@pytest.mark.parametrize("change,code", [({"state": "US-VT"}, "mapping_unavailable"), ({"subject": "mathematics"}, "grade_unreviewed"), ({"grades": [8]}, "grade_unreviewed"), ({"academic_year": "2027-2028"}, "year_unreviewed"), ({"standards_version": "fictional-2026"}, "version_unreviewed")])
 def test_unsupported_mappings_fail_closed_with_no_invented_standards(corpus_env, change, code):
     database, identity, audit_actor, _ = corpus_env
     with database.write() as db:

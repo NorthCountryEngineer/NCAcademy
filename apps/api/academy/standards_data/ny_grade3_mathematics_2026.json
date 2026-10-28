@@ -1,0 +1,1250 @@
+{
+  "schema_version": 1,
+  "state": "US-NY",
+  "state_name": "New York",
+  "subject": "mathematics",
+  "subject_name": "Mathematics",
+  "grades": [
+    3
+  ],
+  "academic_years": [
+    "2026-2027"
+  ],
+  "standards_version": "nys-next-generation-mathematics-2017-updated-2019",
+  "mapping_version": "ncacademy-ny-grade3-mathematics-2026-10-28-v1",
+  "mapping_revision": 0,
+  "reviewed_at": "2026-10-28",
+  "review_valid_through": "2027-06-30",
+  "effective_from": "2022-2023",
+  "coverage": "complete_standards",
+  "mapping_note": "All 44 printed Grade 3 content expectations/components across OA, NBT, NF, MD and G are mapped, together with eight cross-grade Mathematical Practices. Parent statements with listed components are retained; no unsuffixed parent statement is invented where NYSED prints only suffixed expectations. This is a locally authored standards-aligned teaching corpus and suggested sequence, not a state-authored curriculum, a complete collection of classroom lessons or a guarantee of mastery. School pacing, accessibility, practice, assessment and human publication review remain required.",
+  "instructional_coverage_note": "Twenty-seven original local reference explanations cover all mapped expectations. The nine-unit sequence is a local suggestion. Teachers still choose practice tasks, adaptations and assessments; no student work or automatic publication approval is supplied.",
+  "teaching_pack_version": "ncacademy-ny-grade3-math-teaching-2026-10-28-v1",
+  "sources": [
+    {
+      "id": "nysed-math-ngls-2017",
+      "title": "New York State Next Generation Mathematics Learning Standards (2017, updated June 2019)",
+      "url": "https://www.nysed.gov/sites/default/files/programs/standards-instruction/nys-next-generation-mathematics-p-12-standards.pdf",
+      "publisher": "New York State Education Department",
+      "content_sha256": "1bc23fd7e8793c22ba2d398be43411f570b043e4a4da930662c22b81cd5def95",
+      "byte_length": 3736579,
+      "retrieved_at": "2026-10-28",
+      "reviewed_at": "2026-10-28",
+      "hash_scope": "Exact downloaded PDF bytes; full source is not redistributed",
+      "rights_note": "Standards are linked as alignment evidence. Included explanations and teaching examples are original NCAcademy material, not copied state lessons or standard text."
+    },
+    {
+      "id": "nysed-math-guidance-2026",
+      "title": "Mathematics Guidance & Resources",
+      "url": "https://www.nysed.gov/standards-instruction/mathematics-guidance-resources",
+      "publisher": "New York State Education Department",
+      "content_sha256": "9944a036c68df8865829b519284e1e7d4b3a2441c476d091ab2c4d1ccadf9d7b",
+      "byte_length": 83954,
+      "retrieved_at": "2026-10-28",
+      "reviewed_at": "2026-10-28",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Standards are linked as alignment evidence. Included explanations and teaching examples are original NCAcademy material, not copied state lessons or standard text."
+    },
+    {
+      "id": "nysed-math-index-2026",
+      "title": "Mathematics",
+      "url": "https://www.nysed.gov/standards-instruction/mathematics",
+      "publisher": "New York State Education Department",
+      "content_sha256": "2e444977c3b3382b78d73c3e0edbb3d95219783fc24f6d3f5fdb44b81e01ef45",
+      "byte_length": 63674,
+      "retrieved_at": "2026-10-28",
+      "reviewed_at": "2026-10-28",
+      "hash_scope": "Exact retrieved HTML bytes; full source is not redistributed",
+      "rights_note": "Standards are linked as alignment evidence. Included explanations and teaching examples are original NCAcademy material, not copied state lessons or standard text."
+    }
+  ],
+  "applicability_references": [
+    {
+      "source_id": "nysed-math-guidance-2026",
+      "finding": "Current NYSED guidance identifies full implementation from September 2022 and grade 3-8 aligned assessments from spring 2023. Suggested roadmap activities are optional."
+    },
+    {
+      "source_id": "nysed-math-index-2026",
+      "finding": "The current NYSED mathematics page describes standards as mandatory guides to the design of locally developed mathematics programs."
+    },
+    {
+      "source_id": "nysed-math-ngls-2017",
+      "finding": "Printed/PDF pages45-54 define Grade3 content. Pages7-9 define the eight Mathematical Practices; page169 records the June2019 four-digit wording correction."
+    }
+  ],
+  "standards": [
+    {
+      "code": "NY-3.OA.1",
+      "source_page": 46,
+      "pdf_page": 46,
+      "topic": "multiplication_and_division",
+      "title": "Equal-group products",
+      "summary": "Connect a product to equal-sized groups and explain what each factor and the total describe."
+    },
+    {
+      "code": "NY-3.OA.2",
+      "source_page": 46,
+      "pdf_page": 46,
+      "topic": "multiplication_and_division",
+      "title": "Two meanings of division",
+      "summary": "Interpret a whole-number quotient as either equal sharing or counting equal-sized groups."
+    },
+    {
+      "code": "NY-3.OA.3",
+      "source_page": 46,
+      "pdf_page": 46,
+      "topic": "multiplication_and_division",
+      "title": "Multiplication and division situations",
+      "summary": "Model equal-group, array and measurement word problems with products and quotients within 100."
+    },
+    {
+      "code": "NY-3.OA.4",
+      "source_page": 46,
+      "pdf_page": 46,
+      "topic": "multiplication_and_division",
+      "title": "Missing factors and quotients",
+      "summary": "Find an unknown whole number in a three-number multiplication or division relationship, wherever the unknown appears."
+    },
+    {
+      "code": "NY-3.OA.5",
+      "source_page": 47,
+      "pdf_page": 47,
+      "topic": "multiplication_and_division",
+      "title": "Useful operation properties",
+      "summary": "Use switching factors, regrouping factors and splitting a factor to calculate; formal property names are not required."
+    },
+    {
+      "code": "NY-3.OA.6",
+      "source_page": 47,
+      "pdf_page": 47,
+      "topic": "multiplication_and_division",
+      "title": "Division through a missing factor",
+      "summary": "Connect a division calculation to the multiplication fact with the missing factor."
+    },
+    {
+      "code": "NY-3.OA.7a",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "multiplication_and_division",
+      "title": "Flexible fact fluency",
+      "summary": "Build efficient, accurate single-digit multiplication and related division using relationships and strategies."
+    },
+    {
+      "code": "NY-3.OA.7b",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "multiplication_and_division",
+      "title": "Remembering multiplication facts",
+      "summary": "Develop recall of products of two single-digit numbers, building on conceptual strategies."
+    },
+    {
+      "code": "NY-3.OA.8",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "problem_solving_and_patterns",
+      "title": "Two-step whole-number problems",
+      "summary": "Use any of the four operations to solve two-step situations with whole-number inputs and answers."
+    },
+    {
+      "code": "NY-3.OA.8a",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "problem_solving_and_patterns",
+      "title": "Representing two-step situations",
+      "summary": "Represent each situation with an equation or expression using a letter for the unknown; separate steps are acceptable.",
+      "component_of": "NY-3.OA.8"
+    },
+    {
+      "code": "NY-3.OA.8b",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "problem_solving_and_patterns",
+      "title": "Checking reasonableness",
+      "summary": "Use mental mathematics, estimation and rounding to check whether a two-step result makes sense.",
+      "component_of": "NY-3.OA.8"
+    },
+    {
+      "code": "NY-3.OA.9",
+      "source_page": 48,
+      "pdf_page": 48,
+      "topic": "problem_solving_and_patterns",
+      "title": "Arithmetic patterns",
+      "summary": "Notice and continue number patterns, including relationships within addition and multiplication tables."
+    },
+    {
+      "code": "NY-3.NBT.1",
+      "source_page": 49,
+      "pdf_page": 49,
+      "topic": "place_value_and_arithmetic",
+      "title": "Rounding to tens and hundreds",
+      "summary": "Use place-value reasoning to choose the nearest ten or hundred for a whole number."
+    },
+    {
+      "code": "NY-3.NBT.2",
+      "source_page": 49,
+      "pdf_page": 49,
+      "topic": "place_value_and_arithmetic",
+      "title": "Addition and subtraction within1000",
+      "summary": "Develop flexible, accurate addition and subtraction within 1,000 using place value, operation properties and inverse relationships; no single algorithm is mandated."
+    },
+    {
+      "code": "NY-3.NBT.3",
+      "source_page": 49,
+      "pdf_page": 49,
+      "topic": "place_value_and_arithmetic",
+      "title": "Single digits times tens",
+      "summary": "Multiply a single-digit whole number by a multiple of ten from 10 through 90 using place value and operation properties."
+    },
+    {
+      "code": "NY-3.NBT.4a",
+      "source_page": 49,
+      "pdf_page": 49,
+      "topic": "place_value_and_arithmetic",
+      "title": "Thousands in four-digit numbers",
+      "summary": "Interpret a four-digit numeral using thousands, hundreds, tens and ones."
+    },
+    {
+      "code": "NY-3.NBT.4b",
+      "source_page": 49,
+      "pdf_page": 49,
+      "topic": "place_value_and_arithmetic",
+      "title": "Writing four-digit numbers",
+      "summary": "Read and write four-digit quantities in numeral, word and expanded forms; includes the June 2019 correction."
+    },
+    {
+      "code": "NY-3.NF.1",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Building fractions from equal parts",
+      "summary": "Identify a unit fraction from one equal part of a whole and build a general fraction by counting equal unit parts."
+    },
+    {
+      "code": "NY-3.NF.2",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Fractions on a number line",
+      "summary": "Treat fractions as numbers and locate them on a number line with a fixed whole."
+    },
+    {
+      "code": "NY-3.NF.2a",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Locating a unit fraction",
+      "summary": "Partition the 0-to-1 interval into equal lengths and locate one unit fraction at the first endpoint after 0.",
+      "component_of": "NY-3.NF.2"
+    },
+    {
+      "code": "NY-3.NF.2b",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Counting fractional lengths",
+      "summary": "Locate a fraction by iterating its unit-fraction length from 0, including locations beyond 1.",
+      "component_of": "NY-3.NF.2"
+    },
+    {
+      "code": "NY-3.NF.3",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Fraction size and equivalence",
+      "summary": "Explain when fractions have equal size and compare their values with reference to the same whole."
+    },
+    {
+      "code": "NY-3.NF.3a",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Equivalent locations and sizes",
+      "summary": "Recognize equivalent fractions by equal amounts or a shared position on a number line.",
+      "component_of": "NY-3.NF.3"
+    },
+    {
+      "code": "NY-3.NF.3b",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Creating equivalent fractions",
+      "summary": "Generate and explain equivalent fractions with visual models, rather than an unexplained symbolic rule.",
+      "component_of": "NY-3.NF.3"
+    },
+    {
+      "code": "NY-3.NF.3c",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Whole numbers written as fractions",
+      "summary": "Express whole numbers as fractions and recognize fractions that describe a whole-number quantity.",
+      "component_of": "NY-3.NF.3"
+    },
+    {
+      "code": "NY-3.NF.3d",
+      "source_page": 50,
+      "pdf_page": 50,
+      "topic": "fractions",
+      "title": "Comparing related fractions",
+      "summary": "Compare fractions sharing a numerator or denominator for the same whole; justify <, = or > with size reasoning.",
+      "component_of": "NY-3.NF.3"
+    },
+    {
+      "code": "NY-3.MD.1",
+      "source_page": 51,
+      "pdf_page": 51,
+      "topic": "measurement_and_data",
+      "title": "Time and elapsed minutes",
+      "summary": "Read and record time to the minute; measure intervals and solve one-step minute-interval problems, including crossing an hour."
+    },
+    {
+      "code": "NY-3.MD.2a",
+      "source_page": 51,
+      "pdf_page": 51,
+      "topic": "measurement_and_data",
+      "title": "Metric masses and liquid amounts",
+      "summary": "Estimate and measure masses in grams or kilograms and liquid amounts in liters; geometric volume and compound units are outside this expectation."
+    },
+    {
+      "code": "NY-3.MD.2b",
+      "source_page": 51,
+      "pdf_page": 51,
+      "topic": "measurement_and_data",
+      "title": "Same-unit measurement problems",
+      "summary": "Use one operation with mass or liquid-volume quantities in the same units; exclude multiplicative comparison contexts."
+    },
+    {
+      "code": "NY-3.MD.3",
+      "source_page": 51,
+      "pdf_page": 51,
+      "topic": "measurement_and_data",
+      "title": "Scaled data graphs",
+      "summary": "Make scaled picture/bar graphs for several categories, then solve one- and two-step category comparisons."
+    },
+    {
+      "code": "NY-3.MD.4",
+      "source_page": 51,
+      "pdf_page": 51,
+      "topic": "measurement_and_data",
+      "title": "Rulers and fractional-inch line plots",
+      "summary": "Measure to halves and quarters of an inch, then plot repeated measurements on a correctly scaled line plot."
+    },
+    {
+      "code": "NY-3.MD.5",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Meaning of area",
+      "summary": "Understand area as the amount of a flat region measured with square units."
+    },
+    {
+      "code": "NY-3.MD.5a",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "One square unit",
+      "summary": "Relate a square whose side is one chosen length unit to one unit of area.",
+      "component_of": "NY-3.MD.5"
+    },
+    {
+      "code": "NY-3.MD.5b",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Covering a region",
+      "summary": "Use equal unit squares with neither gaps nor overlaps to define a region's area.",
+      "component_of": "NY-3.MD.5"
+    },
+    {
+      "code": "NY-3.MD.6",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Counting square units",
+      "summary": "Measure area by counting equal unit squares, including common metric/customary and consistent improvised squares."
+    },
+    {
+      "code": "NY-3.MD.7",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Area with multiplication and addition",
+      "summary": "Relate tiled rectangles, products, decomposition and sums of nonoverlapping areas."
+    },
+    {
+      "code": "NY-3.MD.7a",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Tiles and rectangle products",
+      "summary": "Show that counting a whole-number rectangle's square tiles agrees with multiplying its side lengths.",
+      "component_of": "NY-3.MD.7"
+    },
+    {
+      "code": "NY-3.MD.7b",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Rectangle area applications",
+      "summary": "Use side-length products to solve rectangle-area situations and explain products through rectangular regions.",
+      "component_of": "NY-3.MD.7"
+    },
+    {
+      "code": "NY-3.MD.7c",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Distributing a rectangle",
+      "summary": "Partition a tiled rectangle to explain a times(b+c) as the sum of a-times-b and a-times-c.",
+      "component_of": "NY-3.MD.7"
+    },
+    {
+      "code": "NY-3.MD.7d",
+      "source_page": 52,
+      "pdf_page": 52,
+      "topic": "area",
+      "title": "Adding nonoverlapping rectangles",
+      "summary": "Find a compound region's area by summing nonoverlapping rectangles; problems have at most one unknown side length.",
+      "component_of": "NY-3.MD.7"
+    },
+    {
+      "code": "NY-3.MD.8a",
+      "source_page": 53,
+      "pdf_page": 53,
+      "topic": "perimeter",
+      "title": "Polygon boundary lengths",
+      "summary": "Solve polygon perimeter situations using all side lengths, or find one missing side from the perimeter and the other sides."
+    },
+    {
+      "code": "NY-3.MD.8b",
+      "source_page": 53,
+      "pdf_page": 53,
+      "topic": "perimeter",
+      "title": "Area and perimeter are different",
+      "summary": "Identify rectangles with equal perimeter but different area, or equal area but different perimeter."
+    },
+    {
+      "code": "NY-3.G.1",
+      "source_page": 54,
+      "pdf_page": 54,
+      "topic": "geometry",
+      "title": "Classifying polygons",
+      "summary": "Classify triangles, quadrilaterals, pentagons and hexagons using sides and vertices; include unusual examples and nonexamples without requiring regularity terminology."
+    },
+    {
+      "code": "NY-3.G.2",
+      "source_page": 54,
+      "pdf_page": 54,
+      "topic": "geometry",
+      "title": "Equal-area shares",
+      "summary": "Partition a region into equal-area parts and describe one part as a unit fraction of the whole."
+    },
+    {
+      "code": "MP.1",
+      "source_page": 7,
+      "pdf_page": 7,
+      "topic": "mathematical_practices",
+      "title": "Planning and perseverance",
+      "summary": "Interpret the problem, select an entry point, monitor progress and try another representation when needed.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.2",
+      "source_page": 7,
+      "pdf_page": 7,
+      "topic": "mathematical_practices",
+      "title": "Quantities and symbols",
+      "summary": "Connect numbers and operations to their quantities, units and real-world meanings.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.3",
+      "source_page": 7,
+      "pdf_page": 7,
+      "topic": "mathematical_practices",
+      "title": "Explaining and checking reasoning",
+      "summary": "Use drawings, examples and logical explanations to support a claim and evaluate another approach.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.4",
+      "source_page": 7,
+      "pdf_page": 7,
+      "topic": "mathematical_practices",
+      "title": "Mathematical models",
+      "summary": "Represent a situation mathematically and check that the model fits its context.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.5",
+      "source_page": 8,
+      "pdf_page": 8,
+      "topic": "mathematical_practices",
+      "title": "Choosing useful tools",
+      "summary": "Select suitable objects, drawings, measuring tools or technology and explain their limits.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.6",
+      "source_page": 8,
+      "pdf_page": 8,
+      "topic": "mathematical_practices",
+      "title": "Clear and accurate communication",
+      "summary": "Use accurate calculations, defined symbols, appropriate units and understandable labels.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.7",
+      "source_page": 8,
+      "pdf_page": 8,
+      "topic": "mathematical_practices",
+      "title": "Using mathematical structure",
+      "summary": "Recognize groups, place-value units, partitions and relationships that make a problem easier.",
+      "applies_across_grades": true
+    },
+    {
+      "code": "MP.8",
+      "source_page": 8,
+      "pdf_page": 8,
+      "topic": "mathematical_practices",
+      "title": "Repeated reasoning",
+      "summary": "Use repeated calculations to find and justify an efficient pattern while monitoring each step.",
+      "applies_across_grades": true
+    }
+  ],
+  "teaching_documents": [
+    {
+      "id": "ny-g3-oa-1",
+      "title": "Equal groups tell a multiplication story",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.1"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 46"
+      ],
+      "content": "Multiplication counts equal groups. In 4 trays with 3 markers on each tray,4 tells how many groups there are and 3 tells the size of each group. The product counts all the markers. Sketch a separate loop for every tray, put the same number of dots in each, and connect the picture to 4 x 3. An array organizes those dots into equal rows and columns. An expression on its own does not name the objects; a story gives each number a meaning. If the groups have different sizes, a single equal-group product does not describe them. Explain what the two factors mean before calculating. Then show a new equal-group story with objects or a drawing.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-2",
+      "title": "Sharing and grouping are two division stories",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.2"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 46"
+      ],
+      "content": "Division can answer two different questions. A total of 18 counters shared equally among 3 children asks how many each child receives. The same 18 counters placed into groups of 3 asks how many groups can be made. The quotient describes the missing quantity, so its label changes with the story. Draw either the known number of sharing circles or repeated equal groups of the known size. Keep the total fixed and use every counter once. Check a division model by multiplying the number of groups by the size of one group. Explain which quantity is unknown before choosing a calculation.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-3",
+      "title": "Choose a model for a multiplication or division problem",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.3"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 46"
+      ],
+      "content": "An equal-group story has a number of groups, a group size and a total. An array shows the same relationship through rows, objects in each row and all objects. A measurement story can use equal lengths joined end to end. Label the known quantities and leave a box for the missing one. A missing total suggests multiplication; a missing group size or number of groups suggests division. Work within products and quotients through 100. A drawing, number line or equation should represent the actual situation, not just a keyword. Explain how every number in the equation appears in the model, and check whether the answer's unit fits the question.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-4",
+      "title": "Find the missing part of an equation",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.4"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 46"
+      ],
+      "content": "The equal sign says that two quantities have the same value. A missing number may appear in a product, as a factor, or in either part of a division equation. For 7 x box=42, ask which count of 7 s reaches 42. For box divided by 4=6, build 6 groups of 4 to reconstruct the total. Replace the box with the proposed number and check both sides of the equation. Use an array or a multiplication-division fact family when the missing position is unfamiliar. Do not assume the unknown must follow the equal sign. Describe whether the unknown represents a group count, group size or total.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-5",
+      "title": "Use a known product to reason about another",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.5"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 47"
+      ],
+      "content": "Switching the two factors turns an array and keeps its total unchanged. Regrouping three factors changes which pair is multiplied first while preserving the product. Splitting a group size lets a difficult product become two familiar products:6 groups of 7 can be split into 6 groups of 5 and 6 groups of 2. Draw one array and a dividing line so the pieces do not overlap. Add the two piece totals to reconstruct the original product. These ideas support division because a quotient is related to a missing factor. Students can explain the action with a picture and ordinary words; memorizing formal property names is not required.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-6",
+      "title": "Use multiplication to understand division",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.6"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 47"
+      ],
+      "content": "A division statement and a missing-factor multiplication statement can describe the same equal groups. For 36 divided by 6, ask 6 times what number makes 36. An array with 6 in one dimension makes the missing dimension visible. The total must equal number of groups times group size. A fact family can connect two multiplication statements and their related divisions when the factors are nonzero. Explain which number is the total and which factor is missing. This connection is more useful than treating division as an unrelated rule, and it provides a way to check a quotient with multiplication.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-7",
+      "title": "Grow fluency and recall with meaning",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.7a",
+        "NY-3.OA.7b"
+      ],
+      "topics": [
+        "multiplication_and_division"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 48"
+      ],
+      "content": "Fact fluency combines accuracy, efficient strategies and an understanding of equal groups. Start from a product you know: doubling, grouping by 5 or 10, and splitting a factor can help reconstruct another single-digit product. Connect each product to its related division. Fact recall is a related goal: over time, products of two one-digit numbers should be available from memory. A student who reconstructs a fact thoughtfully is showing useful understanding even while recall is developing. Practice short sets, explain one strategy, and revisit familiar facts over time. If recall fails, return to an array or a known fact instead of guessing. Fluency and memorization are recorded separately because the standards distinguish them.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-8",
+      "title": "Plan and check a two-step situation",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.8",
+        "NY-3.OA.8a",
+        "NY-3.OA.8b"
+      ],
+      "topics": [
+        "problem_solving_and_patterns"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 48"
+      ],
+      "content": "Read the entire situation and state what the final question asks. Identify any quantity that must be found first. Represent the first relationship with a drawing or an equation; use its result in the next relationship. A letter can stand for a missing amount in an expression or equation, and the steps may use separate equations. Use whole-number situations with whole-number answers and any of the four operations. Estimate a sensible size before calculating, perhaps by rounding, then compare the computed result with that estimate. A mathematically correct calculation can still answer the wrong question, so label quantities and reread the story. Explain how the intermediate quantity connects the two steps.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-oa-9",
+      "title": "Notice and extend arithmetic patterns",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.OA.9"
+      ],
+      "topics": [
+        "problem_solving_and_patterns"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 48"
+      ],
+      "content": "An arithmetic pattern follows a relationship that can be described and checked. In a multiplication table, moving one place along the row for 4 increases the product by 4 because one group of 4 has been added. An addition table also has regular changes along rows and columns. Look at several entries, describe what stays fixed and what changes, then test the proposed rule on another entry. Continue a pattern using the relationship, not only the appearance of the last digit. Equal-group drawings can explain why patterns of even and odd totals occur. When more than one rule fits a short sequence, state the rule being used rather than claiming that it is the only possible continuation.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nbt-1",
+      "title": "Rounding keeps a useful nearby value",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NBT.1"
+      ],
+      "topics": [
+        "place_value_and_arithmetic"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 49"
+      ],
+      "content": "Rounding to the nearest ten chooses between the two neighboring tens; rounding to the nearest hundred chooses between neighboring hundreds. Place the original number between those benchmarks on a number line and compare distances. A midpoint is equally far from both; the usual whole-number rounding convention chooses the greater benchmark. For 347, the tens benchmarks are 340 and 350, while the hundreds benchmarks are 300 and 400. The chosen place matters. A rounded value is an estimate, not a claim that the original number has changed. Explain which benchmarks were compared and why the rounded value is close enough for the purpose.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nbt-2",
+      "title": "Add and subtract by place-value units",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NBT.2"
+      ],
+      "topics": [
+        "place_value_and_arithmetic"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 49"
+      ],
+      "content": "Hundreds, tens and ones are different-sized units. Combine like units when adding and rename units when necessary:10 ones make 1 ten and 10 tens make 1 hundred. When subtracting, a hundred can be renamed as 10 tens, or a ten as 10 ones, without changing the total. Base-ten drawings, an open number line and written algorithms can all represent these actions within 1,000. Align units by their place value, not merely by how the digits look. Check subtraction with addition and compare either result with a rough estimate. More than one sensible strategy is allowed. Describe why a regrouping step preserves the original quantity.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nbt-3",
+      "title": "Multiply bundles of ten",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NBT.3"
+      ],
+      "topics": [
+        "place_value_and_arithmetic"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 49"
+      ],
+      "content": "A multiple of ten is a count of tens. In 7 x 40, the 40 is 4 tens, so the product can be reasoned about as 7 groups of 4 tens. First use the single-digit fact, then name the resulting number of tens and express it in ones. Draw bundles or use a place-value chart to explain the change of unit. This is the reason a product such as this has a zero in the ones place; attaching a zero without understanding the unit is not an explanation. This expectation uses a single-digit factor and multiples of ten from 10 through 90.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nbt-4",
+      "title": "Thousands extend the place-value system",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NBT.4a",
+        "NY-3.NBT.4b"
+      ],
+      "topics": [
+        "place_value_and_arithmetic"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 49"
+      ],
+      "content": "In a four-digit number, each digit counts a unit in the thousands, hundreds, tens or ones position. The same digit has a different value in a different position. The numeral 4,063 contains 4 thousands, no hundreds,6 tens and 3 ones; the zero holds the empty hundreds place. Expanded form names the nonzero units:4,000+60+3. Words, a place-value drawing and a numeral should describe the same amount. Read four-digit numbers aloud and reconstruct a numeral from its unit counts. Keep the New York expectation for four-digit reading and writing alongside arithmetic within 1,000; these are different goals.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nf-1",
+      "title": "A fraction counts equal shares of one whole",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NF.1"
+      ],
+      "topics": [
+        "fractions"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 50"
+      ],
+      "content": "Choose and identify the whole before naming a fraction. If the whole is partitioned into 4 equal-area parts, one part is one fourth and 3 such parts form three fourths. The denominator names how many equal parts make the whole; the numerator counts those unit parts. Unequal pieces are not interchangeable fourths merely because there are 4 of them. Equal-area pieces can have different shapes. Use strips, regions or collections only when the whole and the equal shares are clear. Use denominators 2,3,4,6 and 8. Fractions can describe amounts smaller than, equal to or larger than one whole.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nf-2",
+      "title": "Fractions are positions and lengths on a number line",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NF.2",
+        "NY-3.NF.2a",
+        "NY-3.NF.2b"
+      ],
+      "topics": [
+        "fractions"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 50"
+      ],
+      "content": "On a number line, the distance from 0 to 1 defines one whole. Partition that interval into equally long parts; with 4 parts, the first endpoint after 0 marks one fourth. Count equal fractional lengths from 0 to locate a larger fraction. Three lengths of one fourth locate three fourths, while 5 such lengths pass 1 and locate five fourths. Count intervals, not tick marks, and maintain the same unit length beyond 1. A fraction is a number at a position, as well as a distance measured from 0. Use denominators 2,3,4,6 and 8 in ordinary grade 3 fraction work and explain which segment represents one whole.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-nf-3",
+      "title": "Compare fraction sizes using the same whole",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.NF.3",
+        "NY-3.NF.3a",
+        "NY-3.NF.3b",
+        "NY-3.NF.3c",
+        "NY-3.NF.3d"
+      ],
+      "topics": [
+        "fractions"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 50"
+      ],
+      "content": "Two fractions are equivalent when they name the same amount of the same whole or share a number-line position. Splitting every half into 2 equal pieces shows why one half and two fourths coincide. Build equivalent fractions by repartitioning a model and explain why the amount has stayed fixed. Whole numbers can also be fractions: two wholes can be named six thirds, and 3 can be named 3 over 1. Denominator 1 is appropriate for this whole-number representation even though the main fraction work uses 2,3,4,6 and 8. With a common denominator, compare counts of the same-sized parts. With a common numerator, fewer equal divisions make each part larger. Comparisons require the same whole. Record <, = or > and justify with a model, rather than claiming that a larger denominator always makes a larger fraction.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-1",
+      "title": "Read clocks and reason about elapsed minutes",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.1"
+      ],
+      "topics": [
+        "measurement_and_data"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 51"
+      ],
+      "content": "A clock's minute hand moves through 60 minute positions in an hour. First identify the hour interval, then count minutes to read a time precisely. The hour hand advances between hour numbers as the minutes pass. An elapsed-time question asks about a duration, which is different from a clock reading. Represent the start, useful hour benchmarks and the end on a number line. Crossing an hour may be handled in two jumps, such as moving from 2:48 to 3:00 and then to 3:07. Use addition for time passing and subtraction for a missing interval or start. Check that the direction and minute units match the situation.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-2",
+      "title": "Choose metric units and keep them consistent",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.2a",
+        "NY-3.MD.2b"
+      ],
+      "topics": [
+        "measurement_and_data"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 51"
+      ],
+      "content": "Mass describes how much matter an object has; grams and kilograms are useful metric units for different-sized objects. Liters describe a liquid amount. Estimate using familiar benchmarks, then use a suitable scale or marked container to measure. Read the marked scale carefully and keep the unit attached to the number. When all quantities are given in the same unit, one-step addition, subtraction, multiplication or division can model combining, removing or equal groups. This grade 3 expectation does not ask for geometric container-volume calculations, cubic units or compound units. It also excludes multiplicative comparison stories about one quantity being a number of times as much as another. Explain what each measurement and operation represents.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-3",
+      "title": "A graph key changes the value of a mark",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.3"
+      ],
+      "topics": [
+        "measurement_and_data"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 51"
+      ],
+      "content": "A scaled graph uses one picture or one scale step for a specified number of observations. If a picture stands for 4 books,3 pictures stand for 3 groups of 4 books. Label the categories and show the scale or key so another reader can recover each total. A bar's height is read against the numbered scale, not by counting arbitrary drawn lines. To compare categories, find their quantities first, then determine how many more or fewer one has. A two-step question may require combining categories before comparing. Choose a consistent scale that suits the data and check that the graph includes every observation in the correct category.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-4",
+      "title": "Measure fractional inches and show repeated values",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.4"
+      ],
+      "topics": [
+        "measurement_and_data"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 51"
+      ],
+      "content": "Place the ruler's zero mark at the start of the length being measured. Between consecutive inch marks, the halfway mark measures one half inch; four equal intervals mark quarters. Count equal intervals rather than decorative lines. Measure several objects and record every observation, including repetitions. On a line plot, mark a number line using consistent whole-, half- or quarter-inch steps as appropriate. Stack one symbol above the measured value for each observation. The height of a stack counts observations and the horizontal position gives the length; those are different quantities. Read the scale before comparing measurements or describing the data.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-5",
+      "title": "Area measures covered surface",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.5",
+        "NY-3.MD.5a",
+        "NY-3.MD.5b"
+      ],
+      "topics": [
+        "area"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 52"
+      ],
+      "content": "Area describes the size of a flat region, while length describes a distance. A unit square has sides of one chosen length unit and covers one square unit. Cover a region using squares of exactly the same size. Tiles must meet without gaps or overlaps because either would change the amount being counted. The region's area is the number of those square units covering it. Changing the size of the unit square changes the count but not the region itself. State the square unit used. A boundary count measures something different from the surface covered by the tiles.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-6",
+      "title": "Count equal squares to measure area",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.6"
+      ],
+      "topics": [
+        "area"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 52"
+      ],
+      "content": "To measure area directly, cover a region with equal unit squares and count them once each. Centimeter squares, meter squares, inch squares, foot squares or consistently sized improvised squares can serve as units. A square centimeter has side length one centimeter; it is an area unit rather than a length unit. Organizing the tiles into rows makes counting easier, but first check that all rows cover the region without gaps or overlaps. Keep the unit size fixed across the measurement. If the same region is tiled with larger squares, fewer tiles may be needed, which explains why a count without its unit is incomplete.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-7",
+      "title": "Build rectangle area from rows and parts",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.7",
+        "NY-3.MD.7a",
+        "NY-3.MD.7b",
+        "NY-3.MD.7c",
+        "NY-3.MD.7d"
+      ],
+      "topics": [
+        "area"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 52"
+      ],
+      "content": "A rectangle with 5 rows of 3 unit squares has the same tile count as 5 x 3. Its whole-number side lengths describe the numbers of unit intervals along the two dimensions, so multiplying them counts the square units in every row. Use this model in practical area questions and label the result in square units. Split a rectangle of width b+c into widths b and c while keeping its height a: the two areas a x b and a x c sum to the original area a x(b+c). A compound shape can likewise be split into nonoverlapping rectangles and their areas added. Do not count a shared region twice. Grade 3 compound-area problems have no more than one unknown side length. Explain any missing length using the labeled whole and parts before finding area.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-md-8",
+      "title": "Separate the boundary from the covered region",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.MD.8a",
+        "NY-3.MD.8b"
+      ],
+      "topics": [
+        "perimeter"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 53"
+      ],
+      "content": "Perimeter measures a polygon's boundary. Add each outside side length once; do not count an interior dividing line. If the perimeter and all but one side are given, subtract the known sides from the perimeter to find the missing length. Area counts square units inside the boundary, so it answers a different question and uses different units. A 2-by 6 rectangle and a 3-by 4 rectangle both cover 12 square units, but their boundary lengths are 16 and 14 units. A 2-by 6 rectangle and a 3-by 5 rectangle both have perimeter 16, but their areas are 12 and 15 square units. Draw or tile the rectangles to verify both comparisons. Equal area does not force equal perimeter, and equal perimeter does not force equal area.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-g-1",
+      "title": "Sort polygons by sides and vertices",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.G.1"
+      ],
+      "topics": [
+        "geometry"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 54"
+      ],
+      "content": "A polygon is a closed flat shape made of straight sides that meet at vertices. Count the sides and vertices, even when the figure is rotated or looks unusual. Triangles have 3 sides, quadrilaterals 4, pentagons 5 and hexagons 6. Side lengths and angles need not all match for a shape to belong to one of these groups. A stretched or tilted pentagon remains a pentagon. Compare examples with nonexamples: an open shape or a shape with a curved boundary does not meet the polygon definition. Explain a classification using an attribute, and identify a shape that fails the chosen group's test. Formal terms for regular and irregular shapes are optional at this grade.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-g-2",
+      "title": "Equal-area parts need not look identical",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "NY-3.G.2"
+      ],
+      "topics": [
+        "geometry"
+      ],
+      "source_sections": [
+        "Grade 3, printed/PDF page 54"
+      ],
+      "content": "Partitioning a region into equal-area parts makes each part a unit fraction of the whole. If 4 parts cover the whole and each has the same area, each part represents one fourth of that whole. Simply drawing 4 pieces is insufficient: their areas must be equal. A square grid or rearranging congruent pieces can help check equality. Equal areas need not have the same outline. Always identify the whole, since one piece can be a different fraction of a larger region. Connect the partition to a fraction strip or another equal-share model, and explain how the parts cover the original shape with neither missing area nor overlaps.",
+      "content_role": "original_local_teaching_summary"
+    },
+    {
+      "id": "ny-g3-mathematical-practices",
+      "title": "Explain, model, check and improve mathematical reasoning",
+      "source_id": "nysed-math-ngls-2017",
+      "standard_codes": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "topics": [
+        "mathematical_practices"
+      ],
+      "source_sections": [
+        "Standards for Mathematical Practice, printed/PDF pages 7-9",
+        "Grade 3 overview, printed/PDF page45"
+      ],
+      "content": "Good mathematical work includes understanding the question, selecting a plan and checking whether the result fits the situation. Draw objects or an array when a symbolic expression is hard to interpret. State what a number counts and keep measurement units attached. Explain why a strategy works and ask a useful question about another student's reasoning. Choose a tool for a reason: counters make equal groups visible, a ruler measures length and square tiles reveal area. Use clear labels and accurate equal signs. Look for structure such as tens, equal rows or matching fraction positions. Notice repeated calculations and describe a rule that explains them. If a strategy fails, try a smaller case or a different representation and explain what changed. These eight mathematical practices accompany all grade 3 content; a single correct numerical answer does not demonstrate them all.",
+      "content_role": "original_local_teaching_summary"
+    }
+  ],
+  "local_sequence": [
+    {
+      "order": 1,
+      "title": "Equal groups and unknown quantities",
+      "document_ids": [
+        "ny-g3-oa-1",
+        "ny-g3-oa-2",
+        "ny-g3-oa-3",
+        "ny-g3-oa-4"
+      ],
+      "standard_codes": [
+        "NY-3.OA.1",
+        "NY-3.OA.2",
+        "NY-3.OA.3",
+        "NY-3.OA.4"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 2,
+      "title": "Multiplication strategies, division, fluency and patterns",
+      "document_ids": [
+        "ny-g3-oa-5",
+        "ny-g3-oa-6",
+        "ny-g3-oa-7",
+        "ny-g3-oa-9"
+      ],
+      "standard_codes": [
+        "NY-3.OA.5",
+        "NY-3.OA.6",
+        "NY-3.OA.7a",
+        "NY-3.OA.7b",
+        "NY-3.OA.9"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 3,
+      "title": "Square units, rectangle area and decomposing regions",
+      "document_ids": [
+        "ny-g3-md-5",
+        "ny-g3-md-6",
+        "ny-g3-md-7"
+      ],
+      "standard_codes": [
+        "NY-3.MD.5",
+        "NY-3.MD.5a",
+        "NY-3.MD.5b",
+        "NY-3.MD.6",
+        "NY-3.MD.7",
+        "NY-3.MD.7a",
+        "NY-3.MD.7b",
+        "NY-3.MD.7c",
+        "NY-3.MD.7d"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 4,
+      "title": "Place value, four-digit numbers and arithmetic",
+      "document_ids": [
+        "ny-g3-nbt-1",
+        "ny-g3-nbt-2",
+        "ny-g3-nbt-3",
+        "ny-g3-nbt-4"
+      ],
+      "standard_codes": [
+        "NY-3.NBT.1",
+        "NY-3.NBT.2",
+        "NY-3.NBT.3",
+        "NY-3.NBT.4a",
+        "NY-3.NBT.4b"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 5,
+      "title": "Two-step situations and reasonable estimates",
+      "document_ids": [
+        "ny-g3-oa-8"
+      ],
+      "standard_codes": [
+        "NY-3.OA.8",
+        "NY-3.OA.8a",
+        "NY-3.OA.8b"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 6,
+      "title": "Fraction numbers, equivalence and equal-area shares",
+      "document_ids": [
+        "ny-g3-nf-1",
+        "ny-g3-nf-2",
+        "ny-g3-nf-3",
+        "ny-g3-g-2"
+      ],
+      "standard_codes": [
+        "NY-3.NF.1",
+        "NY-3.NF.2",
+        "NY-3.NF.2a",
+        "NY-3.NF.2b",
+        "NY-3.NF.3",
+        "NY-3.NF.3a",
+        "NY-3.NF.3b",
+        "NY-3.NF.3c",
+        "NY-3.NF.3d",
+        "NY-3.G.2"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 7,
+      "title": "Minute intervals and metric measurement",
+      "document_ids": [
+        "ny-g3-md-1",
+        "ny-g3-md-2"
+      ],
+      "standard_codes": [
+        "NY-3.MD.1",
+        "NY-3.MD.2a",
+        "NY-3.MD.2b"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 8,
+      "title": "Scaled graphs and fractional-inch measurement data",
+      "document_ids": [
+        "ny-g3-md-3",
+        "ny-g3-md-4"
+      ],
+      "standard_codes": [
+        "NY-3.MD.3",
+        "NY-3.MD.4"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    },
+    {
+      "order": 9,
+      "title": "Polygon classification, perimeter and area comparisons",
+      "document_ids": [
+        "ny-g3-md-8",
+        "ny-g3-g-1"
+      ],
+      "standard_codes": [
+        "NY-3.MD.8a",
+        "NY-3.MD.8b",
+        "NY-3.G.1"
+      ],
+      "ongoing_practices": [
+        "MP.1",
+        "MP.2",
+        "MP.3",
+        "MP.4",
+        "MP.5",
+        "MP.6",
+        "MP.7",
+        "MP.8"
+      ],
+      "note": "Locally suggested sequence. Revisit fluency and reasoning throughout the year; adapt pacing, accessibility and assessments to learners."
+    }
+  ],
+  "scope_limits": {
+    "fraction_denominators": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "whole_number_fraction_denominator_one": true,
+    "arithmetic_within": 1000,
+    "four_digit_read_write": true,
+    "time_interval_units": "minutes",
+    "metric_units": [
+      "g",
+      "kg",
+      "l"
+    ],
+    "measurement_comparison_excluded": "multiplicative comparison in NY-3.MD.2b",
+    "compound_area_max_unknown_sides": 1,
+    "geometry_categories": [
+      "triangle",
+      "quadrilateral",
+      "pentagon",
+      "hexagon"
+    ]
+  },
+  "coverage_counts": {
+    "content_expectations_and_components": 44,
+    "mathematical_practices": 8,
+    "teaching_documents": 27,
+    "local_units": 9
+  }
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## October 28, 2026 — complete Grade 3 mathematics mapping
+
+- Added the exact New York 2026–2027 Grade 3 mathematics package: 44 content/component records and eight Mathematical Practices, 27 original teaching references and a nine-unit local sequence, with official source hashes and page citations. Other grades retain their existing framework preparation; complete mapping does not claim a full published lesson or assessment bank. See [scope, sources and setup](ny-grade3-mathematics.md).
+- Added exact-grade curriculum planning and corpus coverage indicators while retaining explicit human corpus/profile/model approval, class authority, student authorship and existing historical evidence. Preparation introduces no schema or permission change and makes no provider call.
+- Added narrowly reviewed GPT-6 Chat Completions parameters only for exact OpenAI endpoint/model matches, with unchanged approved output caps and no retries or fallbacks. Other compatible endpoints retain their existing request contract. See [transport compatibility](openai-chat-compatibility.md).
+
 ## October 27, 2026 — practice-game display controls
 
 - Added a full-screen toolbar and expanded-window fallback around the existing approved practice player, with an Exit button and native Escape handling. F and Alt+Enter shortcuts are available while the toolbar has focus; the pinned game's own focused keyboard behavior remains unchanged.

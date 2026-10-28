@@ -5,6 +5,7 @@ import type { CurriculumReviewMetadata, StandardsSubject } from './teacher-api';
 export const gradeLabel=(grade:number)=>grade===-1?'Pre-K':grade===0?'Kindergarten':`Grade ${grade}`;
 export function curriculumCoverageLabel(value:{coverage?:string;alignment_mapping_available?:boolean}){
  if(value.coverage==='framework_review'||value.alignment_mapping_available===false)return 'Framework review only';
+ if(value.coverage==='complete_standards')return 'Complete installed standards mapping';
  if(value.coverage==='partial')return 'Partial standards coverage';
  return value.alignment_mapping_available===true?'Standards mapping available':'Review mapping coverage';
 }
@@ -40,9 +41,11 @@ export function CurriculumSubjectPicker({subjects,selected,change,multiple=false
 }
 
 export function CurriculumSubjectSummary({subject,grades=[]}:{subject:StandardsSubject;grades?:number[]}){
- const focus=(subject.grade_focus||subject.curriculum_review?.grade_focus||[]).filter(item=>!grades.length||item.grades.some(grade=>grades.includes(grade))),reviewOnly=subject.coverage==='framework_review'||subject.alignment_mapping_available===false,scope=subject.tutoring_scope||subject.curriculum_review?.tutoring_scope||[],limitations=subject.limitations||subject.curriculum_review?.limitations||[];
- return <div className="curriculum-subject-summary"><div className="scope-line"><Badge tone={reviewOnly?'amber':''}>{curriculumCoverageLabel(subject)}</Badge><Badge>{placementLabel(subject.placement||subject.curriculum_review?.placement)}</Badge></div>
-  {reviewOnly?<p className="help-text">Reviewed framework references support class planning. A standards alignment and approved teaching materials still need to be prepared.</p>:<p className="help-text">The installed mapping covers reviewed subsets. Selecting a grade does not establish complete standards or teaching coverage.</p>}
+ const mapped=subject.versions?.some(version=>version.available&&grades.length>0&&grades.every(grade=>version.grades.includes(grade)));
+ const effective=grades.length&&subject.versions?.length&&!mapped?{...subject,coverage:'framework_review',alignment_mapping_available:false}:subject;
+ const focus=(subject.grade_focus||subject.curriculum_review?.grade_focus||[]).filter(item=>!grades.length||item.grades.some(grade=>grades.includes(grade))),reviewOnly=effective.coverage==='framework_review'||effective.alignment_mapping_available===false,scope=subject.tutoring_scope||subject.curriculum_review?.tutoring_scope||[],limitations=subject.limitations||subject.curriculum_review?.limitations||[];
+ return <div className="curriculum-subject-summary"><div className="scope-line"><Badge tone={reviewOnly?'amber':''}>{curriculumCoverageLabel(effective)}</Badge><Badge>{placementLabel(subject.placement||subject.curriculum_review?.placement)}</Badge></div>
+  {reviewOnly?<p className="help-text">Reviewed framework references support class planning. A standards alignment and approved teaching materials still need to be prepared.</p>:effective.coverage==='complete_standards'?<p className="help-text">The installed package maps all standards for its exact reviewed grade and year, with original local teaching references. Human review, classroom practice and assessment remain required; other grades retain framework planning.</p>:<p className="help-text">The installed mapping covers reviewed subsets. Selecting a grade does not establish complete standards or teaching coverage.</p>}
   {scope.length>0&&<p className="help-text">Tutoring scope: {scope.join(' · ')}</p>}
   {(focus.length>0||limitations.length>0)&&<details><summary>Review grade scope and limits</summary>{focus.map((item,index)=><div key={index}><strong>{item.grades.map(gradeLabel).join(', ')}</strong><ul>{item.topics.map(topic=><li key={topic}>{topic}</li>)}</ul></div>)}{limitations.length>0&&<ul>{limitations.map(note=><li key={note}>{note}</li>)}</ul>}</details>}
  </div>;
