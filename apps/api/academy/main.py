@@ -5,7 +5,7 @@ import json
 import re
 import time
 
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Path
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy import select, text
@@ -14,6 +14,7 @@ from .auth import Auth
 from .config import Settings
 from .db import Database, Record, RecordScope, Audit, AuditHead, Login, CoreIdentityBinding, audit, audit_dict, audit_material, canonical, now, uid, teaching_schema_id, external_review_schema_id, learning_preferences_schema_id, homework_voice_schema_id, school_curriculum_schema_id, chat_schema_id, classroom_schema_id, family_schema_id, homework_ai_schema_id, teacher_models_schema_id, administration_schema_id, game_studio_schema_id, student_avatar_schema_id, game_scoring_schema_id
 from .family_accounts import register_family_api, record_enrollment_change
+from .course_enrollment import EnrollmentCandidateSearch, enrollment_candidates, student_projection
 from .permissions import normalized_role, global_admin, scope_id, bind_scope, school_role, require_school, default_school_id, membership_id
 from .school_api import register_school_api
 from .school_curriculum_api import register_school_curriculum_api
@@ -446,13 +447,43 @@ def create_app(settings=None):
 
     @app.get("/api/courses/{course_id}")
     def get_course(course_id: str, identity=Depends(actor)):
-        with database.factory() as db:
+        with database.write() as db:
             course = membership(db, course_id, identity)
             members = []
             if school_role(db, identity, scope_id(db, course), settings) in {"admin", "school", "teacher"}:
                 membership(db, course_id, identity, True)
-                members = [{"user_id": r.owner_id, "name": user_name(db, r.owner_id), "role": normalized_role(r.value["role"])} for r in rows(db, "enrollment", identity, parent_id=course_id)]
+                sid = scope_id(db, course)
+                school = find(db, sid, "school", identity)
+                can_read_names = identity.get("principal_kind", "human") == "human" and not school.value.get("disabled")
+                private_reads = 0
+                for member in rows(db, "enrollment", identity, parent_id=course_id):
+                    # Agent IDs are the server-owned namespace established by
+                    # validated school placements, not a browser-supplied label.
+                    value = {"user_id": member.owner_id, "name": user_name(db, member.owner_id), "role": normalized_role(member.value["role"]), "principal_kind": "agent" if member.owner_id.startswith("agent:") else "human"}
+                    user = db.get(Record, member.owner_id)
+                    if can_read_names and user and user.kind == "user" and user.tenant_id == identity["tenant_id"] and user.value.get("principal_kind", "human") == "human" and user.value.get("auth_provider") == "academy" and user.value.get("role") == "student" and value["role"] == "student":
+                        projection = student_projection(db, auth, user, sid)
+                        value.update({key: projection[key] for key in ("name", "display_name", "preferred_name", "username", "grade", "grade_level", "academic_year")})
+                        private_reads += 1
+                    members.append(value)
+                if private_reads:
+                    audit_actor(db, identity, "enrollment.roster_viewed", {"course_id": course_id, "count": private_reads})
             return {**course_dict(db, course, identity), "members": members, "assignments": [assignment_dict(row, identity, db) for row in rows(db, "assignment", identity, parent_id=course_id)]}
+
+    @app.post("/api/courses/{course_id}/enrollment-candidates/search")
+    def search_enrollment_candidates(body: EnrollmentCandidateSearch, course_id: str = Path(min_length=1, max_length=64), identity=Depends(actor)):
+        # Search terms contain names/usernames: accept them only in a bounded
+        # JSON body, never URL query strings retained by ordinary access logs.
+        with database.write() as db:
+            course = membership(db, course_id, identity, True)
+            sid = scope_id(db, course)
+            require_school(db, identity, sid, settings, {"admin", "school", "teacher"}, human=True)
+            school = find(db, sid, "school", identity)
+            if school.value.get("disabled"):
+                raise HTTPException(403, "An active school is required")
+            result = enrollment_candidates(db, auth, identity, course, sid, body)
+            audit_actor(db, identity, "enrollment.candidates_viewed", {"course_id": course_id, "count": len(result["candidates"])})
+            return result
 
     @app.put("/api/courses/{course_id}")
     def update_course(course_id: str, body: CourseInput, identity=Depends(actor)):
@@ -510,7 +541,7 @@ def create_app(settings=None):
             else:
                 target = find(db, body.user_id, "user", identity)
                 school_member = db.get(Record, membership_id(sid, body.user_id))
-                if target.value.get("disabled") or not school_member or not school_member.value.get("active") or school_member.value.get("role") != "student":
+                if target.value.get("principal_kind", "human") != "human" or target.value.get("disabled") or target.value.get("family_status", "active") != "active" or not school_member or school_member.kind != "school_membership" or school_member.tenant_id != identity["tenant_id"] or school_member.parent_id != sid or school_member.owner_id != body.user_id or not school_member.value.get("active") or school_member.value.get("role") != "student":
                     raise HTTPException(422, "An active school Student is required")
                 if target.value.get("auth_provider") == "academy" and target.value.get("role") != "student":
                     raise HTTPException(422, "Parent accounts cannot be enrolled as students")

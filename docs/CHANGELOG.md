@@ -1,5 +1,11 @@
 # Changelog
 
+## October 28, 2026 — student names and grade-aware enrollment
+
+- Replaced opaque student labels in human class-management enrollment with names, optional preferred names, usernames and current school grade/year. The general school directory and agent-facing roster retain their existing privacy boundary.
+- Added bounded name/username search, class-grade defaults, explicit other-grade/all-grade and unset-grade filters, and paginated choices. Already enrolled, inactive and other-school students are excluded; existing enrollment permissions and deliberate cross-grade placement remain unchanged.
+- Student search terms stay in protected JSON request bodies; audited, noncached responses return no contacts, birth dates, notes, family links or historical placements. No schema, key, identity or external-provider change is introduced.
+
 ## October 28, 2026 — complete Grade 3 mathematics mapping
 
 - Added the exact New York 2026–2027 Grade 3 mathematics package: 44 content/component records and eight Mathematical Practices, 27 original teaching references and a nine-unit local sequence, with official source hashes and page citations. Other grades retain their existing framework preparation; complete mapping does not claim a full published lesson or assessment bank. See [scope, sources and setup](ny-grade3-mathematics.md).

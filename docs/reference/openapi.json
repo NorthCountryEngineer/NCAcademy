@@ -1794,6 +1794,57 @@
         "title": "EmptyChatInput",
         "type": "object"
       },
+      "EnrollmentCandidateSearch": {
+        "additionalProperties": false,
+        "properties": {
+          "grade": {
+            "default": "course",
+            "enum": [
+              "course",
+              "all",
+              "unplaced",
+              "-1",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12"
+            ],
+            "title": "Grade",
+            "type": "string"
+          },
+          "limit": {
+            "default": 50,
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "maximum": 100000.0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "search": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Search",
+            "type": "string"
+          }
+        },
+        "title": "EnrollmentCandidateSearch",
+        "type": "object"
+      },
       "EnrollmentInput": {
         "additionalProperties": false,
         "properties": {
@@ -7643,6 +7694,55 @@
           }
         },
         "summary": "Progress"
+      }
+    },
+    "/api/courses/{course_id}/enrollment-candidates/search": {
+      "post": {
+        "operationId": "search_enrollment_candidates_api_courses__course_id__enrollment_candidates_search_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollmentCandidateSearch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Enrollment Candidates"
       }
     },
     "/api/courses/{course_id}/enrollments": {

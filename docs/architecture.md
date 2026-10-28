@@ -112,6 +112,8 @@ A hash chain detects modifications relative to a trusted exported head. Database
 
 ## Administrative UX reuse
 
+Human class managers use a dedicated [enrollment projection](course-enrollment.md) for student names and current school grade/year. Authorization is resolved from the course and current school membership before private profiles are decrypted. The general directory and agent-facing roster remain pseudonymous. Name searches use bounded POST bodies, and read audits contain opaque scope/count metadata. Grade matching is a default picker filter and never changes a student's school placement, grade or authority.
+
 The fixed dark green sidebar, light workspace, administrative tab strip, integration cards and configuration modal follow Proposal Studio. Domain concepts map as school → classes → modules → assignments → student work/review. Administrative controls follow the active school and server-returned capabilities. Students cannot choose arbitrary endpoints, enable models or change a policy. Approving a teacher agent grants only its scoped teaching operations; it never grants autonomous assignment completion or an unrestricted student-facing model channel.
 
 ## Runtime and release

@@ -1,5 +1,15 @@
 # Verification record
 
+## Student enrollment names and grade filtering — October 28, 2026
+
+The new enrollment backend suite passed **37 synthetic tests**. It covers current human course-management authority, denial before private-profile access, tenant/school isolation, active versus historical placement, grade aliases, multi-grade and no-grade class defaults, custom versus unset grades, bounded paging/search and private-field exclusion. Raw record/audit sentinels remain encrypted, search terms never enter URLs, responses are noncached and general directories/agent rosters remain pseudonymous. An existing PostgreSQL-only case was skipped in the focused mixed regression run; real PostgreSQL remains required in full-suite and exact-commit CI validation.
+
+All **481 frontend tests** passed using bundled Node 24.19.0, including twelve new active form/effect regressions for real/preferred names, class-grade defaults and explicit overrides, name/username search in POST bodies, selection clearing, delayed/stale response rejection, pagination, roster exclusion and human teacher versus AI profile handling. TypeScript and the production build passed. The system Node 18 run lacks existing `File`/`crypto` globals and is not the supported test runtime; it was rerun successfully with the bundled modern runtime.
+
+The native nonroot API image matches all **76 runtime payload hashes** and all 24 locked dependencies, retaining the reviewed database-role portability adapter. With networking disabled, a read-only root filesystem and a synthetic tmpfs database, schema/readiness and the new OpenAPI route passed; the existing 52-standard/27-reference/nine-unit Grade 3 package is unchanged. Source/package, catalog, Compose and whitespace guards passed. The final frontend includes wrapping for long roster names and usernames on narrow screens.
+
+The generated OpenAPI adds one bounded request schema and one course-scoped POST search route. No database schema, key, identity, approval or provider configuration is changed. Full source tests, exact-commit CI, preservation of existing account/placement/audit ciphertext and authenticated production UI acceptance are separate release checks recorded in the private operator receipts. No real student enrollment or live provider call is used as a test fixture. See [the workflow and privacy boundary](course-enrollment.md).
+
 ## Grade 3 mathematics readiness — October 28, 2026
 
 The focused standards/curriculum/corpus suite passed **129 tests** using synthetic records. It independently enumerates all 44 New York Grade 3 content/component codes and eight Mathematical Practices, verifies exact source hashes/pages, all 27 original teaching references and nine local units, exercises draft planning/corpus approval and stale-context rejection, and retains unreviewed-grade/year boundaries. The mocked provider suite passed **28 tests**, including exact OpenAI endpoint/model payloads, unchanged token caps and no retry or fallback. See [package scope and refresh](ny-grade3-mathematics.md) and [transport contract](openai-chat-compatibility.md).
