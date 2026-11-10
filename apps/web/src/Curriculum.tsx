@@ -5,7 +5,7 @@ import { Badge, Empty, Modal, Notice, PageHead, Spinner, Tabs } from './componen
 import { AcademicContextFields, CourseCorpusPanel } from './CourseCorpus';
 import { TeacherPortrait, academicLabel, teacherProfileLabel } from './Teachers';
 import { listTeachers, type Curriculum, type TeacherCard, type TeacherProfile } from './teacher-api';
-import { LessonTutor } from './LessonTutor';
+import { LessonTutor, lessonTeachers } from './LessonTutor';
 import { StudentFeedback } from './StudentFeedback';
 import { CuratedLessons } from './CuratedLessons';
 import { ExternalResources } from './ExternalResources';
@@ -47,8 +47,7 @@ export function CourseDetail({id,user,school,back,backLabel='All courses',initia
   back={()=>{setSelected(null);changeActivity('coursework');}} edit={assignment=>setEditor(assignment)} editor={editor}
   closeEditor={()=>setEditor(null)} onSaved={load} teachers={course?.teachers||[]}/>;
  const modules=[...new Set(assignments.map(a=>a.module||'Course assignments'))];
- const lessonTeacher=course?.teachers?.find(item=>item.kind==='ai'&&item.lesson_tutoring_available)
-  ||course?.teachers?.find(item=>item.kind==='ai'&&item.context_ready);
+ const lessonTeacher=lessonTeachers(course?.teachers||[],practice)[0];
  const tabs=[
   ...(practice?[{id:'practice',label:'Daily math practice'}]:[]),
   {id:'coursework',label:'Coursework'},
@@ -85,7 +84,7 @@ export function CourseDetail({id,user,school,back,backLabel='All courses',initia
    {activity==='practice'&&course&&practice?
     <DailyPractice key={school.id+':'+id+':'+user.id} courseId={id} schoolId={school.id} members={course.members}
      initialAssignmentId={practiceAssignmentId} teacherName={lessonTeacher?.name}
-     openEnrollment={teacher?()=>setEnrollment(true):undefined} askTeacher={user.role==='student'?askPracticeTeacher:undefined}/>
+     openEnrollment={teacher?()=>setEnrollment(true):undefined} askTeacher={user.role==='student'&&lessonTeacher?askPracticeTeacher:undefined}/>
     :activity==='classroom'&&user.auth_provider!=='academy'?
      <Classroom key={school.id+':'+id+':'+user.id} courseId={id} school={school} user={user}
       openCourse={target=>{if(target.assignmentId)setSelected(target.assignmentId);else changeActivity(target.activity||'coursework');}}/>

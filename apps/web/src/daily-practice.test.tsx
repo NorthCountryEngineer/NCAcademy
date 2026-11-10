@@ -179,10 +179,13 @@ async function expectText(ui: ReturnType<typeof view>, value: string) {
  await vi.waitFor(() => expect(visible(ui.render())).toContain(value));
 }
 function courseView(auth_provider: User['auth_provider']) {
+ const card = {kind:'ai' as const, title:'Grade 3 teacher', biography:'', pronouns:'', picture:null, context_ready:true, available_for_tutoring:false};
  const course: Course = {
   id: courseId, school_id: schoolId, teacher_id: 'course-staff', title: 'Grade 3 Mathematics', description: '',
   curriculum: { state: 'US-NY', subject: 'mathematics', academic_year: '2026-2027', grades: [3], standards_version: null },
   can_manage: false,
+  teachers: [{...card,id:'bound-teacher',name:'External Teacher',lesson_mode:'core_agent',lesson_tutoring_available:true},
+   {...card,id:'managed-teacher',name:'Morgan',lesson_mode:'managed',lesson_tutoring_available:false}],
  };
  const school = { id: schoolId } as School;
  const user: User = { id: owner, role: 'student', name: 'Synthetic student', auth_provider };
@@ -368,6 +371,7 @@ describe('Grade 3 daily practice interactions', () => {
  it('opens the exact Grade 3 local student course assignment-first and routes the selected lesson into the existing chat and back', async () => {
   const { render, find } = courseView('academy');
   await vi.waitFor(() => expect(find(DailyPractice)).toBeDefined());
+  expect(find(DailyPractice)?.teacherName).toBe('Morgan');
   expect(find(Tabs)?.value).toBe('practice');
   expect(visible(render())).not.toContain('No assignments yet');
   const link = { id: lessonOne.id, title: lessonOne.title };
