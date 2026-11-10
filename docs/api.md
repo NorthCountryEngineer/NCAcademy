@@ -148,6 +148,8 @@ Human school managers use `GET/PUT /api/schools/{school_id}/audit-agent` and `GE
 
 ## Homework Help and voice
 
+For Academy username/password students, `/api/homework-help/ai` serves the provider-free study coach. Human School/Admin use `GET/PUT /api/homework-help/private-policy?school_id=<id>` to read and update its school policy with `expected_version`. The existing student session routes record private text and consented images for authorized review. The legacy message and resume operations reject Academy accounts. See [Private Homework Help](homework-help.md#private-homework-help-for-academy-student-accounts).
+
 `/api/homework-help` provides the enrolled routing catalog and own conversation index. Student mutations create immutable sessions/messages; an explicit same-key resume can recover a request interrupted before lesson admission. Photo-aware messages alone accept 400,000 HTTP bytes. School/Admin humans discover and review conversations through separate audited catalog/review endpoints, including pre-triage evidence. See [the complete Homework contract](homework-help.md).
 
 `/api/admin/voice` exposes scoped status/configuration with write-only key replacement. Course voice routes maintain personal stock-voice choices, accept consentful bounded WAV transcription and synthesize only a server-derived owned released reply. The transcription route alone has a 4,300,000-byte HTTP cap; real PCM remains capped at 3 MiB/30 seconds. Receipt lookup never resends uncertain work. Schema 6 preserves immutable Homework/voice evidence. See [the complete voice contract](homework-voice.md).

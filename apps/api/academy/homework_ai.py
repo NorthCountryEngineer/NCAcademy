@@ -415,33 +415,52 @@ def project_message(db, identity, row, settings, *, app=None):
     data = row.value
     require_school(db, identity, data["school_id"], settings, {"student"}, human=True)
     status, answer, citations, references, error = data["status"], data.get("answer"), data.get("citations", []), data.get("references", []), data.get("error")
+    private = data.get("private_mode") is True
+    private_course = None
+    if private and (scope_id(db, row) != data["school_id"] or db.get(Record, data["school_id"]).value.get("disabled")):
+        raise HTTPException(403, "School permission required")
     if status in {"released", "clarify"}:
         try:
-            # Preference changes affect future responses, not already displayed
-            # explanations; configuration, source and enrollment revocation do.
-            snapshot, _ = resolve_configuration(db, identity, data["school_id"], settings)
-            if canonical(snapshot) != canonical(data["configuration_snapshot"]):
-                raise HTTPException(409)
-            validate_course_scope(db, identity, settings, data)
-            revalidate_teacher(db, identity, settings, data, app)
-            validate_teacher_execution(db, identity, data, current=False)
-            if data.get("grounding_snapshot"):
-                course, school = course_for_student(db, identity, data["course_id"], settings)
-                corpus = corpus_descriptor(db, course, school)
-                ground = data["grounding_snapshot"]
-                if not corpus.get("ready_for_teaching") or corpus.get("id") != ground["corpus_id"] or corpus.get("snapshot_sha256") != ground["snapshot_sha256"]:
+            if not private:
+                # Preference changes affect future responses, not already displayed
+                # explanations; configuration, source and enrollment revocation do.
+                snapshot, _ = resolve_configuration(db, identity, data["school_id"], settings)
+                if canonical(snapshot) != canonical(data["configuration_snapshot"]):
                     raise HTTPException(409)
+                validate_course_scope(db, identity, settings, data)
+                # A previously recorded Core-agent handoff cannot cause an
+                # upstream authority call while a local family reopens history.
+                revalidate_teacher(db, identity, settings, data, None if identity.get("auth_provider") == "academy" else app)
+                validate_teacher_execution(db, identity, data, current=False)
+                if data.get("grounding_snapshot"):
+                    course, school = course_for_student(db, identity, data["course_id"], settings)
+                    corpus = corpus_descriptor(db, course, school)
+                    ground = data["grounding_snapshot"]
+                    if not corpus.get("ready_for_teaching") or corpus.get("id") != ground["corpus_id"] or corpus.get("snapshot_sha256") != ground["snapshot_sha256"]:
+                        raise HTTPException(409)
         except HTTPException:
             status, answer, citations, references, error = "withheld", None, [], [], "Current school assistant, class and source authorization are required to display this reply."
+    if private and data.get("course_id"):
+        # The coach never sees class sources. A revoked class only removes the
+        # private course label; the student's generic coaching remains readable.
+        try:
+            course, school = course_for_student(db, identity, data["course_id"], settings)
+            if school == data["school_id"]:
+                private_course = course
+        except HTTPException:
+            pass
     images = [{**item, "url": f"/api/homework-help/ai/sessions/{row.parent_id}/messages/{row.id}/images/{item['id']}"} for item in data.get("images", [])] if data.get("images_cipher") else data.get("images", [])
     teacher_id = data.get("teacher_context_snapshot", {}).get("id")
     triage = {**data.get("triage", {}), "teacher_name": data.get("assistant_name"), "teacher_profile_id": teacher_id, "responder": "teacher" if teacher_id else "school_assistant"}
-    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), "execution": execution_receipt(data), "images": images, "resume_available": False, "activity": VERSION}
+    if private:
+        triage.update(course_id=private_course.id if private_course else None, course_name=private_course.value["title"] if private_course else None)
+    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), **({"private_mode": True} if private else {"execution": execution_receipt(data)}), "images": images, "resume_available": False, "activity": VERSION}
 
 
 def feedback_context(db, identity, row, settings, *, app=None):
     if not row or row.kind != "homework_ai_message" or row.tenant_id != identity["tenant_id"] or row.owner_id != identity["id"]:
         raise HTTPException(404, "Student interaction not found")
-    if project_message(db, identity, row, settings, app=app)["status"] != "released":
+    projection = project_message(db, identity, row, settings, app=app)
+    if projection["status"] != "released":
         raise HTTPException(409, "Feedback requires a currently available released interaction")
-    return {"course_id": row.value.get("course_id"), "school_id": row.value["school_id"], "teacher_profile_id": row.value.get("teacher_profile_id")}
+    return {"course_id": projection["triage"]["course_id"] if projection.get("private_mode") else row.value.get("course_id"), "school_id": row.value["school_id"], "teacher_profile_id": row.value.get("teacher_profile_id")}

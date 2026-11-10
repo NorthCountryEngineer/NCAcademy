@@ -2,6 +2,9 @@ ARG PYTHON_REGISTRY=public.ecr.aws/docker/library
 FROM ${PYTHON_REGISTRY}/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HOME=/tmp
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 COPY apps/api/requirements.lock.txt ./requirements.lock.txt
 RUN pip install --no-cache-dir -r requirements.lock.txt \
     && useradd --create-home --uid 10001 academy

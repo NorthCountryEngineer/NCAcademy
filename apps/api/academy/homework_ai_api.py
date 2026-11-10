@@ -6,20 +6,24 @@ from typing import Literal
 
 from fastapi import Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 
 from . import provider
 from .curated_lesson_api import _image_bytes, _image_metadata, _normalized_images
 from .db import Audit, Record, audit_dict, canonical, now, uid
-from .homework_api import HomeworkMessageInput, HomeworkSessionInput, MAX_DAILY_IMAGE_BYTES
+from .homework_api import HomeworkMessageInput, HomeworkSessionInput, MAX_DAILY_IMAGE_BYTES, _json_field
 from .homework_ai import (VERSION, BOUNDARY_VERSION, PHASES, LIMITS, SYSTEM_BOUNDARY, SAFE_REFUSAL, ConfigurationInput,
     ApprovalInput, config_id, configuration_descriptor, resolve_configuration, enrolled_courses,
     optional_grounding, course_references, digest, revalidate, project_message, route_selection,
     tutoring_selection, safety_selection, visible_response, school_teacher_personas,
     public_persona, revalidate_teacher, triage_selection)
-from .learning_preferences import preference_snapshot, student_principal
-from .lesson_api import completion_request
+from .learning_preferences import latest_preferences, preference_snapshot, student_principal
+from .lesson_api import completion_request, course_for_student
 from .permissions import bind_scope, require_school, scope_id
+from .private_homework_coach import coach_homework
+from .private_homework_policy import (DISABLED, ENGINE, MAX_DAILY_TURNS, MAX_INPUT_CHARS, NAME,
+    PrivatePolicyInput, assistant_descriptor as private_assistant, local_student,
+    policy as private_policy, save_policy)
 from .teacher_models import model_policy_context, preview_model_policy
 
 
@@ -93,13 +97,33 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
         if not row or row.kind != "homework_ai_session" or row.tenant_id != identity["tenant_id"] or row.owner_id != identity["id"]:
             raise HTTPException(404, "AI Homework Help conversation not found")
         require_school(db, identity, row.value["school_id"], settings, {"student"}, human=True)
+        if local_student(identity):
+            if row.parent_id != row.value["school_id"] or scope_id(db, row) != row.parent_id:
+                raise HTTPException(404, "AI Homework Help conversation not found")
+            require_active_private_school(db, row.parent_id)
         return row
+
+    def require_active_private_school(db, school_id):
+        if db.get(Record, school_id).value.get("disabled"):
+            raise HTTPException(403, "School permission required")
 
     def fresh(request, identity):
         accepted = auth.actor(request)
         if accepted["id"] != identity["id"] or accepted["login_id"] != identity["login_id"] or accepted["tenant_id"] != identity["tenant_id"]:
             raise HTTPException(401, "Student session changed")
         return accepted
+
+    @app.get("/api/homework-help/private-policy")
+    def read_private_policy(school_id: str | None = None, identity=Depends(actor)):
+        with database.factory() as db:
+            selected = school(db, identity, school_id, {"admin", "school"})
+            return private_policy(db, identity, selected)
+
+    @app.put("/api/homework-help/private-policy")
+    def update_private_policy(body: PrivatePolicyInput, school_id: str | None = None, identity=Depends(actor)):
+        with database.write() as db:
+            selected = school(db, identity, school_id, {"admin", "school"})
+            return save_policy(db, identity, selected, body, audit_actor)
 
     @app.get("/api/homework-help/configuration")
     def configuration(school_id: str | None = None, identity=Depends(actor)):
@@ -167,10 +191,14 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             history, next_cursor = page_rows(db, select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "homework_ai_session", Record.owner_id == identity["id"], Record.parent_id == selected), cursor)
             # Student projection exposes teaching metadata and model labels, but
             # not provider URLs, connection identifiers or policy instructions.
-            descriptor = configuration_descriptor(db, identity, selected, settings)
-            config = descriptor["configuration"]
-            descriptor["photo_model_labels"] = {phase: str((db.get(Record, config[phase]["connection_id"]).value if db.get(Record, config[phase]["connection_id"]) else {}).get("name", "Unavailable connection")) + " · " + config[phase]["model"] for phase in PHASES} if config else None
-            descriptor["configuration"] = {key: config[key] for key in ("enabled", "name", "biography", "allow_images", "max_input_chars", "max_output_tokens")} if config else None
+            if local_student(identity):
+                require_active_private_school(db, selected)
+                descriptor = private_assistant(db, identity, selected)
+            else:
+                descriptor = configuration_descriptor(db, identity, selected, settings)
+                config = descriptor["configuration"]
+                descriptor["photo_model_labels"] = {phase: str((db.get(Record, config[phase]["connection_id"]).value if db.get(Record, config[phase]["connection_id"]) else {}).get("name", "Unavailable connection")) + " · " + config[phase]["model"] for phase in PHASES} if config else None
+                descriptor["configuration"] = {key: config[key] for key in ("enabled", "name", "biography", "allow_images", "max_input_chars", "max_output_tokens")} if config else None
             summaries = []
             for row in history:
                 first = db.scalar(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "homework_ai_message", Record.owner_id == identity["id"], Record.parent_id == row.id).order_by(Record.created_at, Record.id).limit(1))
@@ -182,12 +210,18 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
         with database.write() as db:
             student_principal(db, identity, settings)
             selected = school(db, identity, body.school_id, {"student"})
+            if local_student(identity):
+                require_active_private_school(db, selected)
             key = digest([VERSION, "session", identity["tenant_id"], identity["id"], body.idempotency_key])
             existing = db.get(Record, key)
             if existing:
                 if existing.kind != "homework_ai_session" or existing.tenant_id != identity["tenant_id"] or existing.owner_id != identity["id"] or existing.parent_id != selected:
                     raise HTTPException(409, "Conversation key was used for another school")
                 return session_descriptor(existing)
+            if local_student(identity):
+                if not private_policy(db, identity, selected)["enabled"]:
+                    raise HTTPException(403, DISABLED)
+                require_private_intake(db, identity)
             today = datetime.now(timezone.utc).date().isoformat()
             recent = list(db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "homework_ai_session", Record.owner_id == identity["id"], Record.created_at.like(today + "%")).limit(100)))
             if len(recent) >= 100:
@@ -208,6 +242,8 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
 
     def mark_and_send(request, identity, message_id, phase, prompt, maximum):
         accepted = fresh(request, identity)
+        if accepted.get("auth_provider") == "academy":
+            raise HTTPException(403, "Platform-local family accounts cannot send to Homework Help model providers")
         with database.write() as db:
             row = db.get(Record, message_id)
             data = row.value
@@ -294,12 +330,128 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             raise HTTPException(409, "An administrator closed this request while its model call was in flight; late evidence was retained and no output can be released")
         return selected
 
+    def require_private_intake(db, identity):
+        revision = latest_preferences(db, identity)
+        if not revision or not revision.value["complete"]:
+            raise HTTPException(409, "Complete your learning preferences before starting a new tutoring session")
+        return revision.id
+
+    def private_admission(db, identity, session_id, selected_school, course_id, image_bytes):
+        active = private_policy(db, identity, selected_school)
+        if not active["enabled"]:
+            raise HTTPException(403, DISABLED)
+        intake_revision = require_private_intake(db, identity)
+        course_name = None
+        if course_id:
+            try:
+                course, course_school = course_for_student(db, identity, course_id, settings)
+                if course_school != selected_school:
+                    raise HTTPException(403)
+            except HTTPException:
+                raise HTTPException(403, "Choose only a currently enrolled course at this school") from None
+            course_name = course.value["title"]
+        own = (Record.tenant_id == identity["tenant_id"], Record.kind == "homework_ai_message", Record.owner_id == identity["id"])
+        if db.scalar(select(func.count()).where(*own, Record.parent_id == session_id)) >= 100:
+            raise HTTPException(429, "This conversation has 100 questions. Start a new conversation; daily limits still apply")
+        day = now()[:10]
+        count, bytes_used = db.execute(select(func.count(), func.coalesce(func.sum(_json_field(db, "image_bytes", integer=True)), 0)).where(*own, Record.created_at.like(day + "%"))).one()
+        if count >= MAX_DAILY_TURNS or bytes_used + image_bytes > MAX_DAILY_IMAGE_BYTES:
+            raise HTTPException(429, "Daily Homework Help question or picture limit reached; resets at midnight UTC")
+        prior = db.scalar(select(Record).where(*own, Record.parent_id == session_id).order_by(Record.created_at.desc(), Record.id.desc()).limit(1))
+        return active["version"], course_name, prior, intake_revision
+
+    def private_ask(session_id, body, request, identity):
+        message_id = digest([VERSION, "message", identity["tenant_id"], session_id, body.idempotency_key])
+        if len(body.message) > MAX_INPUT_CHARS:
+            raise HTTPException(422, "Question exceeds the private Homework Help input limit")
+        if body.images and not body.image_use_confirmed:
+            raise HTTPException(403, "Confirm that Academy can read and save these homework pictures before sending them")
+
+        def replay(db):
+            existing = db.get(Record, message_id)
+            if not existing:
+                return None
+            if (existing.kind != "homework_ai_message" or existing.owner_id != identity["id"] or existing.parent_id != session_id
+                    or existing.tenant_id != identity["tenant_id"] or scope_id(db, existing) != selected_school
+                    or existing.value.get("request_sha256") != fingerprint):
+                raise HTTPException(409, "Question key was used for different input")
+            return project_message(db, identity, existing, settings, app=app)
+
+        with database.factory() as db:
+            conversation = session(db, identity, session_id)
+            selected_school = conversation.value["school_id"]
+            if not db.get(Record, message_id):
+                private_admission(db, identity, session_id, selected_school, body.course_id, 0)
+        normalized = _normalized_images(body)
+        fingerprint = digest({"message": body.message, "images": _image_metadata(normalized), "confirmed": body.image_use_confirmed,
+                              "course_id": body.course_id, "routing_mode": body.routing_mode})
+        # Original names can contain student details; keep only generic labels.
+        for index, image in enumerate(normalized, start=1):
+            image["name"] = f"Homework picture {index}"
+        raw_images = tuple(base64.b64decode(item["data_base64"], validate=True) for item in normalized)
+        image_bytes = sum(map(len, raw_images))
+        with database.factory() as db:
+            session(db, identity, session_id)
+            if existing := replay(db):
+                return existing
+            policy_version, course_name, prior, _ = private_admission(db, identity, session_id, selected_school, body.course_id, image_bytes)
+            prior_id = prior.id if prior else None
+            prior_topic = None
+            if prior:
+                previous = prior.value
+                if previous.get("private_coaching", {}).get("engine") == ENGINE and previous.get("course_id") == body.course_id and previous["status"] == "released":
+                    prior_topic = previous["private_coaching"].get("topic")
+
+        # OCR and fixed coaching run without holding the database write lock.
+        # No approved integration, tenant resource, course content or raw OCR text is read here.
+        result = coach_homework(body.message, raw_images, prior_topic)
+        with database.write() as db:
+            # Family login validation is local. Recheck inside the serialized
+            # commit so a password reset or account suspension cannot race it.
+            accepted = fresh(request, identity)
+            if not local_student(accepted):
+                raise HTTPException(403, "Private Homework Help requires a current platform-local student account")
+            session(db, accepted, session_id)
+            if existing := replay(db):
+                return existing
+            current_policy, current_course, current_prior, intake_revision = private_admission(db, accepted, session_id, selected_school, body.course_id, image_bytes)
+            if current_policy != policy_version or current_course != course_name:
+                raise HTTPException(409, "Homework Help policy or class changed; send your question again")
+            if (current_prior.id if current_prior else None) != prior_id:
+                raise HTTPException(409, "This conversation changed while reading your question; send it again")
+            created = now()
+            data = {"activity": VERSION, "session_id": session_id, "school_id": selected_school,
+                    "teacher_profile_id": assistant_preference_id(identity, selected_school), "assistant_name": NAME,
+                    "message": body.message, "created_at": created, "idempotency_key": body.idempotency_key,
+                    "request_sha256": fingerprint, "course_id": body.course_id, "budget_day": created[:10], "reservation": 0,
+                    "status": result.status, "error": result.error or (result.answer if result.status == "blocked" else None),
+                    "answer": result.answer if result.status in {"released", "clarify"} else None,
+                    "citations": [], "references": [], "usage": {}, "phases": {}, "images": _image_metadata(normalized),
+                    "image_bytes": image_bytes, "image_use_confirmed": body.image_use_confirmed, "routing_mode": body.routing_mode,
+                    "learning_preferences_snapshot": {"revision_id": intake_revision},
+                    "triage": {"method": "private_coach", "course_id": body.course_id, "course_name": course_name,
+                               "confidence": None, "prompt": None, "candidates": []},
+                    "private_mode": True,
+                    "private_coaching": {"engine": ENGINE, "policy_version": policy_version, "topic": result.topic,
+                                         "image_read": result.image_read, "prior_message_id": prior_id if prior_topic else None}}
+            if normalized:
+                data["images_cipher"] = auth.seal({"images": normalized})
+            row = Record(id=message_id, tenant_id=identity["tenant_id"], kind="homework_ai_message", parent_id=session_id, owner_id=identity["id"], data=canonical(data))
+            db.add(row)
+            db.flush()
+            bind_scope(db, row, selected_school)
+            audit_actor(db, accepted, "homework_ai.private_" + result.status,
+                        {"homework_session_id": session_id, "homework_message_id": row.id, **safe_data(data)}, session_id)
+            return project_message(db, accepted, row, settings, app=app)
+
     @app.post("/api/homework-help/ai/sessions/{session_id}/messages")
     def ask(session_id: str, body: AIMessageInput, request: Request, identity=Depends(actor)):
         if body.routing_mode == "general" and body.course_id:
             raise HTTPException(422, "General help cannot select a course")
         if body.teacher_profile_id:
             raise HTTPException(422, "AI Homework Help uses the school assistant, independent of the course teacher")
+        if local_student(identity):
+            return private_ask(session_id, body, request, identity)
         normalized = _normalized_images(body)
         fingerprint = digest({"message": body.message, "images": _image_metadata(normalized), "confirmed": body.image_use_confirmed, "course_id": body.course_id, "routing_mode": body.routing_mode})
         message_id = digest([VERSION, "message", identity["tenant_id"], session_id, body.idempotency_key])
@@ -627,7 +779,7 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                 except HTTPException:
                     raise HTTPException(404, "Homework picture not found") from None
             row = db.get(Record, message_id)
-            if not row or row.kind != "homework_ai_message" or row.tenant_id != identity["tenant_id"] or row.owner_id != conversation.owner_id or row.parent_id != session_id:
+            if not row or row.kind != "homework_ai_message" or row.tenant_id != identity["tenant_id"] or row.owner_id != conversation.owner_id or row.parent_id != session_id or scope_id(db, row) != conversation.parent_id:
                 raise HTTPException(404, "Homework picture not found")
             found = next(((meta, raw) for meta, raw in _image_bytes(auth, row.value) if meta["id"] == image_id), None) if row.value.get("images_cipher") else None
             if not found:

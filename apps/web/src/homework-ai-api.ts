@@ -16,7 +16,8 @@ export type HomeworkAIConfiguration = {
  approved:boolean;available:boolean;live_models_enabled:boolean;configuration:HomeworkAIPolicy|null;
  configuration_sha256:string|null;approval_required:true;boundary_version?:string;reapproval_required?:boolean;unavailable_reason?:string|null;
 };
-export type HomeworkAIStudentConfiguration = Omit<HomeworkAIConfiguration,'configuration'> & {configuration:Pick<HomeworkAIPolicy,'enabled'|'name'|'biography'|'allow_images'|'max_input_chars'|'max_output_tokens'>|null;photo_model_labels?:{triage:string;tutor:string;safety:string}};
+export type HomeworkAIStudentConfiguration = Omit<HomeworkAIConfiguration,'configuration'|'approval_required'> & {configuration:Pick<HomeworkAIPolicy,'enabled'|'name'|'biography'|'allow_images'|'max_input_chars'|'max_output_tokens'>|null;approval_required:boolean;photo_model_labels?:{triage:string;tutor:string;safety:string}|null;private_mode?:boolean};
+export type HomeworkPrivatePolicy = {enabled:boolean;version:number};
 export type HomeworkAICourse = {id:string;name:string;school_id?:string;available?:boolean};
 export type HomeworkAICitation = {document_id:string;title:string;course_id?:string;source_url?:string|null;content_sha256?:string;excerpt_sha256?:string};
 export type HomeworkAITriage = {method:string;course_id:string|null;course_name:string|null;confidence?:number|null;prompt:string|null;teacher_name?:string|null;teacher_profile_id?:string|null;responder?:'school_assistant'|'teacher';topic?:string|null;candidates:HomeworkAICourse[]};
@@ -29,7 +30,7 @@ export type HomeworkAIMessage = {
  id:string;message:string;created_at:string;idempotency_key:string;
  status:'released'|'clarify'|'blocked'|'withheld'|'pending';error:string|null;answer:string|null;
  triage:HomeworkAITriage;citations:HomeworkAICitation[];references:HomeworkReference[];images:CuratedImageMetadata[];
- usage:Record<string,unknown>;execution?:HomeworkAIExecution;resume_available:boolean;reconciliation?:{available:boolean;expected_sha256:string;status:'pending'|'terminal';send_marked:boolean};teacher_profile_id?:string|null;
+ usage:Record<string,unknown>;execution?:HomeworkAIExecution;resume_available:boolean;reconciliation?:{available:boolean;expected_sha256:string;status:'pending'|'terminal';send_marked:boolean};teacher_profile_id?:string|null;private_mode?:boolean;
 };
 export type HomeworkAIConversationSummary = HomeworkSessionSummary & {title?:string|null};
 export type HomeworkAIIndex = {assistant:HomeworkAIStudentConfiguration;courses:HomeworkAICourse[];sessions:HomeworkAIConversationSummary[];next_cursor?:string|null};
@@ -40,6 +41,8 @@ export const blankHomeworkAIPolicy = ():HomeworkAIPolicy=>({enabled:false,name:'
 export const homeworkAIIndex=(schoolId:string,cursor?:string)=>request<HomeworkAIIndex>(schoolPath('/homework-help/ai',schoolId)+(cursor?`&cursor=${encodeURIComponent(cursor)}`:''));
 export function mergeHomeworkAIPages<T extends {id:string}>(previous:T[],next:T[]):T[]{return [...new Map([...previous,...next].map(item=>[item.id,item])).values()];}
 export const homeworkAIConfiguration=(schoolId:string)=>request<HomeworkAIConfiguration>(schoolPath('/homework-help/configuration',schoolId));
+export const homeworkPrivatePolicy=(schoolId:string)=>request<HomeworkPrivatePolicy>(schoolPath('/homework-help/private-policy',schoolId));
+export const saveHomeworkPrivatePolicy=(schoolId:string,enabled:boolean,version:number)=>send<HomeworkPrivatePolicy>(schoolPath('/homework-help/private-policy',schoolId),{enabled,expected_version:version},'PUT');
 export function homeworkAIConfigurationPayload(policy:HomeworkAIPolicy,version:number){
  const model=(value:HomeworkAIModel)=>({connection_id:value.connection_id,model:value.model}),behavior=policy.behavior;
  return {expected_version:version,enabled:policy.enabled,name:policy.name.trim(),biography:policy.biography.trim(),behavior:{tone:behavior.tone,teaching_style:behavior.teaching_style,detail:behavior.detail,question_frequency:behavior.question_frequency,encouragement:behavior.encouragement,instructions:behavior.instructions||'',boundaries:behavior.boundaries.map(item=>item.trim()).filter(Boolean)},use_school_teacher_personas:policy.use_school_teacher_personas,allow_teacher_models:!!policy.allow_teacher_models,triage:model(policy.triage),tutor:model(policy.tutor),safety:model(policy.safety),allow_images:policy.allow_images,triage_image_capable:policy.triage_image_capable,tutor_image_capable:policy.tutor_image_capable,safety_image_capable:policy.safety_image_capable,max_input_chars:policy.max_input_chars,max_output_tokens:policy.max_output_tokens,max_daily_turns:policy.max_daily_turns,max_daily_tokens:policy.max_daily_tokens,triage_confidence_threshold:policy.triage_confidence_threshold};
@@ -51,11 +54,12 @@ export const getHomeworkAISession=(id:string)=>request<HomeworkAISession>(`/home
 export function homeworkAIPayload(input:HomeworkAIInput,key:string){return {message:input.message,course_id:input.course_id,routing_mode:input.routing_mode||'auto',images:input.images.map(image=>({name:image.name,data_url:image.data_url})),image_use_confirmed:input.images.length>0&&input.image_use_confirmed,idempotency_key:key};}
 export const sendHomeworkAIMessage=(sessionId:string,input:HomeworkAIInput,key:string)=>send<HomeworkAIMessage>(`/homework-help/ai/sessions/${encodeURIComponent(sessionId)}/messages`,homeworkAIPayload(input,key));
 export function homeworkAIRequestProblem(input:HomeworkAIInput,assistant:HomeworkAIStudentConfiguration){
- if(!assistant.available)return 'Your school’s Homework Help AI is not available yet.';
+ if(!assistant.available)return assistant.private_mode?'Private Homework Help is not available yet.':'Your school’s Homework Help AI is not available yet.';
  if(!input.message.trim()&&!input.images.length)return 'Explain your question or add a homework photo.';
  if(input.message.length>(assistant.configuration?.max_input_chars||3000))return 'Shorten your question to the school’s character limit.';
  if(input.images.length>2)return 'Choose up to two homework photos.';
  if(input.images.length&&!assistant.configuration?.allow_images)return 'Your school’s approved Homework Help AI supports written questions only.';
+ if(assistant.private_mode)return input.images.length&&!input.image_use_confirmed?'Confirm that Academy can read your homework photos.':null;
  if(input.images.length&&(!assistant.photo_model_labels?.triage||!assistant.photo_model_labels?.tutor||!assistant.photo_model_labels?.safety||!input.image_use_confirmed))return 'Confirm photo use with the named school-approved model.';
  return null;
 }

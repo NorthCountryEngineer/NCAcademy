@@ -34,6 +34,27 @@ def password_login(browser, username="sample.parent"):
     return {"Origin": "http://localhost:8090", "X-CSRF-Token": response.json()["csrf_token"]}
 
 
+def test_local_student_cannot_submit_or_resume_external_legacy_homework(client, app):
+    from academy.learning_preferences import NEUTRAL
+
+    child = student(client, app, login(client, "demo-admin"), course_ids=[])
+    school = child["enrollments"][0]["school_id"]
+    headers = password_login(client, "sample.student")
+    preferences = client.get("/api/me/learning-preferences").json()
+    intake = client.put("/api/me/learning-preferences", json={"answers": NEUTRAL, "expected_version": preferences["version"]}, headers=headers)
+    assert intake.status_code == 200, intake.text
+    app.state.settings.allow_live_models = True
+    sessions = "/api/homework-help/sessions"
+    created = client.post(sessions, json={"school_id": school, "idempotency_key": "legacy-family-test"}, headers=headers)
+    assert created.status_code == 200, created.text
+    session_path = f"{sessions}/{created.json()['id']}"
+    question = client.post(f"{session_path}/messages", json={"message": "Help me compare fractions", "idempotency_key": "legacy-family-question"}, headers=headers)
+    resume = client.post(f"{session_path}/messages/old-legacy-question/resume", json={}, headers=headers)
+    assert question.status_code == resume.status_code == 403
+    history = client.get(session_path)
+    assert history.status_code == 200 and history.json()["messages"] == []
+
+
 def test_admin_creates_encrypted_local_student_not_core_or_demo_identity(client, app):
     headers = login(client, "demo-admin")
     child = student(client, app, headers)

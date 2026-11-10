@@ -354,29 +354,33 @@ def test_safety_requires_exact_current_approval_before_release(client, app, monk
     assert reply["status"] == "withheld" and reply["answer"] is None and len(env["calls"]) == 2
 
 
-def test_platform_local_student_transcripts_prompts_send_evidence_and_audits_are_encrypted(client, app, monkeypatch):
+def test_platform_local_student_transcripts_and_audits_are_encrypted_without_model_sends(client, app, monkeypatch):
     from sqlalchemy import text
     from academy.learning_preferences import NEUTRAL
     from academy.pii_storage import ENVELOPE
     from test_local_pii import create_student, student_login
     env = environment(client, app, monkeypatch)
     student = create_student(client, app)
+    admin = login(client, "demo-admin")
+    assert client.put("/api/homework-help/private-policy", params={"school_id": env["school"]}, json={"enabled": True, "expected_version": 0}, headers=admin).status_code == 200
     monkeypatch.setattr(app.state.auth, "core", lambda *args, **kwargs: pytest.fail("Local family student must not contact Core"))
     env["headers"] = student_login(client)
     intake = client.get("/api/me/learning-preferences").json()
     assert client.put("/api/me/learning-preferences", json={"answers": NEUTRAL, "expected_version": intake["version"]}, headers=env["headers"]).status_code == 200
     env["session"] = client.post("/api/homework-help/ai/sessions", json={"school_id": env["school"], "idempotency_key": "local-private-session-123"}, headers=env["headers"]).json()
-    question = "Synthetic private homework question about evidence at my school garden."
+    question = "How can I use text evidence? Synthetic private homework question about my school garden."
     reply = ask(client, env, message=question).json()
     assert reply["status"] == "released", reply
-    feedback = client.post("/api/me/feedback", json={"turn_id": reply["id"], "accuracy": 2, "helpfulness": 4, "style_preferences": {"encouragement": 4}}, headers=env["headers"])
+    assert reply["private_mode"] and not env["calls"]
+    feedback = client.post("/api/me/feedback", json={"turn_id": reply["id"], "accuracy": 2, "helpfulness": 4}, headers=env["headers"])
     assert feedback.status_code == 200, feedback.text
     assert feedback.json()["review_required"]
     with app.state.database.factory() as db:
         raw = " ".join(db.scalars(text("SELECT data FROM records"))) + " ".join(db.scalars(text("SELECT payload FROM audit_events")))
         assert question not in raw and reply["answer"] not in raw
         owned = list(db.scalars(select(Record).where(Record.owner_id == student["id"], Record.kind.in_(["homework_ai_session", "homework_ai_message", "homework_ai_send"]))))
-        assert len(owned) == 4 and all(ENVELOPE in json.loads(row.data) for row in owned)
+        assert {row.kind for row in owned} == {"homework_ai_session", "homework_ai_message"}
+        assert len(owned) == 2 and all(ENVELOPE in json.loads(row.data) for row in owned)
         assert "synthetic-ai-question-123" not in db.get(Record, reply["id"]).data
         events = list(db.scalars(select(Audit).where(Audit.session_id == env["session"]["id"])))
         assert all(ENVELOPE in json.loads(row.payload) for row in events)

@@ -1,11 +1,73 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Bot, RefreshCw, ShieldCheck } from 'lucide-react';
-import { errorText, request, schoolPath, stamp, type Connection } from './api';
+import { ApiError, errorText, request, schoolPath, stamp, type Connection } from './api';
 import { Badge, Notice, Spinner } from './components';
-import { approveHomeworkAIConfiguration, blankHomeworkAIPolicy, homeworkAuditDeliveryStatus, homeworkAIConfiguration, saveHomeworkAIConfiguration, type HomeworkAIConfiguration, type HomeworkAIModel, type HomeworkAIPolicy, type HomeworkAuditDeliveryStatus } from './homework-ai-api';
+import { approveHomeworkAIConfiguration, blankHomeworkAIPolicy, homeworkAuditDeliveryStatus, homeworkAIConfiguration, homeworkPrivatePolicy, saveHomeworkAIConfiguration, saveHomeworkPrivatePolicy, type HomeworkAIConfiguration, type HomeworkAIModel, type HomeworkAIPolicy, type HomeworkAuditDeliveryStatus, type HomeworkPrivatePolicy } from './homework-ai-api';
 
 const limits=[{key:'max_input_chars',label:'Question character limit',min:100,max:10000},{key:'max_output_tokens',label:'Tutor output token limit',min:200,max:3000},{key:'max_daily_turns',label:'Daily questions per student',min:1,max:100},{key:'max_daily_tokens',label:'Daily token reservation per student',min:1000,max:2000000}] as const;
 export function HomeworkAISettings({schoolId}:{schoolId:string}){
+ return <>
+  <HomeworkPrivateSettings key={schoolId} schoolId={schoolId}/>
+  <HomeworkLiveAISettings schoolId={schoolId}/>
+ </>;
+}
+
+export function HomeworkPrivateSettings({schoolId}:{schoolId:string}){
+ const [policy,setPolicy]=useState<HomeworkPrivatePolicy|null>(null);
+ const [enabled,setEnabled]=useState(false);
+ const [loading,setLoading]=useState(true);
+ const [saving,setSaving]=useState(false);
+ const [error,setError]=useState('');
+ const [success,setSuccess]=useState('');
+
+ const load=useCallback(async()=>{
+  setLoading(true);
+  setError('');
+  setSuccess('');
+  try{
+   const saved=await homeworkPrivatePolicy(schoolId);
+   setPolicy(saved);
+   setEnabled(saved.enabled);
+  }catch(e){setError(errorText(e));}
+  finally{setLoading(false);}
+ },[schoolId]);
+ useEffect(()=>{void load();},[load]);
+
+ async function save(event:FormEvent){
+  event.preventDefault();
+  if(!policy||saving||enabled===policy.enabled)return;
+  setSaving(true);
+  setError('');
+  setSuccess('');
+  try{
+   const saved=await saveHomeworkPrivatePolicy(schoolId,enabled,policy.version);
+   setPolicy(saved);
+   setEnabled(saved.enabled);
+   setSuccess(saved.enabled?'Private Homework Help enabled.':'Private Homework Help disabled.');
+  }catch(e){
+   setPolicy(null);
+   setError(e instanceof ApiError && e.status===409
+    ? 'Someone changed this setting. Reload it before saving again.'
+    : `${errorText(e)} Reload this setting to check the saved status.`);
+  }finally{setSaving(false);}
+ }
+
+ return <section className="panel">
+  <div className="panel-head"><div><h2>Private Homework Help</h2><p>For students who sign in with an Academy username and password.</p></div><ShieldCheck size={22}/></div>
+  <div className="panel-body">
+   <p>The private study coach offers hints, explanations and practice, with or without course enrollment. Academy reads homework photos inside the service and saves photos and conversations for authorized school review.</p>
+   <p className="help-text">This setting controls the private study coach. The separate live AI configuration, including any OpenAI draft, has its own approval and availability controls.</p>
+   <Notice error={error} success={success}/>
+   {loading?<Spinner text="Loading Private Homework Help settings…"/>:policy?<form onSubmit={save}>
+    <p role="status"><strong>Saved status</strong> · {policy.enabled?'Enabled':'Disabled'}</p>
+    <label className="checkbox-label"><input type="checkbox" checked={enabled} disabled={saving} onChange={e=>{setEnabled(e.target.checked);setSuccess('');}}/>Enable Private Homework Help for Academy students</label>
+    <button type="submit" className="button primary" disabled={saving||enabled===policy.enabled}>{saving?'Saving…':'Save private setting'}</button>
+   </form>:<button type="button" className="button secondary" onClick={()=>void load()}><RefreshCw size={15}/>Reload private setting</button>}
+  </div>
+ </section>;
+}
+
+function HomeworkLiveAISettings({schoolId}:{schoolId:string}){
  const [state,setState]=useState<HomeworkAIConfiguration|null>(null),[draft,setDraft]=useState<HomeworkAIPolicy>(blankHomeworkAIPolicy()),[connections,setConnections]=useState<Connection[]>([]),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[dirty,setDirty]=useState(false),[acknowledged,setAcknowledged]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState('');
  const load=useCallback(async()=>{setError('');try{const [value,models]=await Promise.all([homeworkAIConfiguration(schoolId),request<Connection[]>(schoolPath('/admin/connections',schoolId))]);setState(value);setDraft(value.configuration||blankHomeworkAIPolicy());setConnections(models.filter(item=>item.enabled));setDirty(false);setAcknowledged(false);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[schoolId]);
  useEffect(()=>{setLoading(true);void load();},[load]);

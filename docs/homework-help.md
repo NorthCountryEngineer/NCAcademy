@@ -1,8 +1,22 @@
 # Homework Help
 
+## Private Homework Help for Academy student accounts
+
+In **School setup → Homework Help AI**, a human School/Admin can enable **Private Homework Help** for that school. Academy username/password students need a current school placement and completed learning preferences. They can open Homework Help with or without a class enrollment. The school setting starts disabled and is saved independently of the separate live AI configuration. Local student accounts use the private coach exclusively for Homework Help. The legacy send and resume endpoints also reject those accounts. Authorized history remains readable after disabling the coach.
+
+Students can type a question or attach up to two pictures after confirming that Academy may read and retain them. The API normalizes images and runs English text recognition with Tesseract inside its container. It selects a fixed study hint or follow-up from reviewed content. The coach covers selected math, reading, writing and science topics. Unclear pictures and unfamiliar topics prompt the student to type a question or send a clearer image. Text recognition is designed for clear printed English. Handwriting, diagrams and math notation can require a typed description. The private coach uses no external model, teacher handoff or private corpus. Daily use is capped at 25 turns per student and retains the existing conversation and photo storage bounds.
+
+Questions, normalized photographs and student-visible replies use the existing independent family PII key and school-scoped audit. Original file names and raw OCR output are excluded from stored conversation and audit payloads. A human School/Admin can open **Administration → Audit** to review the full conversation and explicitly open retained pictures. Picture reads are audited. Core audit delivery, if configured, receives allowlisted metadata only. See [family account encryption](family-accounts.md) and [audit delivery](audit-delivery.md).
+
+`GET /api/homework-help/private-policy?school_id=<id>` returns the saved `{enabled, version}`. The corresponding `PUT` accepts `{enabled, expected_version}`. The policy requires current human School/Admin authority, and a stale write returns 409. Student sessions use the existing `/api/homework-help/ai` endpoints with `assistant.private_mode` and per-turn `private_mode` markers.
+
+To verify locally, use a synthetic Academy student with no class enrollment, enable the private coach in the selected school, and upload a clear worksheet screenshot with the in-app photo confirmation. Try a fraction question from the [released 2026 NYSED Grade 3 math test](https://www.nysedregents.org/ei/math/2026/2026-released-items-math-g3.pdf) or an original worksheet. Check the related hint, reload the session, then try an unreadable image and review the transcript as school staff. Use public samples or synthetic student data. The API image supplies the English OCR data, and the integration tests check authorization, photo confirmation and the external-send block.
+
+## External model Homework Help
+
 School/Admins may explicitly approve the new `allow_teacher_models` opt-in to use each matching AI teacher’s independently approved primary for text responses. Missing/false preserves existing school-model behavior. Triage/safety and all Homework photo destinations remain school-controlled. Reply Model details show actual models, policy revisions, normalized token usage and advisory alternate choices; unknown pricing is not shown as zero. See [teacher models](teacher-models.md) for fixed/preview execution, in-flight/replay safeguards and the live-routing plan.
 
-## School AI assistant
+### School AI assistant
 
 Homework Help is a private, model-provider-neutral chat workspace for an authenticated student in a school. Course enrollment is not required. Conversations appear on the left and the selected conversation and composer on the right; students can start a conversation, reopen history, ask a written question or attach permitted homework photos. Routing is automatic. The screen stays in this chat workspace when the school assistant is unavailable and explains that school setup is required. It does not silently substitute the enrollment-dependent legacy flow. Earlier guided-lesson conversations retain their separate historical contract below.
 

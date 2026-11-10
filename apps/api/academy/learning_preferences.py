@@ -227,6 +227,8 @@ def register_learning_preferences_api(app, database, auth, settings, actor, audi
     def give_feedback(body: StudentFeedbackInput, identity=Depends(actor)):
         with database.write() as db:
             turn, course_id, school_id = authorized_turn(db, identity, body.turn_id)
+            if turn.value.get("private_mode") is True and body.style_preferences:
+                raise HTTPException(422, "Private Homework Help uses reviewed hints and does not adapt their style")
             supplied = body.model_dump()
             key = feedback_id(identity, turn.id)
             previous = db.get(Record, key)

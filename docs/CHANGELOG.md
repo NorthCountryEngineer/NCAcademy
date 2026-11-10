@@ -1,5 +1,10 @@
 # Changelog
 
+## November 10, 2026 — private Homework Help
+
+- Added a school setting for students with Academy username/password accounts to get reviewed study hints from text or homework screenshots, with or without course enrollment.
+- The API runs English photo text recognition locally. Private Homework Help retains encrypted chat and normalized images for authorized school review and blocks both external-model Homework Help send paths for these accounts. See [setup and testing](homework-help.md).
+
 ## November 10, 2026 — daily New York Grade 3 math practice
 
 - Added 44 skill topics and nine unit mixes with variable questions, precise standards and lesson links, and optional reflection across all eight Mathematical Practices.

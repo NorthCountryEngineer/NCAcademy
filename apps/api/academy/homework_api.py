@@ -196,6 +196,11 @@ def _references(db, identity, settings, data, turn):
     return result
 
 
+def _require_legacy_homework_access(identity):
+    if identity.get("auth_provider") == "academy":
+        raise HTTPException(403, "Open Homework Help to start a private conversation.")
+
+
 def homework_message_projection(db, identity, row, settings, app):
     data, turn = row.value, None
     triage = data["triage"]
@@ -205,7 +210,11 @@ def homework_message_projection(db, identity, row, settings, app):
     error = outcome.value["error"] if outcome else None
     resume_available = not triage["prompt"] and not linked and not outcome
     if resume_available:
-        error = "Your question was saved, but teaching has not started. Resume this question to send it to the selected teacher."
+        if identity.get("auth_provider") == "academy":
+            resume_available = False
+            error = "Your question was saved. Open Homework Help to start a private conversation."
+        else:
+            error = "Your question was saved, but teaching has not started. Resume this question to send it to the selected teacher."
     if linked:
         turn = curated_turn_dict(linked)
         if turn["status"] == "released":
@@ -295,6 +304,7 @@ def register_homework_api(app, database, auth, settings, actor, audit_actor, cur
 
     @app.post("/api/homework-help/sessions/{session_id}/messages")
     def message(session_id: str, body: HomeworkMessageInput, request: Request, identity=Depends(actor)):
+        _require_legacy_homework_access(identity)
         with database.write() as db:
             conversation = session(db, identity, session_id)
             school = conversation.value["school_id"]
@@ -357,6 +367,7 @@ def register_homework_api(app, database, auth, settings, actor, audit_actor, cur
         return continue_message(session_id, message_id, request, identity)
 
     def continue_message(session_id, message_id, request, identity):
+        _require_legacy_homework_access(identity)
         with database.write() as db:
             session(db, identity, session_id)
             row = db.get(Record, message_id)
