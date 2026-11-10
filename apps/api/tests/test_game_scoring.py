@@ -219,7 +219,7 @@ def test_schema16_is_additive_idempotent_and_required_for_readiness(client, app)
     assert client.get("/api/ready").status_code == 503
     migrate(app.state.settings)
     assert client.get("/api/ready").status_code == 200
-    assert client.get("/api/admin/settings", headers=login(client, "demo-admin")).json()["schema_version"] == 16
+    assert client.get("/api/admin/settings", headers=login(client, "demo-admin")).json()["schema_version"] == 17
 
 
 def test_two_concurrent_starts_cannot_exceed_a_single_attempt_budget(client, app, monkeypatch):

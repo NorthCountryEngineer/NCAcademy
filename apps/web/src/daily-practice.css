@@ -1,0 +1,77 @@
+.daily-practice .panel-head h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.practice-planner h2 { scroll-margin-top: 22px; }
+.practice-plan-form > .button { margin-top: 5px; }
+.practice-note, .practice-reuse {
+ padding: 14px 17px; border: 1px solid #e6e0ca; border-radius: 8px; background: #faf8ef;
+ color: #554d32; margin: 0 0 16px;
+}
+.practice-reuse, .practice-today-row, .practice-history-row, .practice-score {
+ display: flex; align-items: center; justify-content: space-between; gap: 12px 18px; flex-wrap: wrap;
+}
+.practice-reuse p, .practice-today-row p, .practice-history-row p, .practice-score p { margin: 4px 0 0; }
+.practice-today-row + .practice-today-row { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--line); }
+.practice-today-row strong { font-size: 17px; }
+.practice-today-row p, .practice-history-row p { color: var(--muted); }
+.practice-today-row > div, .practice-history-row > div, .practice-reuse > div { min-width: 0; overflow-wrap: anywhere; }
+.practice-history-row { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.practice-history-row:first-child { padding-top: 0; }
+.practice-history-row:last-child { border-bottom: 0; }
+.practice-history-actions, .practice-pagination, .practice-lesson-actions {
+ display: flex; align-items: center; gap: 9px 12px; flex-wrap: wrap;
+}
+.practice-pagination { justify-content: space-between; margin-top: 16px; }
+.practice-pagination > span { color: var(--muted); }
+.practice-back { margin-bottom: 9px; }
+.practice-preview { padding-left: 23px; }
+.practice-preview > li { padding: 6px 0 12px; overflow-wrap: anywhere; }
+.practice-preview ul { margin: 5px 0 7px; }
+.practice-preview p { margin: 6px 0 0; }
+.practice-copy { margin-top: 14px; }
+.practice-questions { display: grid; gap: 15px; margin-bottom: 17px; }
+.daily-practice .practice-question {
+ margin: 0; min-width: 0; padding: 12px 16px 15px;
+ border: 1px solid var(--line); border-radius: 9px;
+}
+.daily-practice .practice-question legend {
+ max-width: 100%; padding: 0 6px; color: var(--ink); font-size: 15px; font-weight: 650;
+ text-transform: none; letter-spacing: normal; overflow-wrap: anywhere;
+}
+.practice-number { color: var(--accent-dark); }
+.practice-options { display: grid; gap: 7px; }
+.daily-practice .practice-option {
+ display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center;
+ margin: 0; padding: 9px 11px; color: var(--ink); border: 1px solid var(--line);
+ border-radius: 7px; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.daily-practice .practice-option:has(:checked) { background: #eef7f3; border-color: var(--accent); }
+.daily-practice .practice-option input[type=radio] { width: auto; margin: 0; padding: 0; accent-color: var(--accent); }
+.daily-practice .practice-option span { white-space: pre-wrap; overflow-wrap: anywhere; }
+.daily-practice .practice-answer { margin-bottom: 0; }
+.daily-practice .practice-answer input { max-width: 27rem; font-size: 16px; }
+.practice-figure {
+ margin: 9px 0 12px; padding: 10px 13px; max-width: 100%; overflow: auto; white-space: pre;
+ background: #f3f6f4; border: 1px solid var(--line); border-radius: 7px; color: var(--ink);
+ font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace;
+}
+.practice-score { border-radius: 8px; border: 1px solid #d8e7df; background: #f1f8f4; padding: 14px 16px; margin-bottom: 18px; }
+.practice-score h3, .practice-score p { margin-top: 0; }
+.practice-score h3 { font-size: 18px; }
+.practice-lesson { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 10px; }
+.practice-lesson summary {
+ display: flex; gap: 10px; align-items: center; padding: 13px 16px; cursor: pointer;
+ color: var(--accent-dark); overflow-wrap: anywhere;
+}
+.practice-lesson summary > svg { flex-shrink: 0; }
+.practice-lesson summary > span { flex: 1; min-width: 0; }
+.practice-lesson summary::after { content: '+'; font-size: 18px; }
+.practice-lesson[open] summary::after { content: '−'; }
+.practice-lesson summary small { display: block; margin-top: 3px; color: var(--muted); }
+.practice-lesson-body { border-top: 1px solid var(--line); padding: 0 16px 16px; }
+.practice-lesson-body .prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.practice-answer-review { margin-top: 16px; }
+@media (max-width: 580px) {
+ .practice-plan-form .form-grid { grid-template-columns: 1fr; }
+ .practice-history-actions { justify-content: flex-start; }
+ .practice-today-row > .button, .practice-lesson-actions > .button { width: 100%; justify-content: center; }
+ .daily-practice .practice-question { padding: 9px 10px 12px; }
+}

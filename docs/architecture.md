@@ -88,6 +88,8 @@ Disabled assistance makes no provider call. Assignment curated mode progresses t
 
 ## Exact Grade 3 mathematics package
 
+The [daily practice workflow](daily-grade3-math.md) adds a locally generated, teacher-published question bank to the exact Grade 3 class. Staff select an enrolled student, topic and New York date; publish the reviewed immutable draft; and can reuse exact archived questions. Server grading stores a student's own response once and binds missed items to public lesson documents in the current human-approved corpus. Local reviewed chat reuses the approved managed teacher and existing protected lesson transcript with zero model or Core-agent calls. Schema 17 adds immutable encrypted practice records and leaves previous assignments and approvals intact.
+
 The installed [New York Grade 3 mathematics package](ny-grade3-mathematics.md) adds complete standards mapping for the exact 2026–2027 grade/year: 52 standards/practice records, 27 original teaching references and a nine-unit local sequence. This is a locally authored reference and starting syllabus, not a full published lesson or assessment bank. The two high-school science packages remain partial; other grade/subject contexts retain their existing preparation boundaries. The same immutable corpus, source-review, human approval and student-authorship controls apply. [Exact OpenAI model transport compatibility](openai-chat-compatibility.md) changes request parameters within the existing approved cap without widening this teaching authority.
 
 ## Homework Help and speech

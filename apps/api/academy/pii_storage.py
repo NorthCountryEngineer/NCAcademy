@@ -82,7 +82,8 @@ def protect_records(db, _context, _instances):
         if ENVELOPE in value:
             continue
         targeted = row.kind == "change_request" and local_owner(db, row.tenant_id, value.get("target_id"))
-        if not (row.kind in {"game_attempt", "game_attempt_result", "game_attempt_award"} or targeted or local_owner(db, row.tenant_id, row.owner_id) or local_owner(db, row.tenant_id, row.parent_id)):
+        practice_chat = row.kind == "lesson_turn" and value.get("practice_chat") is True
+        if not (row.kind in {"game_attempt", "game_attempt_result", "game_attempt_award"} or practice_chat or targeted or local_owner(db, row.tenant_id, row.owner_id) or local_owner(db, row.tenant_id, row.parent_id)):
             continue
         if crypto is None:
             raise HTTPException(503, "Protected student storage requires its encryption key")
@@ -112,7 +113,7 @@ def protect_audit(db, row, payload):
     keys = {"student_id", "user_id", "principal_id", "submission_id", "turn_id", "lesson_turn_id", "message_id", "homework_session_id", "change_id", "target_id"}
     related = [value for key, value in payload.items() if key in keys and isinstance(value, str)]
     game_evidence = row.event_type.startswith(("game_studio.attempt_", "game_studio.attempts_", "game_studio.award_"))
-    if not (game_evidence or local_owner(db, row.tenant_id, row.actor_id) or any(local_owner(db, row.tenant_id, key) for key in related)):
+    if not (game_evidence or row.event_type.startswith(("daily_practice.", "lesson.practice_")) or local_owner(db, row.tenant_id, row.actor_id) or any(local_owner(db, row.tenant_id, key) for key in related)):
         return payload
     if crypto is None:
         raise HTTPException(503, "Protected student audit requires its encryption key")

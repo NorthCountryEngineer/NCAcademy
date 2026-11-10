@@ -1,5 +1,11 @@
 # Changelog
 
+## November 10, 2026 — daily New York Grade 3 math practice
+
+- Added 44 skill topics and nine unit mixes with variable questions, precise standards and lesson links, and optional reflection across all eight Mathematical Practices.
+- Staff choose the date, student and school topic, preview and publish exact versions, review results, and reuse archived question sets. Students open the day's work, submit their own answers, and are guided to a matching lesson after a missed question.
+- Added provider-free reviewed conversations with the approved managed teacher. Schema 17 protects assignment, publication and result snapshots alongside encrypted and audited chat. See [daily Grade 3 practice](daily-grade3-math.md).
+
 ## October 28, 2026 — student names and grade-aware enrollment
 
 - Replaced opaque student labels in human class-management enrollment with names, optional preferred names, usernames and current school grade/year. The general school directory and agent-facing roster retain their existing privacy boundary.

@@ -30,6 +30,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [All 2,030 official NYSED course options and custom classes](docs/ny-course-catalog.md)
 - [New York standards planning and tutoring coverage](docs/ny-curriculum-2026-review.md)
 - [Complete New York Grade 3 mathematics mapping and setup](docs/ny-grade3-mathematics.md)
+- [Daily Grade 3 assignments, review lessons and teacher chat](docs/daily-grade3-math.md)
 - [Teacher onboarding and standards corpora](docs/teachers-and-standards.md)
 - [Bounded OpenAI model transport compatibility](docs/openai-chat-compatibility.md)
 - [Teacher model assignment and cost-aware routing plan](docs/teacher-models.md)

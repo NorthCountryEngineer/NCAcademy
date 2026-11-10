@@ -12,6 +12,8 @@ import { ExternalResources } from './ExternalResources';
 import { Classroom } from './Classroom';
 import { CourseGames } from './CourseGames';
 import { Enrollment } from './Enrollment';
+import { DailyPractice } from './DailyPractice';
+import { isGrade3PracticeCourse, type PracticeLessonLink } from './daily-practice-api';
 import { CourseCatalogFields, CourseCatalogSelection, CourseCreationChoice, type CourseCreationMode } from './CourseCatalogFields';
 import { courseCreationContextPayload, type CourseCatalogReference } from './course-catalog-api';
 
@@ -29,14 +31,91 @@ export function CourseEditor({school,initial,close,saved}:{school:School;initial
  return <Modal title={initial?'Configure course':'Create course'} close={close}><form onSubmit={save}><div className="modal-body"><Notice error={error}/><CourseCreationChoice value={creationMode} change={setCreationMode}/>{creationMode==='catalog'?<CourseCatalogFields schoolId={school.id} value={catalogCourse} change={selectCatalog}/>:<p className="help-text">Custom courses are available in every school. Choose any title and content; no NYS catalog code, state standards or AI corpus approval is required to create the class.</p>}<label>Course title<input required maxLength={200} value={title} onChange={e=>setTitle(e.target.value)}/><small>{creationMode==='catalog'?'The selected official title is suggested. You can use a local class name while keeping its NYSED course code.':'Use your own course name, such as Robotics club, Studio art or Independent study.'}</small></label><label>Description<textarea rows={4} maxLength={5000} value={description} onChange={e=>setDescription(e.target.value)}/></label>{canAssignProfiles&&<CourseTeacherProfiles profiles={profiles} selected={teacherProfileIds} initial={initial} loading={profilesLoading} error={profilesError} change={ids=>{setTeacherProfileIds(ids);setProfilesChanged(true);}}/ >}{school.capabilities.manage_school&&<details><summary>Class administration</summary><label>Responsible staff member<select value={teacherId} onChange={e=>setTeacherId(e.target.value)}><option value="">You</option>{initial?.teacher_id&&!teachers.some(teacher=>teacher.id===initial.teacher_id)&&<option value={initial.teacher_id}>{initial.teacher_name||'Current owner'} · {principalLabel(initial.teacher_principal_kind)}</option>}{teachers.map(teacher=><option key={teacher.id} value={teacher.id}>{teacher.name} · {principalLabel(teacher.principal_kind)}</option>)}</select><small>This staff member manages the class and its coursework. Choose human or AI class teachers above; AI profiles do not need a sign-in account.</small></label></details>}<fieldset><legend>Optional standards alignment</legend><label className="checkbox-label"><input type="checkbox" checked={configure} onChange={e=>setConfigure(e.target.checked)}/>Link a reviewed state standards pathway</label><p className="help-text">This is separate from the official course catalog. Add an alignment when useful for curriculum planning and AI teaching preparation; it is optional for every course.</p>{configure?<AcademicContextFields schoolId={school.id} value={curriculum} change={setCurriculum}/>:<p className="help-text">No state standards alignment will be assigned. You can create coursework, enroll students and assign teachers. Approved materials and model policies are still required for restricted AI teaching modes.</p>}</fieldset></div><div className="modal-footer"><button type="button" className="button secondary" onClick={close}>Cancel</button><button className="button primary" disabled={busy||creationMode==='catalog'&&!catalogCourse}>{busy?'Saving…':initial?'Save course':'Create course'}</button></div></form></Modal>;
 }
 export function CourseDetail({id,user,school,back,backLabel='All courses',initialAssignmentId,initialActivity,openClassGroup}:{id:string;user:User;school:School;back:()=>void;backLabel?:string;initialAssignmentId?:string;initialActivity?:'resources'|'classroom';openClassGroup?:(id:string)=>void}){
- const [course,setCourse]=useState<Course|null>(null),[assignments,setAssignments]=useState<Assignment[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[selected,setSelected]=useState<string|null>(initialAssignmentId||null),[editor,setEditor]=useState<Assignment|'new'|null>(null),[enrollment,setEnrollment]=useState(false),[courseEditor,setCourseEditor]=useState(false),[activity,setActivity]=useState(user.auth_provider==='academy'&&initialActivity==='classroom'?'coursework':initialActivity||'coursework');
+ const [course,setCourse]=useState<Course|null>(null),[assignments,setAssignments]=useState<Assignment[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[selected,setSelected]=useState<string|null>(initialAssignmentId||null),[editor,setEditor]=useState<Assignment|'new'|null>(null),[enrollment,setEnrollment]=useState(false),[courseEditor,setCourseEditor]=useState(false);
+ const [chosenActivity,setChosenActivity]=useState<string|null>(user.auth_provider==='academy'&&initialActivity==='classroom'?'coursework':initialActivity||null);
+ const [practiceLesson,setPracticeLesson]=useState<PracticeLessonLink|null>(null),[practiceAssignmentId,setPracticeAssignmentId]=useState<string|null>(null);
  const teacher=!!course&&canManageCourse(user,course);
- const load=useCallback(async()=>{setError('');try{const [c,a]=await Promise.all([request<Course>(schoolPath(`/courses/${id}`,school.id)),request<Assignment[]>(schoolPath(`/courses/${id}/assignments`,school.id))]);setCourse(c);setAssignments(a);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[id,school.id]);
+ const practice=!!course&&user.principal_kind!=='agent'&&(teacher||user.role==='student'&&user.auth_provider==='academy')&&isGrade3PracticeCourse(course.curriculum);
+ const activity=chosenActivity==='practice'&&!practice?'coursework':chosenActivity||(practice&&user.role==='student'?'practice':'coursework');
+ const load=useCallback(async()=>{setError('');try{const [c,a]=await Promise.all([request<Course>(schoolPath('/courses/'+id,school.id)),request<Assignment[]>(schoolPath('/courses/'+id+'/assignments',school.id))]);setCourse(c);setAssignments(a);}catch(e){setError(errorText(e));}finally{setLoading(false);}},[id,school.id]);
  useEffect(()=>{setLoading(true);void load();},[load]);
- if(selected)return <AssignmentWorkbench id={selected} school={school} canManage={teacher} user={user} back={()=>setSelected(null)} edit={assignment=>setEditor(assignment)} editor={editor} closeEditor={()=>setEditor(null)} onSaved={load} teachers={course?.teachers||[]}/>;
+ function changeActivity(next:string){setChosenActivity(next);setPracticeLesson(null);}
+ function askPracticeTeacher(lesson:PracticeLessonLink,assignmentId:string){
+  setPracticeLesson(lesson);setPracticeAssignmentId(assignmentId);setChosenActivity('lesson');
+ }
+ if(selected)return <AssignmentWorkbench id={selected} school={school} canManage={teacher} user={user}
+  back={()=>{setSelected(null);changeActivity('coursework');}} edit={assignment=>setEditor(assignment)} editor={editor}
+  closeEditor={()=>setEditor(null)} onSaved={load} teachers={course?.teachers||[]}/>;
  const modules=[...new Set(assignments.map(a=>a.module||'Course assignments'))];
- return <><button className="text-button back-button" onClick={back}><ArrowLeft size={15}/>{backLabel}</button>{loading?<Spinner/>:<><PageHead title={course?.title||'Course'} description={course?.description}>{course&&openClassGroup&&<button className="button secondary" onClick={()=>openClassGroup(id)}><MessageSquareText size={15}/>Class group</button>}{teacher&&<><button className="button secondary" onClick={()=>setCourseEditor(true)}><Settings2 size={15}/>Configure course</button><button className="button secondary" onClick={()=>setEnrollment(true)}><Users size={15}/>Enrollment</button><button className="button primary" onClick={()=>setEditor('new')}><Plus size={15}/>Add assignment</button></>}</PageHead><Notice error={error}/><Tabs label="Class activities" value={activity} change={setActivity} items={[{id:'coursework',label:'Coursework'},...(user.auth_provider==='academy'?[]:[{id:'classroom',label:'Google Classroom'}]),...(user.role==='student'?[{id:'lesson',label:'Lesson Q&A'},{id:'curated',label:'Curated lessons'}]:[]),{id:'games',label:'Practice games'},{id:'resources',label:'Reviewed resources'}]}/>{activity!=='classroom'&&<><div className="detail-summary"><div><small>Assignments</small><strong>{assignments.length}</strong></div><div><small>Modules</small><strong>{modules.length}</strong></div><div><small>Course members</small><strong>{course?.members?.length??'—'}</strong></div>{course&&<div className="teacher-summary"><small>Responsible staff member · {principalLabel(course.teacher_principal_kind)}</small><strong>{course.teacher_name||course.teacher_id}</strong></div>}</div>{course?.course_catalog&&<CourseCatalogSelection value={course.course_catalog}/ >}{course?.curriculum&&<p className="course-academic-context">{academicLabel(course.curriculum)}</p>}{user.role!=='student'&&!!course?.assigned_teacher_profiles?.length?<CourseAssignedTeachers profiles={course.assigned_teacher_profiles}/ >:!!course?.teachers?.length&&<CourseTeachingTeam teachers={course.teachers}/ >}</>}{course&&user.role!=='student'&&activity==='coursework'&&<CourseCorpusPanel courseId={id} school={school} user={user}/ >}{activity==='classroom'&&user.auth_provider!=='academy'?<Classroom key={`${school.id}:${id}:${user.id}`} courseId={id} school={school} user={user} openCourse={target=>{if(target.assignmentId)setSelected(target.assignmentId);else setActivity(target.activity||'coursework');}}/>:activity==='games'?<CourseGames key={`${school.id}:${id}:${user.id}`} schoolId={school.id} courseId={id}/>:activity==='resources'?<ExternalResources key={`${school.id}:${id}:${user.id}`} courseId={id} schoolId={school.id} staff={teacher}/>:user.role==='student'&&activity==='lesson'?<LessonTutor courseId={id} schoolId={school.id} teachers={course?.teachers||[]}/ >:user.role==='student'&&activity==='curated'?<CuratedLessons key={`${school.id}:${id}:${user.id}`} courseId={id} schoolId={school.id} userId={user.id} teachers={course?.teachers||[]}/ >:!assignments.length?<section className="panel"><Empty title="No assignments yet">{teacher?'Add an assignment and choose its tutoring policy.':'Your teacher has not added coursework yet.'}</Empty></section>:modules.map(module=><section className="panel" key={module}><div className="panel-head"><div><div className="eyebrow">MODULE</div><h2>{module}</h2></div><Badge>{assignments.filter(a=>(a.module||'Course assignments')===module).length} assignments</Badge></div><div className="assignment-rows">{assignments.filter(a=>(a.module||'Course assignments')===module).map(a=><button key={a.id} onClick={()=>setSelected(a.id)}><span className="row-icon"><FileText size={18}/></span><div><strong>{a.title}</strong><small>{a.tutor_policy?.mode==='off'?'Tutoring disabled':`${a.tutor_policy?.mode||'curated'} guidance · ${a.tutor_policy?.max_turns??0} turns maximum`}</small></div><ArrowRight size={16}/></button>)}</div></section>)}</>}{editor&&<AssignmentEditor schoolId={school.id} assignment={editor==='new'?undefined:editor} courseId={id} close={()=>setEditor(null)} saved={async()=>{setEditor(null);await load();}}/>}{courseEditor&&course&&<CourseEditor school={school} initial={course} close={()=>setCourseEditor(false)} saved={async()=>{setCourseEditor(false);await load();}}/>}{enrollment&&<Enrollment ownerId={course?.teacher_id||''} schoolId={school.id} courseId={id} admin={['admin','school'].includes(user.role)} members={course?.members||[]} close={()=>setEnrollment(false)} saved={load}/>}</>;
+ const lessonTeacher=course?.teachers?.find(item=>item.kind==='ai'&&item.lesson_tutoring_available)
+  ||course?.teachers?.find(item=>item.kind==='ai'&&item.context_ready);
+ const tabs=[
+  ...(practice?[{id:'practice',label:'Daily math practice'}]:[]),
+  {id:'coursework',label:'Coursework'},
+  ...(user.auth_provider==='academy'?[]:[{id:'classroom',label:'Google Classroom'}]),
+  ...(user.role==='student'?[{id:'lesson',label:'Lesson Q&A'},{id:'curated',label:'Curated lessons'}]:[]),
+  {id:'games',label:'Practice games'},{id:'resources',label:'Reviewed resources'},
+ ];
+ return <>
+  <button className="text-button back-button" onClick={back}><ArrowLeft size={15}/>{backLabel}</button>
+  {loading?<Spinner/>:<>
+   <PageHead title={course?.title||'Course'} description={course?.description}>
+    {course&&openClassGroup&&<button className="button secondary" onClick={()=>openClassGroup(id)}><MessageSquareText size={15}/>Class group</button>}
+    {teacher&&<>
+     <button className="button secondary" onClick={()=>setCourseEditor(true)}><Settings2 size={15}/>Configure course</button>
+     <button className="button secondary" onClick={()=>setEnrollment(true)}><Users size={15}/>Enrollment</button>
+     {activity!=='practice'&&<button className="button primary" onClick={()=>setEditor('new')}><Plus size={15}/>Add assignment</button>}
+    </>}
+   </PageHead>
+   <Notice error={error}/>
+   <Tabs label="Class activities" value={activity} change={changeActivity} items={tabs}/>
+   {activity!=='classroom'&&activity!=='practice'&&<>
+    <div className="detail-summary">
+     <div><small>Assignments</small><strong>{assignments.length}</strong></div>
+     <div><small>Modules</small><strong>{modules.length}</strong></div>
+     <div><small>Course members</small><strong>{course?.members?.length??'—'}</strong></div>
+     {course&&<div className="teacher-summary"><small>Responsible staff member · {principalLabel(course.teacher_principal_kind)}</small><strong>{course.teacher_name||course.teacher_id}</strong></div>}
+    </div>
+    {course?.course_catalog&&<CourseCatalogSelection value={course.course_catalog}/>}
+    {course?.curriculum&&<p className="course-academic-context">{academicLabel(course.curriculum)}</p>}
+    {user.role!=='student'&&!!course?.assigned_teacher_profiles?.length?<CourseAssignedTeachers profiles={course.assigned_teacher_profiles}/>
+     :!!course?.teachers?.length&&<CourseTeachingTeam teachers={course.teachers}/>}
+   </>}
+   {course&&user.role!=='student'&&activity==='coursework'&&<CourseCorpusPanel courseId={id} school={school} user={user}/>}
+   {activity==='practice'&&course&&practice?
+    <DailyPractice key={school.id+':'+id+':'+user.id} courseId={id} schoolId={school.id} members={course.members}
+     initialAssignmentId={practiceAssignmentId} teacherName={lessonTeacher?.name}
+     openEnrollment={teacher?()=>setEnrollment(true):undefined} askTeacher={user.role==='student'?askPracticeTeacher:undefined}/>
+    :activity==='classroom'&&user.auth_provider!=='academy'?
+     <Classroom key={school.id+':'+id+':'+user.id} courseId={id} school={school} user={user}
+      openCourse={target=>{if(target.assignmentId)setSelected(target.assignmentId);else changeActivity(target.activity||'coursework');}}/>
+    :activity==='games'?<CourseGames key={school.id+':'+id+':'+user.id} schoolId={school.id} courseId={id}/>
+    :activity==='resources'?<ExternalResources key={school.id+':'+id+':'+user.id} courseId={id} schoolId={school.id} staff={teacher}/>
+    :user.role==='student'&&activity==='lesson'?
+     <LessonTutor courseId={id} schoolId={school.id} teachers={course?.teachers||[]} localPractice={practice}
+      practiceLesson={practiceLesson||undefined}
+      backToPractice={practice&&practiceAssignmentId?()=>changeActivity('practice'):undefined}/>
+    :user.role==='student'&&activity==='curated'?
+     <CuratedLessons key={school.id+':'+id+':'+user.id} courseId={id} schoolId={school.id} userId={user.id} teachers={course?.teachers||[]}/>
+    :!assignments.length?<section className="panel"><Empty title="No assignments yet">{teacher?'Add an assignment and choose its tutoring policy.':'Your teacher has not added coursework yet.'}</Empty></section>
+    :modules.map(module=><section className="panel" key={module}>
+     <div className="panel-head"><div><div className="eyebrow">MODULE</div><h2>{module}</h2></div><Badge>{assignments.filter(a=>(a.module||'Course assignments')===module).length} assignments</Badge></div>
+     <div className="assignment-rows">{assignments.filter(a=>(a.module||'Course assignments')===module).map(a=>
+      <button key={a.id} onClick={()=>setSelected(a.id)}><span className="row-icon"><FileText size={18}/></span>
+       <div><strong>{a.title}</strong><small>{a.tutor_policy?.mode==='off'?'Tutoring disabled':(a.tutor_policy?.mode||'curated')+' guidance · '+(a.tutor_policy?.max_turns??0)+' turns maximum'}</small></div>
+       <ArrowRight size={16}/>
+      </button>)}</div>
+    </section>)}
+  </>}
+  {editor&&<AssignmentEditor schoolId={school.id} assignment={editor==='new'?undefined:editor} courseId={id}
+   close={()=>setEditor(null)} saved={async()=>{setEditor(null);await load();}}/>}
+  {courseEditor&&course&&<CourseEditor school={school} initial={course} close={()=>setCourseEditor(false)}
+   saved={async()=>{setCourseEditor(false);await load();}}/>}
+  {enrollment&&<Enrollment ownerId={course?.teacher_id||''} schoolId={school.id} courseId={id}
+   admin={['admin','school'].includes(user.role)} members={course?.members||[]} close={()=>setEnrollment(false)} saved={load}/>}
+ </>;
 }
+
 type ModelChoice={connection_id:string;connection_name:string;model:string};
 export function AssignmentEditor({assignment,courseId,schoolId,close,saved}:{assignment?:Assignment;courseId:string;schoolId:string;close:()=>void;saved:()=>Promise<void>}){
  const [title,setTitle]=useState(assignment?.title||''),[module,setModule]=useState(assignment?.module||''),[instructions,setInstructions]=useState(assignment?.instructions||''),[policy,setPolicy]=useState<TutorPolicy>(assignment?.tutor_policy||blankPolicy()),[hints,setHints]=useState(assignment?.tutor_policy.hints.map(h=>h.text).join('\n')||''),[questions,setQuestions]=useState(assignment?.tutor_policy.questions.map(q=>q.text).join('\n')||''),[models,setModels]=useState<ModelChoice[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');

@@ -12,6 +12,7 @@ from .db import Record, canonical, now, uid
 from .lesson_schemas import LessonInput
 from .learning_preferences import preference_snapshot, require_preference_snapshot, presentation_context
 from .permissions import bind_scope, require_school, scope_id
+from .practice_lesson import LOCAL_BUDGET, choose_reference, current_practice_references, next_question
 from .standards import corpus_descriptor, retrieve_corpus, snapshot_material
 from .teacher_api import resolve_lesson_context
 from .teacher_schemas import TeacherTutorModel
@@ -23,7 +24,10 @@ def lesson_session_id(tenant_id, course_id, student_id):
 
 def lesson_turn_dict(row, full=False):
     keys = ("session_id", "teacher_profile_id", "teacher_name", "message", "status", "approved_text", "citations", "error", "usage", "created_at", "budget_day")
-    return {"id": row.id, **(safe_lesson_data(row.value) if full else {key: row.value.get(key) for key in keys})}
+    value = row.value
+    if value.get("practice_chat"):
+        keys += ("practice_chat",)
+    return {"id": row.id, **(safe_lesson_data(value) if full else {key: value.get(key) for key in keys})}
 
 
 def protect_released_lesson(db, course, school_id, result):
@@ -32,6 +36,18 @@ def protect_released_lesson(db, course, school_id, result):
         return result
     school = db.get(Record, school_id)
     citations = result.get("citations") or []
+    if result.get("practice_chat"):
+        try:
+            descriptor, references = current_practice_references(db, course, school_id)
+            if not school or school.value.get("disabled") or not citations or any(
+                item.get("corpus_snapshot_sha256") != descriptor["snapshot_sha256"]
+                or item.get("corpus_id") != descriptor["id"]
+                or references.get(item.get("document_id"), {}).get("content_sha256") != item.get("content_sha256")
+                for item in citations
+            ):
+                raise HTTPException(409)
+        except HTTPException:
+            return {**result, "status": "withheld", "approved_text": None, "citations": [], "error": "The reviewed practice materials changed. Ask about the current lesson."}
     if not school.value.get("external_audit_required") and not any(item.get("external_review") for item in citations):
         return result
     documents = {item["id"]: item for item in snapshot_material(db, course, school_id)["documents"]}
@@ -191,6 +207,37 @@ def lesson_budget(previous, policy, budget_day):
     return consumed, turn_limit, token_limit
 
 
+def reviewed_practice_chat(db, identity, course, school_id, settings, body, previous, data):
+    """Return only approved reference text and fixed prompts; no provider path."""
+    school = db.get(Record, school_id)
+    if not school or school.value.get("disabled"):
+        raise HTTPException(403, "An active school is required")
+    descriptor, references = current_practice_references(db, course, school_id)
+    context = resolve_lesson_context(db, identity, course, school_id, settings, body.teacher_profile_id)
+    if context["teacher_mode"] != "managed":
+        raise HTTPException(403, "Reviewed practice chat requires a currently approved managed teacher")
+    data.update(teacher_name=context["name"], teacher_context_snapshot=context)
+    if completion_request(body.message):
+        raise HTTPException(403, "I can explain a math idea or help you check a method. Your assignment answers need to be your own.")
+    if not body.message.strip():
+        raise HTTPException(422, "Type a question about the math idea you are practicing.")
+    policy = {**LOCAL_BUDGET, "max_turns": min(LOCAL_BUDGET["max_turns"], (context.get("tutor_model") or {}).get("max_turns", LOCAL_BUDGET["max_turns"]))}
+    _, turn_limit, _ = lesson_budget(previous, policy, data["budget_day"])
+    last_id = None
+    for row in reversed(previous):
+        value = row.value
+        if value.get("practice_chat") and value.get("status") == "released" and value.get("teacher_profile_id") == body.teacher_profile_id and value.get("practice_corpus_sha256") == descriptor["snapshot_sha256"]:
+            last_id = value.get("selected_document_id")
+            break
+    document = choose_reference(references, body.message, body.practice_lesson_id, last_id)
+    content = document["content"]
+    excerpt = content[:1600]
+    excerpt_fields = {"excerpt_start": 0, "excerpt_end": len(excerpt), "excerpt_position_unit": "unicode_code_points", "excerpt_sha256": hashlib.sha256(excerpt.encode()).hexdigest()}
+    citation = {"document_id": document["id"], **{key: document[key] for key in ("title", "source_url", "source_page", "content_sha256", "source_content_sha256", "source_record_id", "external_review") if key in document}, **excerpt_fields, "corpus_id": descriptor["id"], "corpus_snapshot_sha256": descriptor["snapshot_sha256"]}
+    text = _render(presentation_context(context, data["learning_preferences_snapshot"]), {"excerpt": excerpt})
+    return {"status": "released", "approved_text": text + "\n\n" + next_question(body.message, last_id == document["id"]), "citations": [citation], "selected_document_id": document["id"], "practice_corpus_sha256": descriptor["snapshot_sha256"], "policy_snapshot": policy, "budget_snapshot": {**data["budget_snapshot"], "max_turns": turn_limit}, "delivery_method": "reviewed-practice-reference-v1"}
+
+
 def register_lesson_api(app, database, auth, settings, actor, audit_actor):
     def resolve(db, identity, course_id, profile_id):
         return resolve_lesson_runtime(db, identity, course_id, profile_id, settings)
@@ -219,13 +266,27 @@ def register_lesson_api(app, database, auth, settings, actor, audit_actor):
             previous = lesson_history(db, identity, course_id)
             existing = next((row for row in previous if row.value["idempotency_key"] == body.idempotency_key), None)
             if existing:
-                if existing.value.get("activity") == "curated_lesson" or existing.value["message"] != body.message or existing.value["teacher_profile_id"] != body.teacher_profile_id:
+                if existing.value.get("activity") == "curated_lesson" or existing.value["message"] != body.message or existing.value["teacher_profile_id"] != body.teacher_profile_id or bool(existing.value.get("practice_chat")) != body.reviewed_practice or existing.value.get("practice_lesson_id") != body.practice_lesson_id:
                     raise HTTPException(409, "Idempotency key was used for different input")
                 return protect_released_lesson(db, course, school_id, lesson_turn_dict(existing))
             learning_snapshot = preference_snapshot(db, identity, body.teacher_profile_id, course_id)
             created_at = now()
             budget_day = _utc_day(created_at, datetime.now(timezone.utc).date().isoformat())
             data = {"learning_preferences_snapshot": learning_snapshot, "session_id": session_id, "teacher_profile_id": body.teacher_profile_id, "teacher_name": None, "message": body.message, "idempotency_key": body.idempotency_key, "created_at": created_at, "budget_day": budget_day, "budget_snapshot": {"budget_day": budget_day, "period": "utc_calendar_day", "scope": "student_course_all_profiles_utc_day"}, "status": "pending", "approved_text": None, "citations": [], "error": None, "usage": {}, "reservation": 0, "send_marker": None, "response": None, "uncertainty": None}
+            if body.reviewed_practice:
+                if sum(bool(row.value.get("practice_chat")) and _turn_budget_day(row, budget_day) == budget_day for row in previous) >= 60:
+                    raise HTTPException(429, "Today's practice question limit has been reached")
+                data.update(practice_chat=True, practice_lesson_id=body.practice_lesson_id)
+                try:
+                    data.update(reviewed_practice_chat(db, identity, course, school_id, settings, body, previous, data))
+                except HTTPException as error:
+                    data.update(status="blocked", error=error.detail)
+                row = Record(id=uid(), tenant_id=identity["tenant_id"], kind="lesson_turn", parent_id=course_id, owner_id=identity["id"], data=canonical(data))
+                db.add(row)
+                db.flush()
+                bind_scope(db, row, school_id)
+                audit_actor(db, identity, "lesson.practice_" + data["status"], {"course_id": course_id, "school_id": school_id, "lesson_turn_id": row.id, **data}, session_id)
+                return lesson_turn_dict(row)
             allowed, key_cipher, connection, policy, prompt = {}, None, None, None, None
             try:
                 if completion_request(body.message):
