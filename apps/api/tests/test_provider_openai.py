@@ -92,3 +92,31 @@ def test_openai_failure_is_one_send_without_parameter_or_model_fallback(monkeypa
     assert len(calls) == 1
     assert calls[0][1]["json"]["model"] == "gpt-6-luna"
     assert calls[0][1]["json"]["max_completion_tokens"] == 80
+
+
+def test_fast_processing_is_an_explicit_official_openai_request(monkeypatch):
+    calls = capture_transport(monkeypatch)
+    provider.classify({"endpoint": "https://api.openai.com/v1", "processing_tier": "fast"},
+                      "synthetic-not-a-key", "gpt-6-luna", [], 400)
+    assert calls[0][1]["json"]["service_tier"] == "fast"
+    assert calls[0][1]["json"]["reasoning_effort"] == "none"
+    assert calls[0][1]["json"]["max_completion_tokens"] == 400
+    assert calls[0][1]["json"]["store"] is False
+
+
+@pytest.mark.parametrize("endpoint", ["https://models.example.test/v1",
+    "https://api.openai.com.example.test/v1", "https://api.openai.com/custom/v1"])
+def test_fast_processing_rejects_unreviewed_destinations_without_sending(monkeypatch, endpoint):
+    calls = capture_transport(monkeypatch)
+    with pytest.raises(provider.ProviderFailure, match="no retry"):
+        provider.classify({"endpoint": endpoint, "processing_tier": "fast"},
+                          "synthetic-not-a-key", "gpt-6-luna", [], 400)
+    assert calls == []
+
+
+def test_unknown_processing_tier_is_rejected_without_sending(monkeypatch):
+    calls = capture_transport(monkeypatch)
+    with pytest.raises(provider.ProviderFailure, match="no retry"):
+        provider.classify({"endpoint": "https://api.openai.com/v1", "processing_tier": "unknown"},
+                          "synthetic-not-a-key", "gpt-6-luna", [], 400)
+    assert calls == []

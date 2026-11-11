@@ -1,5 +1,12 @@
 # Changelog
 
+## November 11, 2026 — contextual vision Homework Help
+
+- Added separately approved generative tutoring for Academy student accounts, with a scoped Homework model gate and recorded provider data-control review.
+- Follow-up questions can reuse a consented worksheet, with current ownership, enrollment, approval and exact image checks. Previous student attempts and replies inform the next explanation and its independent safety review.
+- Added request-specific OpenAI Fast processing and compatibility with empty assistant annotation metadata. Known token usage settles completed phase reservations while uncertain phases retain their reserve.
+- Photo-policy changes before admission reload the approved destinations and require fresh confirmation without locking the chat or resending a question. Retaining a worksheet alone does not enable an empty follow-up submission.
+
 ## November 10, 2026 — Homework Help attachment controls
 
 - Keep photo confirmation and Send visible when homework previews exceed the space in a laptop chat window. The question, previews and optional course context scroll inside the composer.

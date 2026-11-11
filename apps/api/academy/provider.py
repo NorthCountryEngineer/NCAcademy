@@ -24,9 +24,15 @@ OPENAI_REASONING_EFFORT = {
 }
 
 
-def _chat_payload(parsed, model, prompt, max_output_tokens):
+def _chat_payload(parsed, model, prompt, max_output_tokens, processing_tier="standard"):
+    if processing_tier not in {"standard", "fast"}:
+        raise ValueError("Unsupported provider processing tier")
     payload = {"model": model, "messages": prompt, "temperature": 0,
                "max_tokens": max_output_tokens, "stream": False, "store": False}
+    if processing_tier == "fast":
+        if parsed.hostname != "api.openai.com" or parsed.path != "/v1":
+            raise ValueError("Fast processing requires the official OpenAI endpoint")
+        payload["service_tier"] = "fast"
     effort = OPENAI_REASONING_EFFORT.get(model)
     if parsed.hostname == "api.openai.com" and parsed.path == "/v1" and effort is not None:
         # This is the same approved cap, including any reasoning tokens. Never
@@ -69,7 +75,7 @@ def classify(connection, api_key, model, prompt, max_output_tokens):
             raise ProviderFailure("Provider endpoint is not publicly routable")
         target = httpx.URL(connection["endpoint"] + "/chat/completions").copy_with(host=addresses[0])
         with httpx.Client(follow_redirects=False, trust_env=False, timeout=httpx.Timeout(20, connect=5), transport=httpx.HTTPTransport(retries=0, trust_env=False)) as client:
-            with client.stream("POST", target, headers={"Host": parsed.hostname, "Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, json=_chat_payload(parsed, model, prompt, max_output_tokens), extensions={"sni_hostname": parsed.hostname}) as response:
+            with client.stream("POST", target, headers={"Host": parsed.hostname, "Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, json=_chat_payload(parsed, model, prompt, max_output_tokens, connection.get("processing_tier", "standard")), extensions={"sni_hostname": parsed.hostname}) as response:
                 raw = bytearray()
                 for chunk in response.iter_bytes():
                     if time.monotonic() - started > 30:

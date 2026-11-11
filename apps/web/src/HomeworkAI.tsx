@@ -14,6 +14,19 @@ const privatePreflightConflicts=new Set([
  'Homework Help policy or class changed; send your question again',
  'This conversation changed while reading your question; send it again',
 ]);
+// These exact photo errors leave no message/send marker. Post-admission
+// failures instead return a retained terminal message or remain uncertain.
+const photoPreflightErrors=new Map([
+ ['Homework photo destinations changed. Reload the assistant and confirm photo use again.',409],
+ ['Previous homework picture is unavailable',404],
+ ['Wait for the previous homework picture request to finish',409],
+ ['Confirm the approved photo destinations before reusing a homework picture',403],
+ ['Previous homework picture requires its current class enrollment',403],
+ ['Previous homework picture belongs to a different class context',403],
+ ['Use up to two homework pictures, including retained pictures',422],
+ ['Previous homework picture context changed; confirm the picture again',409],
+ ['Previous homework picture changed; confirm the picture again',409],
+]);
 
 export function homeworkConversationTitle(session:HomeworkAIConversationSummary):string {
  return session.title?.trim().slice(0,160) || 'New conversation';
@@ -48,6 +61,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  const [message,setMessage]=useState('');
  const [images,setImages]=useState<CuratedImage[]>([]);
  const [confirmed,setConfirmed]=useState(false);
+ const [useEarlierPhotos,setUseEarlierPhotos]=useState(true);
  const [loading,setLoading]=useState(!!initial.sessions.length);
  const [busy,setBusy]=useState(false);
  const [photoBusy,setPhotoBusy]=useState(false);
@@ -65,8 +79,16 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  const privateMode=!!assistant.private_mode;
  const title=policy?.name || (privateMode?'Private study coach':'Homework assistant');
  const photoAllowed=!!policy?.allow_images;
+ const earlierPhotoMessage=!privateMode&&photoAllowed&&session
+  ? [...session.messages].reverse().find(item=>item.images.length>0&&['released','clarify'].includes(item.status)
+    &&(!courseId||courseId==='__general__'||item.triage.course_id===courseId))
+  : undefined;
+ const earlierPhotos=!images.length&&useEarlierPhotos?earlierPhotoMessage:undefined;
+ const photoCount=images.length+(earlierPhotos?.images.length||0);
  const prompt=photoAllowed?'Ask a question, explain where you’re stuck, or attach a homework photo…':'Ask a question or explain where you’re stuck…';
- const input:HomeworkAIInput={message,...homeworkAIContext(courseId),images,image_use_confirmed:images.length>0 && confirmed};
+ const input:HomeworkAIInput={message,...homeworkAIContext(courseId),images,image_use_confirmed:photoCount>0&&confirmed,
+  ...(!privateMode&&photoCount>0?{expected_image_policy_sha256:assistant.image_policy_sha256}:{}),
+  ...(earlierPhotos?{previous_image_message_id:earlierPhotos.id,previous_image_count:earlierPhotos.images.length}:{})};
  const requestProblem=homeworkAIRequestProblem(input,assistant);
  const remember=(value:HomeworkAIPending|null)=>{pendingRequest.current=value;retainHomeworkAIRequest(scope,value);};
 
@@ -93,6 +115,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   generation.current++;loadedSession.current=null;
   setSessionId('');setSession(null);setLoading(false);setCourseId(index.courses.some(course=>course.id===initialCourseId)?initialCourseId!: '');
   setMessage('');setImages([]);setConfirmed(false);setError('');setUncertain(false);
+  setUseEarlierPhotos(true);
   question.current?.focus();
  }
  function chooseConversation(id:string){
@@ -100,12 +123,17 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   if(id===sessionId && session)return;
   loadedSession.current=null;setSessionId(id);setSession(null);setLoading(true);
   setCourseId('');setMessage('');setImages([]);setConfirmed(false);setError('');
+  setUseEarlierPhotos(true);
  }
  async function refresh(){
   if(sending.current)return;
   sending.current=true;setBusy(true);setError('');
   try{
-   const next=await homeworkAIIndex(schoolId);setIndex(next);
+   const next=await homeworkAIIndex(schoolId);
+   if(next.assistant.configuration_sha256!==assistant.configuration_sha256
+     ||next.assistant.approved_revision_id!==assistant.approved_revision_id
+     ||next.assistant.image_policy_sha256!==assistant.image_policy_sha256)setConfirmed(false);
+   setIndex(next);
    const saved=pendingRequest.current;
    let id=sessionId;
    if(saved?.kind==='create'){
@@ -143,7 +171,8 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  async function ask(event:FormEvent){
   event.preventDefault();
   if(sending.current || locked || photoBusy || pendingRequest.current || requestProblem)return;
-  sending.current=true;setBusy(true);setError('');setSubmitted({message,photoCount:images.length});
+  sending.current=true;setBusy(true);setError('');setSubmitted({message,photoCount});
+  let sendingMessage=false;
   try{
    let current=session;
    if(!current){
@@ -154,14 +183,20 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     setIndex(previous=>({...previous,sessions:[value,...previous.sessions.filter(item=>item.id!==value.id)]}));
    }
    const id=current.session.id,key=crypto.randomUUID();remember({kind:'message',key,session_id:id});
+   sendingMessage=true;
    const reply=await sendHomeworkAIMessage(id,input,key);
    const updated=homeworkConversationWithReply(current,reply);
    setSession(previous=>previous?.session.id===id?homeworkConversationWithReply(previous,reply):previous);
    setIndex(previous=>({...previous,sessions:previous.sessions.map(item=>item.id===id?updated.session:item)}));
    if(reply.status==='pending')setUncertain(true);
-   else{remember(null);setMessage('');setImages([]);setConfirmed(false);}
+   else{remember(null);setMessage('');setImages([]);setConfirmed(!privateMode&&photoCount>0&&confirmed);}
   }catch(e){
-   if(privateMode && e instanceof ApiError && ([403,422,429].includes(e.status) || (e.status===409 && privatePreflightConflicts.has(e.message)))){
+   if(!privateMode && sendingMessage && e instanceof ApiError && photoPreflightErrors.get(e.message)===e.status){
+    remember(null);setConfirmed(false);setUncertain(false);setError(errorText(e));
+    if(e.status===403||e.status===404)setUseEarlierPhotos(false);
+    try{setIndex(await homeworkAIIndex(schoolId));}
+    catch{setIndex(previous=>({...previous,assistant:{...previous.assistant,available:false}}));setError(`${errorText(e)} Refresh history to reload the assistant settings.`);}
+   }else if(privateMode && e instanceof ApiError && ([403,422,429].includes(e.status) || (e.status===409 && privatePreflightConflicts.has(e.message)))){
     remember(null);
     setError(errorText(e));
     if(e.message==='Private Homework Help is disabled for this school'){
@@ -204,9 +239,13 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
       <label className="homework-question-label" htmlFor={`homework-question-${compact?'embedded':'main'}`}>Your question</label>
       <textarea ref={question} id={`homework-question-${compact?'embedded':'main'}`} rows={3} maxLength={limit} value={message} onChange={e=>setMessage(e.target.value)} placeholder={prompt} aria-describedby={`homework-question-note-${compact?'embedded':'main'}`}/>
       {images.length>0 && <div className="curation-photos" aria-label="Photos attached to your question">{images.map((image,position)=><figure key={`${image.sha256}:${position}`}><img src={image.data_url} alt={`Homework photo ${position+1}: ${image.name}`}/><figcaption><span>{image.name}</span><button type="button" className="icon-button" aria-label={`Remove ${image.name}`} onClick={()=>{setImages(current=>current.filter((_,i)=>i!==position));setConfirmed(false);}}><X size={16}/></button></figcaption></figure>)}</div>}
+      {!images.length&&earlierPhotoMessage&&<label className="checkbox-label">
+       <input type="checkbox" checked={useEarlierPhotos} onChange={e=>{setUseEarlierPhotos(e.target.checked);setConfirmed(false);}}/>
+       Use the earlier worksheet for this question ({earlierPhotoMessage.images.length} photo{earlierPhotoMessage.images.length===1?'':'s'})
+      </label>}
       {index.courses.length>0 && <details className="homework-context"><summary>Course context{courseId?' · selected':' · optional'}</summary><HomeworkAICoursePicker courses={index.courses} value={courseId} change={chooseCourse} privateMode={privateMode}/></details>}
       </div>
-      {images.length>0 && <label className="checkbox-label curation-photo-consent"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{privateMode?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos sent to the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
+      {photoCount>0 && <label className="checkbox-label curation-photo-consent"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{privateMode?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos used in this conversation by the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
       <div className="homework-chat-composer-actions"><label className="teacher-photo-picker"><ImagePlus size={17}/><span>Add photos</span><input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={images.length>=2 || !photoAllowed} onChange={e=>{const files=e.target.files;void addPhotos(files);e.target.value='';}}/></label><span className="homework-character-count">{photoBusy?<span role="status">Preparing photos…</span>:`${message.length.toLocaleString()} / ${limit.toLocaleString()}`}</span><button className="button primary" disabled={!!requestProblem}><Send size={16}/>{busy?'Sending…':'Send'}</button></div>
      </fieldset>
      <p id={`homework-question-note-${compact?'embedded':'main'}`} className="help-text homework-chat-disclosure">{privateMode?'Academy processes your questions and photos inside the service.':'AI can make mistakes. Check important claims.'} Your conversation is saved for authorized school review.{photoAllowed?' Up to two PNG, JPEG or WebP photos, 5 MB each.':' Photos are not enabled at this school yet.'}</p>

@@ -89,6 +89,18 @@
             ],
             "title": "Course Id"
           },
+          "expected_image_policy_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Image Policy Sha256"
+          },
           "idempotency_key": {
             "maxLength": 100,
             "minLength": 8,
@@ -114,6 +126,19 @@
             "maxLength": 10000,
             "title": "Message",
             "type": "string"
+          },
+          "previous_image_message_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Image Message Id"
           },
           "routing_mode": {
             "default": "auto",
@@ -1096,6 +1121,11 @@
             "title": "Allow Images",
             "type": "boolean"
           },
+          "allow_local_students": {
+            "default": false,
+            "title": "Allow Local Students",
+            "type": "boolean"
+          },
           "allow_teacher_models": {
             "default": false,
             "title": "Allow Teacher Models",
@@ -1119,6 +1149,12 @@
             "minimum": 0.0,
             "title": "Expected Version",
             "type": "integer"
+          },
+          "local_student_privacy_confirmation": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Local Student Privacy Confirmation",
+            "type": "string"
           },
           "max_daily_tokens": {
             "default": 200000,
@@ -1153,6 +1189,15 @@
             "maxLength": 200,
             "minLength": 1,
             "title": "Name",
+            "type": "string"
+          },
+          "processing_tier": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "fast"
+            ],
+            "title": "Processing Tier",
             "type": "string"
           },
           "safety": {

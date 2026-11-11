@@ -34,6 +34,7 @@ class Settings:
     google_classroom_client_id: str = ""
     google_classroom_client_secret: str = field(default="", repr=False)
     pii_encryption_key: str = field(default="", repr=False)
+    allow_homework_models: bool = False
 
     @property
     def tenant_id(self):
@@ -99,6 +100,9 @@ class Settings:
         chat_flag = os.getenv("CORE_CHAT_ENABLED", "false").lower()
         if chat_flag not in {"true", "false"}:
             raise ValueError("CORE_CHAT_ENABLED must be true or false")
+        homework_flag = os.getenv("ALLOW_HOMEWORK_MODELS", "false").lower()
+        if homework_flag not in {"true", "false"}:
+            raise ValueError("ALLOW_HOMEWORK_MODELS must be true or false")
         workload = ""
         if agent_flag == "true" or chat_flag == "true":
             workload, token_file = os.getenv("CORE_WORKLOAD_TOKEN", ""), os.getenv("CORE_WORKLOAD_TOKEN_FILE", "")
@@ -115,6 +119,7 @@ class Settings:
             if not workload.startswith("cw_") or not 40 <= len(workload) <= 256 or any(c.isspace() for c in workload):
                 raise ValueError("Core Chat requires a separate Core workload credential" if chat_flag == "true" else "Agent teachers require a separate Core workload credential")
         value = cls(db_url, mode, app_url, secret, os.getenv("ALLOW_LIVE_MODELS", "false").lower() == "true", os.getenv("DEMO_SEED", "true").lower() == "true", **{name: os.getenv(name.upper(), "production" if name == "core_environment" else "").rstrip("/") for name in ("core_issuer", "core_browser_client_id", "core_organization_id", "core_service_id", "core_deployment_id", "core_environment")}, core_resource_client_id=creds.get("client_id", os.getenv("CORE_RESOURCE_CLIENT_ID", "")), core_resource_client_secret=creds.get("client_secret", os.getenv("CORE_RESOURCE_CLIENT_SECRET", "")), allow_agent_teachers=agent_flag == "true", core_workload_token=workload, core_chat_enabled=chat_flag == "true", core_chat_installation_id=os.getenv("CORE_CHAT_INSTALLATION_ID", ""), google_classroom_enabled=classroom_flag == "true", google_classroom_client_id=classroom_id, google_classroom_client_secret=classroom_secret, pii_encryption_key=pii_key)
+        value.allow_homework_models = homework_flag == "true"
         origin = urlsplit(app_url)
         if mode not in {"local", "core"} or len(secret) < 32 or origin.path or origin.query or origin.fragment or not origin.hostname or origin.scheme not in {"http", "https"} or origin.username is not None or origin.password is not None:
             raise ValueError("Invalid authentication configuration")
@@ -123,7 +128,7 @@ class Settings:
                 loopback = origin.hostname == "localhost" or ipaddress.ip_address(origin.hostname).is_loopback
             except ValueError:
                 loopback = False
-            if not loopback or value.allow_live_models or value.allow_agent_teachers:
+            if not loopback or value.allow_live_models or value.allow_homework_models or value.allow_agent_teachers:
                 raise ValueError("Local demo authentication requires a loopback application origin and disabled live models/agent credentials")
             if value.core_chat_enabled:
                 raise ValueError("Local demo authentication cannot enable live Core Chat")

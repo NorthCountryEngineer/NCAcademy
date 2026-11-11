@@ -103,6 +103,8 @@ Operator-run audit exports and KMS signatures remain available. This source revi
 
 `ALLOW_LIVE_MODELS=false` is the initial operator setting. Enabling a connection alone cannot enable live traffic globally. Local Compose always keeps live traffic off. No deployment or health probe performs inference. Only approved public HTTPS model endpoints are supported; private-network integrations need a separate transport review.
 
+`ALLOW_HOMEWORK_MODELS=false` is a separate default-off operator setting for the modern Homework Help pipeline. Enabling this scoped flag allows current school-approved Homework configurations to execute while other model features continue to use their own deployment gate. Academy student access additionally requires the approved `allow_local_students` option and recorded, verified provider child-data controls. Verify the exact provider project, ZDR and applicable image eligibility before activation. Use synthetic worksheets for operator capability and latency checks. Local demonstration configuration rejects both live-model flags.
+
 Schema creation is explicit and versioned for the initial release. Future schema changes need a reviewed migration/rollback plan. Local Compose credentials are confined to development and do not implement production privilege separation.
 
 ## Rollback
