@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowRight, BookOpen, ImagePlus, MessageSquareText, Plus, RefreshCw, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { ArrowRight, BookOpen, Flag, History, ImagePlus, Maximize2, MessageSquareText, Minimize2, Plus, RefreshCw, Send, X } from 'lucide-react';
 import { ApiError, errorText, stamp } from './api';
 import { Badge, Notice, PageHead, Spinner } from './components';
 import { prepareAssignmentImage, type CuratedImage } from './curated-api';
@@ -64,6 +64,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  const [images,setImages]=useState<CuratedImage[]>([]);
  const [confirmed,setConfirmed]=useState(false);
  const [useEarlierPhotos,setUseEarlierPhotos]=useState(true);
+ const [questionExpanded,setQuestionExpanded]=useState(false),[historyOpen,setHistoryOpen]=useState(false);
  const [loading,setLoading]=useState(!!initial.sessions.length);
  const [busy,setBusy]=useState(false);
  const [photoBusy,setPhotoBusy]=useState(false);
@@ -73,7 +74,8 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  const scope=`${schoolId}:${userId}`;
  const pendingRequest=useRef<HomeworkAIPending|null>(retainedHomeworkAIRequest(scope));
  const sending=useRef(false),generation=useRef(0),loadedSession=useRef<string|null>(null);
- const messagesEnd=useRef<HTMLDivElement>(null),question=useRef<HTMLTextAreaElement>(null);
+ const messagesEnd=useRef<HTMLDivElement>(null),question=useRef<HTMLTextAreaElement>(null),historyToggle=useRef<HTMLButtonElement>(null);
+ const historyId=`homework-history-${compact?'embedded':'main'}`;
  const assistant=index.assistant,policy=assistant.configuration;
  const pending=!!session?.messages.some(item=>item.status==='pending');
  const locked=busy || loading || uncertain || pending || (!!sessionId && !session);
@@ -88,7 +90,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   : undefined;
  const earlierPhotos=!images.length&&useEarlierPhotos?earlierPhotoMessage:undefined;
  const photoCount=images.length+(earlierPhotos?.images.length||0);
- const prompt=photoAllowed?'Ask a question, explain where you’re stuck, or attach a homework photo…':'Ask a question or explain where you’re stuck…';
+ const prompt=photoAllowed?'Ask a question or add a homework photo…':'Ask a question or explain where you’re stuck…';
  const input:HomeworkAIInput={message,...homeworkAIContext(courseId),images,image_use_confirmed:photoCount>0&&confirmed,
   ...(!privateMode&&photoCount>0?{expected_image_policy_sha256:assistant.image_policy_sha256}:{}),
   ...(earlierPhotos?{previous_image_message_id:earlierPhotos.id,previous_image_count:earlierPhotos.images.length}:{})};
@@ -111,6 +113,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   return()=>{generation.current++;};
  },[sessionId]);
  useEffect(()=>{messagesEnd.current?.scrollIntoView?.({block:'end',behavior:'instant'});},[session?.messages.length,submitted]);
+ useEffect(()=>{if(question.current)resizeHomeworkQuestion(question.current,questionExpanded);},[message,questionExpanded]);
 
  function chooseCourse(value:string){setCourseId(value);setConfirmed(false);question.current?.focus();}
  function start(){
@@ -118,7 +121,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   generation.current++;loadedSession.current=null;
   setSessionId('');setSession(null);setLoading(false);setCourseId(index.courses.some(course=>course.id===initialCourseId)?initialCourseId!: '');
   setMessage('');setImages([]);setConfirmed(false);setError('');setUncertain(false);
-  setUseEarlierPhotos(true);
+  setUseEarlierPhotos(true);setQuestionExpanded(false);setHistoryOpen(false);
   question.current?.focus();
  }
  function chooseConversation(id:string){
@@ -126,7 +129,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   if(id===sessionId && session)return;
   loadedSession.current=null;setSessionId(id);setSession(null);setLoading(true);
   setCourseId('');setMessage('');setImages([]);setConfirmed(false);setError('');
-  setUseEarlierPhotos(true);
+  setUseEarlierPhotos(true);setQuestionExpanded(false);setHistoryOpen(false);
  }
  async function refresh(){
   if(sending.current)return;
@@ -151,7 +154,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     if(saved?.kind==='message'){
      const receipt=recorded.messages.find(item=>item.idempotency_key===saved.key);
      if(!receipt || receipt.status==='pending')throw new Error('Your question is recorded or awaiting confirmation. No additional question was sent.');
-     remember(null);if(!homeworkNeedsTaskClarification(receipt)){setMessage('');setImages([]);setConfirmed(false);}
+     remember(null);if(!homeworkNeedsTaskClarification(receipt)){setMessage('');setImages([]);setConfirmed(false);setQuestionExpanded(false);}
     }
    }
    setUncertain(false);
@@ -192,7 +195,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
    setSession(previous=>previous?.session.id===id?homeworkConversationWithReply(previous,reply):previous);
    setIndex(previous=>({...previous,sessions:previous.sessions.map(item=>item.id===id?updated.session:item)}));
    if(reply.status==='pending')setUncertain(true);
-   else{remember(null);if(!homeworkNeedsTaskClarification(reply)){setMessage('');setImages([]);}setConfirmed(!privateMode&&photoCount>0&&confirmed);}
+   else{remember(null);if(!homeworkNeedsTaskClarification(reply)){setMessage('');setImages([]);setQuestionExpanded(false);}setConfirmed(!privateMode&&photoCount>0&&confirmed);}
   }catch(e){
    if(!privateMode && sendingMessage && e instanceof ApiError && photoPreflightErrors.get(e.message)===e.status){
     remember(null);setConfirmed(false);setUncertain(false);setError(errorText(e));
@@ -213,52 +216,59 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
   finally{sending.current=false;setBusy(false);setSubmitted(null);}
  }
 
- return <div className={`homework-chat${compact?' homework-embedded':''}`}>
-  {compact?<div className="classroom-help-heading"><div><h2>Homework Help</h2><p>Ask a learning question, with or without a class.</p></div></div>:<PageHead title="Homework Help" description="Ask about anything you’re learning. No course enrollment required."/>}
+ const latestMessage=session?.messages[session.messages.length-1];
+ function reportLatest(){
+  if(!session||!latestMessage)return;
+  const target=document.getElementById(homeworkReportControlId(session.session.id,latestMessage.id));
+  target?.scrollIntoView({block:'nearest'});target?.querySelector<HTMLButtonElement>('button')?.click();
+ }
+ function closeHistory(){setHistoryOpen(false);historyToggle.current?.focus();}
+ return <div className={`homework-chat${compact?' homework-embedded':''}${historyOpen?' homework-history-open':''}`} onKeyDown={event=>{if(event.key==='Escape'&&historyOpen){event.preventDefault();closeHistory();}}}>
+  {compact?<div className="classroom-help-heading"><h2>Homework Help</h2></div>:<PageHead title="Homework Help" description="Ask about anything you’re learning. No course enrollment required."/>}
   <Notice error={error}/>
   <div className="homework-layout homework-chat-layout">
-   <aside className="panel homework-sidebar homework-chat-sidebar" aria-label="Conversation history">
-    <div className="homework-chat-sidebar-heading"><h2>Conversations</h2><MessageSquareText size={17}/></div>
-    <button type="button" className="button secondary homework-new-conversation" disabled={locked || photoBusy} onClick={start}><Plus size={16}/>New conversation</button>
-    {index.sessions.length?<nav aria-label="Homework conversations">{index.sessions.map(item=><button key={item.id} type="button" className={item.id===sessionId?'selected':''} disabled={locked || photoBusy} aria-current={item.id===sessionId?'true':undefined} onClick={()=>chooseConversation(item.id)}><strong>{homeworkConversationTitle(item)}</strong><small>{stamp(item.created_at)}</small></button>)}</nav>:<p className="help-text homework-history-empty">Your conversations will appear here after your first question.</p>}
-    {index.next_cursor && <button type="button" className="text-button homework-load-more" disabled={locked || photoBusy} onClick={()=>void more()}>Load older conversations</button>}
-    <div className="homework-sidebar-note"><small>Conversations and homework photos are saved privately for authorized school review. You write your own submitted work.</small></div>
+   {historyOpen&&<button type="button" className="homework-history-backdrop" aria-label="Close conversation history" onClick={closeHistory}/>}
+   <aside id={historyId} className="panel homework-sidebar homework-chat-sidebar" aria-label="Conversation history">
+    <div className="homework-chat-sidebar-heading"><h2>Conversations</h2><button type="button" className="icon-button homework-history-close" aria-label="Close conversation history" onClick={closeHistory}><X size={16}/></button></div>
+    <button type="button" className="button secondary homework-new-conversation" disabled={locked||photoBusy} onClick={start}><Plus size={15}/>New conversation</button>
+    {index.sessions.length?<nav aria-label="Homework conversations">{index.sessions.map(item=><button key={item.id} type="button" className={item.id===sessionId?'selected':''} disabled={locked||photoBusy} aria-current={item.id===sessionId?'true':undefined} onClick={()=>chooseConversation(item.id)}><strong>{homeworkConversationTitle(item)}</strong><small>{stamp(item.created_at)}</small></button>)}</nav>:<p className="help-text homework-history-empty">Your conversations will appear here after your first question.</p>}
+    {index.next_cursor&&<button type="button" className="text-button homework-load-more" disabled={locked||photoBusy} onClick={()=>void more()}>Load older conversations</button>}
+    <small className="homework-sidebar-note">Saved privately for school review.</small>
    </aside>
    <section className="panel homework-conversation homework-chat-conversation" aria-label="Homework conversation">
-    <div className="panel-head"><div><h2>{session?homeworkConversationTitle(session.session):'New conversation'}</h2><p>{privateMode?'Private Homework Help · Academy study coach':`${title} · AI study partner`}</p></div><button type="button" className="text-button" disabled={busy || loading} onClick={()=>void refresh()}><RefreshCw size={14}/>Refresh history</button></div>
-    {!assistant.available && <div className="homework-pending" role="status"><strong>Homework Help is not ready for new questions at this school.</strong><p>{homeworkAssistantSetupMessage(assistant)} You do not need to enroll in a class. Your recorded conversations remain available while you have access.</p></div>}
-    <div className="homework-chat-scroll" aria-busy={loading || busy}>
-     <HomeworkSafetyDisclosure privateMode={privateMode}/>
-     {localTaskProcessing&&<HomeworkTaskPrivacyNotice/>}
+    <div className="panel-head"><button ref={historyToggle} type="button" className="text-button homework-history-toggle" aria-expanded={historyOpen} aria-controls={historyId} aria-label={historyOpen?'Hide conversation history':'Show conversation history'} onClick={()=>setHistoryOpen(value=>!value)}><History size={16}/><span>Conversations</span></button><div className="homework-conversation-heading"><h2>{session?homeworkConversationTitle(session.session):'New conversation'}</h2><p>{privateMode?'Private Homework Help · Academy study coach':`${title} · AI study partner`}</p></div><button type="button" className="text-button homework-refresh" aria-label="Refresh history" disabled={busy||loading} onClick={()=>void refresh()}><RefreshCw size={14}/><span>Refresh history</span></button></div>
+    <div className="homework-chat-guidance"><span>{privateMode?'Private study coach':'AI can make mistakes'} · Staff can review.</span><details className="homework-guidance-details"><summary>Privacy &amp; safety</summary><div><HomeworkSafetyDisclosure privateMode={privateMode}/>{localTaskProcessing&&<HomeworkTaskPrivacyNotice/>}<p id={`homework-question-note-${compact?'embedded':'main'}`} className="help-text">{privateMode?'Academy processes your questions and photos inside the service.':localTaskProcessing?'Original photos and chat stay in Academy. Only supported learning details go to AI.':'AI can make mistakes. Check important claims.'} Your conversation is saved for authorized school review.{photoAllowed?' Up to two PNG, JPEG or WebP photos, 5 MB each.':' Photos are not enabled at this school yet.'} You write your own submitted work.</p></div></details><button type="button" className="text-button homework-report-shortcut" disabled={!latestMessage} onClick={reportLatest} aria-label="Report a concern about the latest message"><Flag size={13}/><span>Report a concern</span></button></div>
+    {!assistant.available&&<div className="homework-pending" role="status"><strong>Homework Help is not ready for new questions at this school.</strong><p>{homeworkAssistantSetupMessage(assistant)} You do not need to enroll in a class. Your recorded conversations remain available while you have access.</p></div>}
+    <div className="homework-chat-scroll" aria-label="Conversation messages" aria-busy={loading||busy} tabIndex={0}>
      {loading?<Spinner text="Loading your conversation…"/>:<div className="homework-messages" aria-label="Your homework conversation" aria-live="polite" aria-relevant="additions">
-      {!session?.messages.length && !submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={24}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:localTaskProcessing?<p>Type a question or add a homework photo. We prepare supported learning details privately, then the AI helps you understand the idea.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">You can ask about any subject, even if you are not enrolled in a course.</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
-      {submitted && <div className="homework-message homework-submitted" role="status"><div className="homework-student-message"><small>You</small>{submitted.message && <p className="prose">{submitted.message}</p>}{submitted.photoCount>0 && <p className="help-text">{submitted.photoCount} homework photo{submitted.photoCount===1?'':'s'} attached</p>}</div><Spinner text="Working on your question…"/></div>}
+      {!session?.messages.length&&!submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={21}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:localTaskProcessing?<p>Type a question or add a homework photo. We prepare supported learning details privately, then the AI helps you understand the idea.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">You can ask about any subject, even if you are not enrolled in a course.</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
+      {submitted&&<div className="homework-message homework-submitted" role="status"><div className="homework-student-message"><small>You</small>{submitted.message&&<p className="prose">{submitted.message}</p>}{submitted.photoCount>0&&<p className="help-text">{submitted.photoCount} homework photo{submitted.photoCount===1?'':'s'} attached</p>}</div><Spinner text="Working on your question…"/></div>}
       <div ref={messagesEnd}/>
      </div>}
     </div>
-    {(uncertain || pending) && <div className="homework-pending" role="status"><strong>Your request is recorded or awaiting confirmation.</strong><p>Refresh history to check its result. We will not repeat a request automatically, including after you reload this page.</p></div>}
-    <form className="homework-composer homework-chat-composer" onSubmit={ask}>
-     <fieldset disabled={locked || photoBusy || !assistant.available}>
+    {(uncertain||pending)&&<div className="homework-pending" role="status"><strong>Your request is recorded or awaiting confirmation.</strong><p>Refresh history to check its result. We will not repeat a request automatically, including after you reload this page.</p></div>}
+    <form className={`homework-composer homework-chat-composer${questionExpanded?' homework-question-expanded':''}`} onSubmit={ask}>
+     <fieldset disabled={locked||photoBusy||!assistant.available}>
       <legend className="sr-only">Ask a learning question</legend>
-      <div className="homework-chat-composer-inputs" role="group" aria-label="Question and attachments" tabIndex={0}>
-      <label className="homework-question-label" htmlFor={`homework-question-${compact?'embedded':'main'}`}>Your question</label>
-      <textarea ref={question} id={`homework-question-${compact?'embedded':'main'}`} rows={3} maxLength={limit} value={message} onChange={e=>setMessage(e.target.value)} placeholder={prompt} aria-describedby={`homework-question-note-${compact?'embedded':'main'}`}/>
-      {images.length>0 && <div className="curation-photos" aria-label="Photos attached to your question">{images.map((image,position)=><figure key={`${image.sha256}:${position}`}><img src={image.data_url} alt={`Homework photo ${position+1}: ${image.name}`}/><figcaption><span>{image.name}</span><button type="button" className="icon-button" aria-label={`Remove ${image.name}`} onClick={()=>{setImages(current=>current.filter((_,i)=>i!==position));setConfirmed(false);}}><X size={16}/></button></figcaption></figure>)}</div>}
-      {!images.length&&earlierPhotoMessage&&<label className="checkbox-label">
-       <input type="checkbox" checked={useEarlierPhotos} onChange={e=>{setUseEarlierPhotos(e.target.checked);setConfirmed(false);}}/>
-       Use the earlier worksheet for this question ({earlierPhotoMessage.images.length} photo{earlierPhotoMessage.images.length===1?'':'s'})
-      </label>}
-      {index.courses.length>0 && <details className="homework-context"><summary>Course context{courseId?' · selected':' · optional'}</summary><HomeworkAICoursePicker courses={index.courses} value={courseId} change={chooseCourse} privateMode={privateMode}/></details>}
+      <div className="homework-chat-composer-inputs" role="group" aria-label="Question and attachments">
+       <div className="homework-question-heading"><label className="homework-question-label" htmlFor={`homework-question-${compact?'embedded':'main'}`}>Your question</label><button type="button" className="text-button homework-question-expand" aria-expanded={questionExpanded} aria-controls={`homework-question-${compact?'embedded':'main'}`} onClick={()=>{setQuestionExpanded(value=>!value);question.current?.focus();}}>{questionExpanded?<Minimize2 size={13}/>:<Maximize2 size={13}/>}<span>{questionExpanded?'Collapse question':'Expand question'}</span></button></div>
+       <textarea ref={question} id={`homework-question-${compact?'embedded':'main'}`} rows={1} maxLength={limit} value={message} onChange={e=>setMessage(e.target.value)} onKeyDown={homeworkQuestionKeyDown} placeholder={prompt} aria-describedby={`homework-question-note-${compact?'embedded':'main'}`}/>
+       {images.length>0&&<div className="homework-photo-chips" aria-label="Photos attached to your question">{images.map((image,position)=><div className="homework-photo-chip" key={`${image.sha256}:${position}`}><details><summary><ImagePlus size={13}/><span>{image.name}</span></summary><img src={image.data_url} alt={`Homework photo ${position+1}: ${image.name}`}/></details><button type="button" className="icon-button" aria-label={`Remove ${image.name}`} onClick={()=>{setImages(current=>current.filter((_,i)=>i!==position));setConfirmed(false);}}><X size={13}/></button></div>)}</div>}
+       {!images.length&&earlierPhotoMessage&&<label className="checkbox-label homework-retained-photo"><input type="checkbox" checked={useEarlierPhotos} onChange={e=>{setUseEarlierPhotos(e.target.checked);setConfirmed(false);}}/>Use the earlier worksheet for this question ({earlierPhotoMessage.images.length} photo{earlierPhotoMessage.images.length===1?'':'s'})</label>}
+       {index.courses.length>0&&<details className="homework-context"><summary>Course context{courseId?' · selected':' · optional'}</summary><HomeworkAICoursePicker courses={index.courses} value={courseId} change={chooseCourse} privateMode={privateMode}/></details>}
       </div>
-      {photoCount>0 && <label className="checkbox-label curation-photo-consent"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{privateMode||localTaskProcessing?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos used in this conversation by the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
-      <div className="homework-chat-composer-actions"><label className="teacher-photo-picker"><ImagePlus size={17}/><span>Add photos</span><input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={images.length>=2 || !photoAllowed} onChange={e=>{const files=e.target.files;void addPhotos(files);e.target.value='';}}/></label><span className="homework-character-count">{photoBusy?<span role="status">Preparing photos…</span>:`${message.length.toLocaleString()} / ${limit.toLocaleString()}`}</span><button className="button primary" disabled={!!requestProblem}><Send size={16}/>{busy?'Sending…':'Send'}</button></div>
+      {photoCount>0&&<label className={`checkbox-label curation-photo-consent${confirmed?' homework-photo-confirmed':''}`}><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{confirmed?'Photo use confirmed · saved for school review.':privateMode||localTaskProcessing?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos used in this conversation by the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
+      <div className="homework-chat-composer-actions"><label className="teacher-photo-picker"><ImagePlus size={16}/><span>Add photos</span><input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={images.length>=2||!photoAllowed} onChange={e=>{const files=e.target.files;void addPhotos(files);e.target.value='';}}/></label><span className="homework-character-count">{photoBusy?<span role="status">Preparing photos…</span>:`${message.length.toLocaleString()} / ${limit.toLocaleString()}`}</span><button className="button primary" disabled={!!requestProblem}><Send size={15}/>{busy?'Sending…':'Send'}</button></div>
      </fieldset>
-     <p id={`homework-question-note-${compact?'embedded':'main'}`} className="help-text homework-chat-disclosure">{privateMode?'Academy processes your questions and photos inside the service.':localTaskProcessing?'Original photos and chat stay in Academy. Only supported learning details go to AI.':'AI can make mistakes. Check important claims.'} Your conversation is saved for authorized school review.{photoAllowed?' Up to two PNG, JPEG or WebP photos, 5 MB each.':' Photos are not enabled at this school yet.'}</p>
     </form>
    </section>
   </div>
  </div>;
 }
+
+export function resizeHomeworkQuestion(input:Pick<HTMLTextAreaElement,'style'|'scrollHeight'>,expanded:boolean){input.style.height='auto';input.style.height=`${Math.min(expanded?220:120,Math.max(expanded?120:38,input.scrollHeight))}px`;}
+export function homeworkQuestionKeyDown(event:KeyboardEvent<HTMLTextAreaElement>){if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.repeat&&!event.nativeEvent.isComposing){event.preventDefault();event.currentTarget.form?.requestSubmit();}}
+export function homeworkReportControlId(sessionId:string,messageId:string){return `homework-concern-${sessionId}-${messageId}`;}
 
 export function HomeworkTaskPrivacyNotice(){
  return <p className="help-text" aria-label="Homework privacy">Your original photos and chat stay in Academy. The AI gets only supported learning details prepared here. If a question is unclear, we will ask you to type an equation or topic. School staff can review your saved work.</p>;
@@ -274,9 +284,9 @@ export function HomeworkAIMessageView({item,assistantName='Homework assistant',p
  return <article className="homework-message">
   <div className="homework-student-message"><small>You · {stamp(item.created_at)}</small>{item.message && <p className="prose">{item.message}</p>}{item.images.length>0 && <HomeworkAIPhotos messageId={item.id} images={item.images}/>}</div>
   <div className="homework-handoff"><span className="homework-agent-avatar"><MessageSquareText size={18}/></span><div><strong>{responder.name}</strong><small className="homework-responder-description">{responder.description}{triage.course_name?` · ${triage.course_name}`:triage.topic?` · ${triage.topic}`:''}</small>{item.status!=='released' && <Badge tone={item.status==='pending'?'amber':''}>{item.status==='clarify'?'Follow-up question':item.status}</Badge>}{triage.prompt && triage.prompt!==answer && <p>{triage.prompt}</p>}{item.status==='clarify' && triage.candidates.length>0 && <div className="homework-course-options" aria-label="Choose context for your next question">{triage.candidates.map(course=><button className="button secondary" type="button" disabled={paused} key={course.id} onClick={()=>choose(course.id)}>{course.name}<ArrowRight size={14}/></button>)}</div>}</div></div>
-  {answer?<><div className="homework-ai-answer prose" aria-label={answerLabel}>{answer}</div>{item.citations.length>0 && <section className="homework-ai-sources" aria-label="Sources used for this explanation"><h4>Course sources</h4><ul>{item.citations.map((citation,index)=><li key={`${citation.document_id}:${index}`}>{citation.title}</li>)}</ul><p className="help-text">These source references were supplied by the school.{!item.private_mode && ' The explanation itself was generated by AI.'}</p></section>}{item.status==='released' && <StudentFeedback turnId={item.id} paused={paused} allowStylePreferences={!item.private_mode}/>}</>:item.status!=='clarify' && <p className="help-text">{item.error || 'No explanation was released. Refresh history to check the request’s status.'}</p>}
+  {answer?<><div className="homework-ai-answer prose" aria-label={answerLabel}>{answer}</div>{item.citations.length>0 && <section className="homework-ai-sources" aria-label="Sources used for this explanation"><h4>Course sources</h4><ul>{item.citations.map((citation,index)=><li key={`${citation.document_id}:${index}`}>{citation.title}</li>)}</ul><p className="help-text">These source references were supplied by the school.{!item.private_mode && ' The explanation itself was generated by AI.'}</p></section>}</>:item.status!=='clarify' && <p className="help-text">{item.error || 'No explanation was released. Refresh history to check the request’s status.'}</p>}
   {answer && item.references.length>0 && <section className="homework-references" aria-label="Related coursework"><h4><BookOpen size={15}/>Continue in your coursework</h4>{item.references.map(reference=>{const target=homeworkReferenceTarget(reference,triage.course_id);return target?<button type="button" className="text-button" key={`${reference.kind}:${reference.id}`} disabled={paused} onClick={()=>openCourse(target)}>{reference.title}<ArrowRight size={14}/></button>:null;})}</section>}
-  {sessionId&&safetyScope&&<HomeworkSafetyReportButton sessionId={sessionId} messageId={item.id} scope={safetyScope}/>}
+  <div className="homework-message-actions">{answer&&item.status==='released'&&<StudentFeedback turnId={item.id} paused={paused} allowStylePreferences={!item.private_mode}/>}{sessionId&&safetyScope&&<div className="homework-safety-action" id={homeworkReportControlId(sessionId,item.id)}><HomeworkSafetyReportButton sessionId={sessionId} messageId={item.id} scope={safetyScope}/></div>}</div>
  </article>;
 }
 

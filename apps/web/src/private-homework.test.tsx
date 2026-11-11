@@ -454,3 +454,10 @@ it('lets an administrator enable and attest all photo models from a blank deiden
  for(const [index,label] of labels.entries()){change(control(label,'input'),{checked:true});expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(index<labels.length-1);}
  await submit(ui.find('form'));expect(savedBody).toMatchObject({privacy_mode:'deidentified',allow_images:true,triage_image_capable:true,tutor_image_capable:true,safety_image_capable:true,expected_version:0});expect(fetcher.mock.calls.filter(([,options])=>options.method==='PUT')).toHaveLength(1);
 });
+
+it('expands and collapses the question without losing a draft or sending another request',async()=>{
+ const {source,session,index}=retainedVisionConversation();const fetcher=vi.fn(async()=>json({session,messages:[source]}));vi.stubGlobal('fetch',fetcher);
+ const ui=view(()=>HomeworkAI({schoolId:'school',userId:'local-student',index,openCourse:()=>{}}));ui.text();await settle();
+ change(ui.find('textarea'),{value:'Keep this unsent question while I expand the box.'});ui.find('button',byText('Expand question')).props.onClick!();expect(ui.find('textarea').props.value).toBe('Keep this unsent question while I expand the box.');
+ ui.find('button',byText('Collapse question')).props.onClick!();expect(ui.find('textarea').props.value).toBe('Keep this unsent question while I expand the box.');expect(ui.find('button',byText('Expand question'))).toBeDefined();expect(fetcher).toHaveBeenCalledOnce();
+});

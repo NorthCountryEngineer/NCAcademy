@@ -1,5 +1,11 @@
 # Changelog
 
+## November 11, 2026 — conversation-focused Homework Help
+
+- Made the conversation fill the available workspace with a narrower history rail and a mobile history drawer. Earlier guided conversations open in a bounded overlay.
+- Replaced the tall default composer with a small growing question box, explicit Expand/Collapse, compact attachment controls and persistent Send. Enter edits the question; Ctrl/Cmd+Enter submits explicitly.
+- Kept safety and school-review disclosure visible in a compact strip, with expandable details and a shortcut to report the latest message. Required photo consent remains visible until accepted; feedback and concern actions use compact rows.
+
 ## November 11, 2026 — de-identified math Homework Help
 
 - Added a separate math mode that compiles local questions and worksheets into bounded public tasks and fresh diagrams before generation and independent review. Original text, photos, OCR, student identity, history, attempts and profiles remain local.

@@ -1,0 +1,51 @@
+/* Homework is a bounded conversation workspace; other pages retain document scrolling. */
+.app-shell.workspace-homework{height:100dvh;min-height:0;overflow:hidden}
+.workspace-homework .main-wrap{height:100dvh;min-height:0;max-height:100dvh}
+.workspace-homework .topbar{height:44px;min-height:44px;flex-shrink:0;padding:0 16px}
+.workspace-homework .topbar .breadcrumb{gap:9px;min-width:0;font-size:11px}
+.workspace-homework .topbar .breadcrumb>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-homework .environment-pill{font-size:10px;white-space:nowrap}
+.workspace-homework .main-wrap main{display:flex;flex-direction:column;flex:1;min-height:0;max-width:none;margin:0;padding:10px 14px;overflow:auto}
+.workspace-homework .main-wrap main:has(.homework-chat:not(.homework-embedded)){overflow:hidden}
+.workspace-homework .workspace-content{min-height:0}
+.workspace-homework .workspace-content:has(.homework-chat:not(.homework-embedded)){display:flex;flex-direction:column;flex:1;overflow:hidden}
+.workspace-homework .main-wrap main>.notice{flex-shrink:0;margin:0 0 8px;max-height:25dvh;overflow:auto}
+.workspace-homework .app-footer{display:none}
+.workspace-homework .homework-navigation-toggle{display:none}
+@media(min-width:781px){
+ .workspace-homework .sidebar{width:176px;padding:17px 9px 10px;overflow-x:hidden;overflow-y:auto}
+ .workspace-homework .sidebar>*{flex-shrink:0}
+ .workspace-homework .main-wrap{margin-left:176px}
+ .workspace-homework .sidebar-brand{padding:0 3px 16px}
+ .workspace-homework .sidebar .brand{font-size:14px;gap:7px}
+ .workspace-homework .sidebar .brand-mark{height:30px;width:30px}
+ .workspace-homework .school-picker{padding:8px;gap:6px;margin-bottom:14px}
+ .workspace-homework .school-picker>.workspace-avatar{display:none}
+ .workspace-homework .school-picker label{width:100%;min-width:0}
+ .workspace-homework .school-picker select{font-size:11px;max-width:100%}
+ .workspace-homework .nav-label{padding:0 9px 7px;font-size:9px}
+ .workspace-homework .nav-item{min-height:38px;gap:9px;padding:9px;font-size:11px;line-height:1.45}
+ .workspace-homework .nav-item svg{flex-shrink:0}
+ .workspace-homework .sidebar-note{display:none}
+ .workspace-homework .user-block{margin-top:auto;padding:12px 3px 0;gap:7px}
+ .workspace-homework .user-block>div{min-width:0}
+ .workspace-homework .user-block strong{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .workspace-homework .user-block small{font-size:9px}
+ .workspace-homework .homework-navigation-toggle{display:inline-flex;flex-shrink:0;width:30px;height:30px}
+ .workspace-homework.workspace-nav-compact .sidebar{width:68px;padding:14px 9px 10px}
+ .workspace-homework.workspace-nav-compact .main-wrap{margin-left:68px}
+ .workspace-nav-compact .sidebar-brand{padding:0 0 17px;justify-content:center}
+ .workspace-nav-compact .brand>span:last-child{display:none}
+ .workspace-nav-compact .school-picker,.workspace-nav-compact .nav-label{display:none}
+ .workspace-nav-compact .nav-item{justify-content:center;min-height:40px;padding:10px;margin:3px 0}
+ .workspace-nav-compact .nav-item-label{display:none}
+ .workspace-nav-compact .user-block{flex-direction:column;justify-content:center;padding-top:12px;gap:8px}
+ .workspace-nav-compact .user-block>div{display:none}
+}
+@media(max-width:780px){
+ .workspace-homework .topbar{padding:0 10px;gap:8px}
+ .workspace-homework .environment-pill{display:none}
+ .workspace-homework .main-wrap main{padding:8px}
+ .workspace-homework .sidebar.open{overflow-y:auto;max-height:100dvh}
+}
+@media(prefers-reduced-motion:reduce){.workspace-homework .sidebar{transition:none}}

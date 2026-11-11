@@ -2,6 +2,31 @@
 
 The family setup uses [de-identified math Homework Help](deidentified-homework-help.md): original questions and photos stay in Academy, and supported problems become bounded, canonical math tasks before model use. See [OpenAI student readiness](openai-student-readiness.md) for the separate raw-content controls and shared child-safety workflow.
 
+## Conversation workspace
+
+Homework Help gives the conversation most of the available screen. The desktop
+conversation list uses a narrow rail; on a phone, **Chats** opens a dismissible
+history drawer. The school navigation can also collapse without changing the
+student's access. Earlier guided conversations remain available through the
+compact link below the chat and open in a bounded overlay.
+
+The question box starts at one line and grows up to a bounded height. **Expand
+question** gives more editing space; **Collapse question** restores the small
+composer without changing the draft. Enter and Shift+Enter edit text. Ctrl+Enter
+or Cmd+Enter submits explicitly; held keys and input-method composition do not
+trigger repeated submissions. Send and photo actions remain visible below the
+question. New attachments use compact chips with an optional preview. The earlier
+worksheet choice and required photo confirmation retain their existing scope,
+privacy checks and recovery behavior. Unaccepted consent is never folded away.
+
+A short AI-mistake and school-review notice stays visible above the conversation.
+**Privacy & safety** expands the complete explanation, and **Report a concern**
+opens the latest message's concern control. Every recorded outcome retains its
+own report control. Feedback and report forms expand inside conversation history;
+opening, collapsing or switching layout controls does not send a model request.
+These presentation changes do not change tutoring policy, original-data controls,
+private compilation, permissions, account scope, auditing or idempotency.
+
 ## Raw-content vision tutoring for Academy students
 
 The generative assistant can provide contextual explanations from a worksheet image and a student's follow-up questions. A human School/Admin enables **Allow the approved AI assistant to tutor Academy username/password students**, records the verified provider data controls, selects image-capable models for every phase, and approves the exact saved configuration. The operator also enables the scoped `ALLOW_HOMEWORK_MODELS` runtime flag. The independent `ALLOW_LIVE_MODELS` setting continues to govern the other model features. An enabled local-student AI configuration displays its own readiness state when a model, approval or gate is unavailable.
