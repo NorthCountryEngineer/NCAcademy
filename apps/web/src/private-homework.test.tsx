@@ -411,8 +411,8 @@ it('uses only the selected conversation’s local worksheet and keeps its draft 
 });
 
 
-it('saves private homework mode with existing models while reserving ZDR and image attestations for original-data mode',async()=>{
- const policy={...blankHomeworkAIPolicy(),enabled:true,allow_local_students:true,allow_images:true,triage:{connection_id:'models',model:'luna'},tutor:{connection_id:'models',model:'luna'},safety:{connection_id:'models',model:'luna'}};
+it('saves private homework mode with existing image-capable models while reserving ZDR evidence for original-data mode',async()=>{
+ const policy={...blankHomeworkAIPolicy(),enabled:true,allow_local_students:true,allow_images:true,triage_image_capable:true,tutor_image_capable:true,safety_image_capable:true,triage:{connection_id:'models',model:'luna'},tutor:{connection_id:'models',model:'luna'},safety:{connection_id:'models',model:'luna'}};
  const saved:HomeworkAIConfiguration={school_id:'school',version:1,revision_id:'revision',approved_revision_id:'revision',approved:true,available:true,live_models_enabled:true,configuration:policy,configuration_sha256:'a'.repeat(64),approval_required:true};
  const fetcher=vi.fn(async(url:string,options:RequestInit)=>{
   if(url==='/api/admin/connections?school_id=school')return json([{id:'models',name:'School model',endpoint:'https://api.openai.com/v1',models:['luna'],enabled:true}]);
@@ -425,7 +425,32 @@ it('saves private homework mode with existing models while reserving ZDR and ima
  vi.stubGlobal('fetch',fetcher);const ui=view(()=>HomeworkLiveAISettings({schoolId:'school'}));ui.text();await settle();
  const privacy=()=>ui.find('select',node=>nodes(node.props.children).some(option=>visible(option).includes('Original questions and photos')));
  expect(privacy().props.value).toBe('deidentified');expect(ui.text()).not.toContain('Verified provider data controls and evidence reference');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(false);
- change(privacy(),{value:'raw_zdr'});expect(ui.text()).toContain('Verified provider data controls and evidence reference');expect(ui.text()).toContain('I have verified that the selected safety reviewer supports images');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(true);
+ change(privacy(),{value:'raw_zdr'});expect(ui.text()).toContain('Verified provider data controls and evidence reference');expect(ui.text()).toContain('I have verified that the selected safety reviewer supports images');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(false);
  change(privacy(),{value:'deidentified'});expect(ui.text()).not.toContain('Verified provider data controls and evidence reference');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(false);
  await submit(ui.find('form'));expect(fetcher.mock.calls.filter(([,options])=>options.method==='PUT')).toHaveLength(1);expect(fetcher.mock.calls).toHaveLength(3);
+});
+
+
+it('lets an administrator enable and attest all photo models from a blank deidentified configuration',async()=>{
+ const blank=blankHomeworkAIPolicy();expect(blank.privacy_mode).toBe('deidentified');expect([blank.triage_image_capable,blank.tutor_image_capable,blank.safety_image_capable]).toEqual([false,false,false]);
+ const state:HomeworkAIConfiguration={school_id:'school',version:0,revision_id:null,approved_revision_id:null,approved:false,available:false,live_models_enabled:true,configuration:null,configuration_sha256:null,approval_required:true};
+ let savedBody:Record<string,unknown>|null=null;
+ const fetcher=vi.fn(async(url:string,options:RequestInit)=>{
+  if(url==='/api/admin/connections?school_id=school')return json([{id:'models',name:'School model',endpoint:'https://api.openai.com/v1',models:['luna'],enabled:true}]);
+  if(url==='/api/homework-help/configuration?school_id=school'){
+   if(options.method==='GET')return json(state);
+   expect(options.method).toBe('PUT');savedBody=JSON.parse(String(options.body));return json({...state,version:1,revision_id:'saved-revision',configuration:savedBody});
+  }
+  throw new Error(`Unexpected request: ${url}`);
+ });
+ vi.stubGlobal('fetch',fetcher);const ui=view(()=>HomeworkLiveAISettings({schoolId:'school'}));ui.text();await settle();
+ const control=(label:string,type:string)=>nodes(ui.find('label',byText(label)).props.children).find(node=>node.type===type)!;
+ for(const label of ['Triage and general-help model','AI teacher response model','Response safety reviewer model'])change(control(label,'select'),{value:'models::luna'});
+ change(control('Allow homework photographs to be read and retained privately','input'),{checked:true});
+ expect(ui.text()).toContain('fresh generated math diagrams');expect(ui.text()).toContain('Original worksheet photos stay in Academy');
+ const labels=['I have verified that the selected triage model supports images','I have verified that the selected tutor model supports images','I have verified that the selected safety reviewer supports images'];
+ for(const label of labels)expect(control(label,'input').props.checked).toBe(false);
+ expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(true);await submit(ui.find('form'));expect(fetcher.mock.calls.filter(([,options])=>options.method==='PUT')).toHaveLength(0);
+ for(const [index,label] of labels.entries()){change(control(label,'input'),{checked:true});expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(index<labels.length-1);}
+ await submit(ui.find('form'));expect(savedBody).toMatchObject({privacy_mode:'deidentified',allow_images:true,triage_image_capable:true,tutor_image_capable:true,safety_image_capable:true,expected_version:0});expect(fetcher.mock.calls.filter(([,options])=>options.method==='PUT')).toHaveLength(1);
 });
