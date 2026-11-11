@@ -35,6 +35,7 @@ class Settings:
     google_classroom_client_secret: str = field(default="", repr=False)
     pii_encryption_key: str = field(default="", repr=False)
     allow_homework_models: bool = False
+    openai_student_approvals_json: str = field(default="{}", repr=False)
 
     @property
     def tenant_id(self):
@@ -120,6 +121,34 @@ class Settings:
                 raise ValueError("Core Chat requires a separate Core workload credential" if chat_flag == "true" else "Agent teachers require a separate Core workload credential")
         value = cls(db_url, mode, app_url, secret, os.getenv("ALLOW_LIVE_MODELS", "false").lower() == "true", os.getenv("DEMO_SEED", "true").lower() == "true", **{name: os.getenv(name.upper(), "production" if name == "core_environment" else "").rstrip("/") for name in ("core_issuer", "core_browser_client_id", "core_organization_id", "core_service_id", "core_deployment_id", "core_environment")}, core_resource_client_id=creds.get("client_id", os.getenv("CORE_RESOURCE_CLIENT_ID", "")), core_resource_client_secret=creds.get("client_secret", os.getenv("CORE_RESOURCE_CLIENT_SECRET", "")), allow_agent_teachers=agent_flag == "true", core_workload_token=workload, core_chat_enabled=chat_flag == "true", core_chat_installation_id=os.getenv("CORE_CHAT_INSTALLATION_ID", ""), google_classroom_enabled=classroom_flag == "true", google_classroom_client_id=classroom_id, google_classroom_client_secret=classroom_secret, pii_encryption_key=pii_key)
         value.allow_homework_models = homework_flag == "true"
+        approvals = os.getenv("OPENAI_STUDENT_APPROVALS_JSON", "")
+        approval_file = os.getenv("OPENAI_STUDENT_APPROVALS_FILE", "")
+        if approvals and approval_file:
+            raise ValueError("Use one OpenAI student approval manifest input")
+        if approval_file:
+            try:
+                import stat
+                path = Path(approval_file)
+                if not path.is_absolute():
+                    raise ValueError()
+                descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+                with os.fdopen(descriptor, "r") as stream:
+                    metadata = os.fstat(stream.fileno())
+                    if (not stat.S_ISREG(metadata.st_mode) or metadata.st_size > 131072
+                            or metadata.st_uid not in {0, os.getuid()} or metadata.st_mode & 0o022):
+                        raise ValueError()
+                    approvals = stream.read(131073)
+            except (OSError, UnicodeError, ValueError):
+                raise ValueError("OpenAI student approval file unavailable") from None
+        if approvals:
+            from .openai_student_privacy import parse_approvals
+            try:
+                parsed_approvals = parse_approvals(approvals)
+            except (ValueError, TypeError, RecursionError):
+                raise ValueError("Invalid OpenAI student approval manifest") from None
+            if mode == "local" and parsed_approvals:
+                raise ValueError("Local demo authentication cannot load provider student approvals")
+        value.openai_student_approvals_json = approvals or "{}"
         origin = urlsplit(app_url)
         if mode not in {"local", "core"} or len(secret) < 32 or origin.path or origin.query or origin.fragment or not origin.hostname or origin.scheme not in {"http", "https"} or origin.username is not None or origin.password is not None:
             raise ValueError("Invalid authentication configuration")

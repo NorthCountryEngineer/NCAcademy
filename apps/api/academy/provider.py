@@ -1,5 +1,7 @@
 """Bounded, single-send classifier transport. Provider prose is never rendered."""
 import ipaddress
+import hashlib
+import hmac
 import json
 import socket
 import time
@@ -75,7 +77,20 @@ def classify(connection, api_key, model, prompt, max_output_tokens):
             raise ProviderFailure("Provider endpoint is not publicly routable")
         target = httpx.URL(connection["endpoint"] + "/chat/completions").copy_with(host=addresses[0])
         with httpx.Client(follow_redirects=False, trust_env=False, timeout=httpx.Timeout(20, connect=5), transport=httpx.HTTPTransport(retries=0, trust_env=False)) as client:
-            with client.stream("POST", target, headers={"Host": parsed.hostname, "Authorization": "Bearer " + api_key, "Content-Type": "application/json"}, json=_chat_payload(parsed, model, prompt, max_output_tokens, connection.get("processing_tier", "standard")), extensions={"sni_hostname": parsed.hostname}) as response:
+            headers = {"Host": parsed.hostname, "Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+            payload = _chat_payload(parsed, model, prompt, max_output_tokens, connection.get("processing_tier", "standard"))
+            if any(name in connection for name in ("openai_organization", "openai_project", "safety_identifier", "openai_inference_key_sha256")):
+                import re
+                if (parsed.hostname != "api.openai.com" or parsed.path != "/v1"
+                        or not re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", connection.get("openai_organization", ""))
+                        or not re.fullmatch(r"proj_[A-Za-z0-9_-]{1,160}", connection.get("openai_project", ""))
+                        or not re.fullmatch(r"academy_[a-f0-9]{64}", connection.get("safety_identifier", ""))
+                        or not re.fullmatch(r"[a-f0-9]{64}", connection.get("openai_inference_key_sha256", ""))
+                        or not hmac.compare_digest(connection["openai_inference_key_sha256"], hashlib.sha256(api_key.encode()).hexdigest())):
+                    raise ValueError("Invalid OpenAI student request context")
+                headers.update({"OpenAI-Organization": connection["openai_organization"], "OpenAI-Project": connection["openai_project"]})
+                payload["safety_identifier"] = connection["safety_identifier"]
+            with client.stream("POST", target, headers=headers, json=payload, extensions={"sni_hostname": parsed.hostname}) as response:
                 raw = bytearray()
                 for chunk in response.iter_bytes():
                     if time.monotonic() - started > 30:

@@ -1,5 +1,7 @@
 """Generative Homework Help uses separate approved models and retained evidence."""
 import json
+import hashlib
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import event, select
@@ -13,12 +15,33 @@ from test_teacher_onboarding import school_id
 from test_curated_lessons import photo
 
 
+def approve_synthetic_openai_project(app, connection_id, **changes):
+    """Mock operator readback for synthetic credentials; never a live approval."""
+    with app.state.database.factory() as db:
+        row = db.get(Record, connection_id)
+        connection = row.value
+        timestamp = datetime.now(timezone.utc)
+        proof = {"connection_id": row.id, "credential_fingerprint": hashlib.sha256(connection["key_cipher"].encode()).hexdigest(),
+            "inference_key_sha256": hashlib.sha256(app.state.auth.unseal(connection["key_cipher"])["api_key"].encode()).hexdigest(),
+            "endpoint": "https://api.openai.com/v1", "organization_id": "org_synthetic_test", "project_id": "proj_synthetic_test",
+            "project_retention_type": "zero_data_retention", "organization_retention_type": None,
+            "image_inputs_reviewed": True, "reviewed_models": connection["models"],
+            "approval_evidence_sha256": "a" * 64, "evidence_sha256": "b" * 64,
+            "key_project_verified": True, "source": "openai-admin-api-readback",
+            "verified_at": (timestamp - timedelta(minutes=1)).isoformat(), "expires_at": (timestamp + timedelta(days=1)).isoformat(), **changes}
+    app.state.settings.openai_student_approvals_json = json.dumps({"version": "openai-student-data-v1", "approvals": [proof]})
+    return proof
+
+
 def environment(client, app, monkeypatch, **changes):
+    official_models = changes.pop("official_models", False) or changes.get("allow_local_students") is True
     admin = login(client, "demo-admin")
     school = school_id(app)
-    response = client.post("/api/admin/connections", json={"school_id": school, "name": "Synthetic homework models", "endpoint": "https://models.example.test/v1", "models": ["triage", "tutor", "safety"], "enabled": True, "api_key": "synthetic-ai-homework-secret"}, headers=admin)
+    response = client.post("/api/admin/connections", json={"school_id": school, "name": "Synthetic homework models", "endpoint": "https://api.openai.com/v1" if official_models else "https://models.example.test/v1", "models": ["triage", "tutor", "safety"], "enabled": True, "api_key": "synthetic-ai-homework-secret"}, headers=admin)
     assert response.status_code == 201, response.text
     connection = response.json()
+    if official_models:
+        approve_synthetic_openai_project(app, connection["id"])
     config = {"expected_version": 0, "enabled": True, "name": "School AI Helper", "triage": {"connection_id": connection["id"], "model": "triage"}, "tutor": {"connection_id": connection["id"], "model": "tutor"}, "safety": {"connection_id": connection["id"], "model": "safety"}, **changes}
     response = client.put("/api/homework-help/configuration?school_id=" + school, json=config, headers=admin)
     assert response.status_code == 200, response.text
@@ -52,6 +75,8 @@ def triage_result(course_id=None, teacher_profile_id=None, confidence=0.95, **ch
 
 
 def result(output, **changes):
+    if isinstance(output, dict) and "verdict" in output:
+        output = {"input_risk_codes": [], **output}
     return {"choices": [{"message": {"role": "assistant", "content": canonical(output)}}], "usage": {"prompt_tokens": 90, "completion_tokens": 40, "total_tokens": 130}, **changes}
 
 

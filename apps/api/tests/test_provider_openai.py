@@ -1,5 +1,6 @@
 """Mocked wire-contract checks; no credentials or live provider traffic."""
 import socket
+import hashlib
 
 import pytest
 
@@ -119,4 +120,33 @@ def test_unknown_processing_tier_is_rejected_without_sending(monkeypatch):
     with pytest.raises(provider.ProviderFailure, match="no retry"):
         provider.classify({"endpoint": "https://api.openai.com/v1", "processing_tier": "unknown"},
                           "synthetic-not-a-key", "gpt-6-luna", [], 400)
+    assert calls == []
+
+
+def test_student_openai_requests_pin_project_and_opaque_safety_identity(monkeypatch):
+    calls = capture_transport(monkeypatch)
+    identity = "academy_" + "a" * 64
+    provider.classify({"endpoint": "https://api.openai.com/v1", "openai_organization": "org_synthetic",
+                       "openai_project": "proj_synthetic", "safety_identifier": identity,
+                       "openai_inference_key_sha256": hashlib.sha256(b"synthetic-not-a-key").hexdigest()},
+                      "synthetic-not-a-key", "gpt-6-luna", [], 400)
+    request = calls[0][1]
+    assert request["headers"]["OpenAI-Organization"] == "org_synthetic"
+    assert request["headers"]["OpenAI-Project"] == "proj_synthetic"
+    assert request["json"]["safety_identifier"] == identity
+    assert request["json"]["store"] is False
+    assert "openai_inference_key_sha256" not in request["json"]
+    assert hashlib.sha256(b"synthetic-not-a-key").hexdigest() not in str(request)
+
+
+@pytest.mark.parametrize("change", [{"endpoint": "https://models.example.test/v1"},
+    {"openai_project": "proj_test\r\nInjected: yes"}, {"openai_organization": "org_test\n"},
+    {"safety_identifier": "private-child-email@example.test"}, {"openai_inference_key_sha256": "b" * 64}])
+def test_student_openai_context_cannot_leak_to_other_providers_or_headers(monkeypatch, change):
+    calls = capture_transport(monkeypatch)
+    connection = {"endpoint": "https://api.openai.com/v1", "openai_organization": "org_synthetic",
+                  "openai_project": "proj_synthetic", "safety_identifier": "academy_" + "a" * 64,
+                  "openai_inference_key_sha256": hashlib.sha256(b"synthetic-not-a-key").hexdigest()}
+    with pytest.raises(provider.ProviderFailure):
+        provider.classify({**connection, **change}, "synthetic-not-a-key", "gpt-6-luna", [], 400)
     assert calls == []

@@ -1,5 +1,12 @@
 # Changelog
 
+## November 11, 2026 — OpenAI child-data and safety readiness
+
+- Added protected operator verification of the exact OpenAI project, effective ZDR policy, reviewed models and inference credential. School notes cannot substitute for provider approval; changed authority requires reapproval.
+- Added opaque safety identifiers, request project binding and removal of unnecessary photo/conversation metadata from model prompts.
+- Added a conservative child boundary, student concern reporting, fixed input-risk escalation and a human school safety inbox with immutable review evidence. Reports stay encrypted and do not change personality weights or resend inference.
+- Added a read-only provider verifier, synthetic regression coverage and [operator instructions](openai-student-readiness.md). Provider approval remains a separately verified prerequisite.
+
 ## November 11, 2026 — contextual vision Homework Help
 
 - Added separately approved generative tutoring for Academy student accounts, with a scoped Homework model gate and recorded provider data-control review.

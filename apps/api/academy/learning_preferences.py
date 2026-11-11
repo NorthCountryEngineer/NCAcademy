@@ -138,7 +138,10 @@ def preference_document(db, identity):
     # optimistic version and every editable value from this one immutable row.
     state = {"status": "complete" if revision and revision.value["complete"] else "required", "version": revision.value["version"] if revision else 0}
     answers = revision.value["answers"] if revision and state["status"] == "complete" else NEUTRAL
-    return {**state, "revision_id": revision.id if revision else None, "answers": answers, "weights": {key: value * 25 for key, value in answers.items()}, "feedback_count": db.scalar(select(func.count()).select_from(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "student_agent_feedback", Record.owner_id == identity["id"])), "questions": QUESTIONS, "adaptation": ALGORITHM}
+    # Safety reports share the encrypted immutable storage kind, but are not
+    # teaching preferences or ratings and must not enter adaptation statistics.
+    feedback_count = sum(1 for row in db.scalars(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "student_agent_feedback", Record.owner_id == identity["id"])) if row.value.get("feedback_type") not in {"homework_safety_report", "homework_safety_review"})
+    return {**state, "revision_id": revision.id if revision else None, "answers": answers, "weights": {key: value * 25 for key, value in answers.items()}, "feedback_count": feedback_count, "questions": QUESTIONS, "adaptation": ALGORITHM}
 
 
 def register_learning_preferences_api(app, database, auth, settings, actor, audit_actor):

@@ -1,6 +1,7 @@
 """Explicit provider admission for encrypted local-family Homework Help."""
 
 import json
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException
@@ -15,7 +16,7 @@ from academy.homework_ai import validate_teacher_execution, visible_response
 from conftest import login
 from test_agent_auth import core_environment
 from test_family_accounts import password_login, student
-from test_homework_ai import environment, result, triage_result
+from test_homework_ai import approve_synthetic_openai_project, environment, result, triage_result
 from test_private_homework_help import BASE, QUESTION, ask, conversation, enable, enroll, screenshot
 
 
@@ -35,7 +36,7 @@ def revise(client, headers, school, *, approve=False, **changes):
 
 
 def test_local_model_opt_in_needs_a_current_approval_and_privacy_evidence(client, app, monkeypatch):
-    env = environment(client, app, monkeypatch)
+    env = environment(client, app, monkeypatch, official_models=True)
     admin = login(client, "demo-admin")
     student(client, app, admin, course_ids=[])
     assert enable(client, admin, env["school"]).status_code == 200
@@ -211,7 +212,7 @@ def test_provider_empty_annotations_match_live_response_shape_without_admitting_
     message = response["choices"][0]["message"]
     message.update(annotations=[], refusal=None)
     selected, usage, evidence = visible_response(response, "synthetic-key", 500, 10000)
-    assert selected == {"verdict": "allow", "reason_codes": []}
+    assert selected == {"verdict": "allow", "reason_codes": [], "input_risk_codes": []}
     assert usage["total_tokens"] == 130 and "annotations" not in evidence
     for invalid in ([{"type": "url_citation", "url": "https://untrusted.example/"}], None, {}, ""):
         message["annotations"] = invalid
@@ -289,6 +290,7 @@ def test_fast_processing_is_scoped_to_approved_official_connections(client, app,
             "endpoint": "https://api.openai.com/v1", "models": ["triage", "tutor", "safety"],
             "enabled": True, "api_key": "synthetic-only-no-live-access"}, headers=headers)
         assert official.status_code == 201, official.text
+        approve_synthetic_openai_project(app, official.json()["id"])
         refs = {phase: {"connection_id": official.json()["id"], "model": phase} for phase in ("triage", "tutor", "safety")}
         revise(admin, headers, env["school"], approve=True, processing_tier="fast", **refs)
     original = app.state.classify
@@ -308,3 +310,76 @@ def test_fast_processing_is_scoped_to_approved_official_connections(client, app,
         stored = db.get(Record, turn["id"]).value
         assert all(phase["send_marker"]["processing_tier"] == "fast" for phase in stored["phases"].values())
         assert all("processing_tier" not in phase["send_marker"]["connection_snapshot"] for phase in stored["phases"].values())
+
+
+@pytest.mark.parametrize("failure", ["missing", "expired", "misbound"])
+def test_openai_provider_proof_revocation_blocks_unknown_age_core_students_and_reapproval(client, app, monkeypatch, failure):
+    env = environment(client, app, monkeypatch, official_models=True)
+    first = client.post(f"{BASE}/sessions/{env['session']['id']}/messages", json={"message": "Explain the idea without doing my work.",
+        "idempotency_key": "synthetic-before-provider-proof-revocation"}, headers=env["headers"]).json()
+    assert first["status"] == "released"
+    initial_calls = len(env["calls"])
+    if failure == "missing":
+        app.state.settings.openai_student_approvals_json = "{}"
+    elif failure == "expired":
+        timestamp = datetime.now(timezone.utc)
+        approve_synthetic_openai_project(app, env["connection"]["id"],
+            verified_at=(timestamp - timedelta(days=2)).isoformat(), expires_at=(timestamp - timedelta(days=1)).isoformat())
+    else:
+        approve_synthetic_openai_project(app, env["connection"]["id"], credential_fingerprint="0" * 64)
+    unavailable = client.get(BASE, params={"school_id": env["school"]}).json()["assistant"]
+    assert not unavailable["available"] and "Zero Data Retention" in unavailable["unavailable_reason"]
+    blocked = client.post(f"{BASE}/sessions/{env['session']['id']}/messages", json={"message": "Give me a new explanation.",
+        "idempotency_key": "synthetic-after-provider-proof-revocation"}, headers=env["headers"]).json()
+    assert blocked["status"] == "blocked" and len(env["calls"]) == initial_calls
+    assert client.get(f"{BASE}/sessions/{env['session']['id']}").json()["messages"][0]["status"] == "withheld"
+    admin = login(client, "demo-admin")
+    response = client.post("/api/homework-help/configuration/approve", params={"school_id": env["school"]},
+        json={"revision_id": env["configuration"]["revision_id"]}, headers=admin)
+    assert response.status_code == 403
+
+
+def test_project_binding_change_needs_human_reapproval_but_same_permission_proof_renewal_preserves_history(client, app, monkeypatch):
+    env = environment(client, app, monkeypatch, official_models=True)
+    path = f"{BASE}/sessions/{env['session']['id']}"
+    first = client.post(path + "/messages", json={"message": "Explain the idea without doing my work.",
+        "idempotency_key": "synthetic-project-binding-before"}, headers=env["headers"]).json()
+    assert first["status"] == "released"
+    old = client.get(BASE, params={"school_id": env["school"]}).json()["assistant"]
+    timestamp = datetime.now(timezone.utc)
+    approve_synthetic_openai_project(app, env["connection"]["id"], evidence_sha256="c" * 64,
+        verified_at=timestamp.isoformat(), expires_at=(timestamp + timedelta(days=2)).isoformat())
+    renewed = client.get(BASE, params={"school_id": env["school"]}).json()["assistant"]
+    assert renewed["available"] and renewed["image_policy_sha256"] == old["image_policy_sha256"]
+    assert client.get(path).json()["messages"][0]["answer"] == first["answer"]
+    approve_synthetic_openai_project(app, env["connection"]["id"], project_id="proj_different_synthetic")
+    changed = client.get(BASE, params={"school_id": env["school"]}).json()["assistant"]
+    assert not changed["approved"] and not changed["available"]
+    assert changed["image_policy_sha256"] != old["image_policy_sha256"]
+    assert client.get(path).json()["messages"][0]["status"] == "withheld"
+    admin = login(client, "demo-admin")
+    approved = client.post("/api/homework-help/configuration/approve", params={"school_id": env["school"]},
+        json={"revision_id": env["configuration"]["revision_id"]}, headers=admin)
+    assert approved.status_code == 200 and approved.json()["approved"]
+    headers = login(client)
+    second = client.post(path + "/messages", json={"message": "Can you explain another way?", "idempotency_key": "synthetic-project-binding-after"}, headers=headers).json()
+    assert second["status"] == "released"
+    assert all(call[0]["openai_project"] == "proj_different_synthetic" for call in env["calls"][-2:])
+    assert all(call[0]["safety_identifier"].startswith("academy_") and "demo-student" not in call[0]["safety_identifier"] for call in env["calls"])
+
+
+def test_provider_proof_changed_inflight_stops_next_phase_without_retry(client, app, monkeypatch):
+    env = environment(client, app, monkeypatch, official_models=True)
+    original = app.state.classify
+    def revoke(*args):
+        response = original(*args)
+        app.state.settings.openai_student_approvals_json = "{}"
+        return response
+    monkeypatch.setattr(app.state, "classify", revoke)
+    response = client.post(f"{BASE}/sessions/{env['session']['id']}/messages", json={"message": "Explain the idea.",
+        "idempotency_key": "synthetic-inflight-provider-proof-revocation"}, headers=env["headers"])
+    assert response.status_code == 200 and response.json()["status"] == "withheld"
+    assert [call[2] for call in env["calls"]] == ["triage"]
+    assert client.post(f"{BASE}/sessions/{env['session']['id']}/messages", json={"message": "Explain the idea.",
+        "idempotency_key": "synthetic-inflight-provider-proof-revocation"}, headers=env["headers"]).json() == response.json()
+    assert len(env["calls"]) == 1
