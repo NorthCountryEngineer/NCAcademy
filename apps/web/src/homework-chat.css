@@ -13,7 +13,7 @@
 .homework-chat .homework-sidebar-note{padding:17px 20px;background:transparent;margin-top:auto}
 .homework-chat .homework-sidebar-note small{font-size:10px;line-height:1.8;color:#75816f}
 .homework-chat .homework-chat-conversation{border:0;border-radius:0;margin:0;display:flex;flex-direction:column;min-width:0;min-height:0}
-.homework-chat .homework-chat-conversation>.panel-head{padding:18px 25px;min-height:76px;gap:15px;align-items:center}
+.homework-chat .homework-chat-conversation>.panel-head{padding:18px 25px;min-height:76px;gap:15px;align-items:center;flex-shrink:0}
 .homework-chat .homework-chat-conversation>.panel-head h2{font-size:14px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .homework-chat .homework-chat-conversation>.panel-head p{font-size:10px}
 .homework-chat .homework-chat-conversation>.panel-head>.text-button{min-height:40px;font-size:10px;flex-shrink:0}
@@ -35,11 +35,16 @@
 .homework-chat .homework-references{margin-left:45px}
 .homework-chat .student-feedback{margin-left:45px;margin-top:15px;padding-top:7px}
 .homework-chat .homework-submitted>.loading{justify-content:flex-start;padding:8px 0;font-size:12px}
-.homework-chat .homework-chat-composer{padding:19px 25px 12px;background:white;flex-shrink:0}
+.homework-chat .homework-chat-composer{padding:19px 25px 12px;background:white;display:flex;flex-direction:column;min-height:0;max-height:65%;flex-shrink:1}
+.homework-chat .homework-chat-composer>fieldset{display:flex;flex-direction:column;min-height:0;flex:1}
+.homework-chat-composer-inputs{min-height:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}
+.homework-chat-composer-inputs:focus-visible{outline:2px solid #6a855c;outline-offset:2px}
 .homework-chat .homework-question-label{font-size:11px;color:#62785a;margin-bottom:8px}
 .homework-chat .homework-chat-composer textarea{resize:vertical;min-height:90px;max-height:250px;background:#fcfdfb;border-radius:9px;font-size:13px;line-height:1.8;margin:0}
-.homework-chat-composer-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:11px}
-.homework-chat .homework-chat-composer-actions>.teacher-photo-picker{min-height:42px;margin:0;font-size:11px;white-space:nowrap;flex-shrink:0}
+.homework-chat-composer-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:11px;flex-shrink:0}
+.homework-chat .homework-chat-composer-actions>.teacher-photo-picker{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px;margin:0;font-size:11px;white-space:nowrap;flex-shrink:0;cursor:pointer}
+.homework-chat .homework-chat-composer-actions>.teacher-photo-picker input{position:absolute;inset:0;width:100%;height:100%;padding:0;opacity:0;cursor:pointer}
+.homework-chat .homework-chat-composer-actions>.teacher-photo-picker:focus-within{outline:2px solid #6a855c;outline-offset:2px;border-radius:4px}
 .homework-chat .homework-chat-composer-actions>.teacher-photo-picker:has(input:disabled){opacity:.5;cursor:not-allowed}
 .homework-character-count{font-size:10px;color:var(--muted);margin-left:auto}
 .homework-chat .homework-chat-composer-actions>.button{min-height:42px;font-size:12px;padding:10px 17px}
@@ -48,10 +53,10 @@
 .homework-context>label{margin:8px 0 0;max-width:460px}
 .homework-context select{min-height:42px}
 .homework-context small{font-size:10px;line-height:1.8;font-weight:400}
-.homework-chat .homework-chat-disclosure{margin:10px 0 0;font-size:10px;line-height:1.8;color:#7a8674;text-align:center}
+.homework-chat .homework-chat-disclosure{margin:10px 0 0;font-size:10px;line-height:1.8;color:#7a8674;text-align:center;flex-shrink:0}
 .homework-chat .homework-pending{padding:17px 25px}
 .homework-chat .curation-photos{margin-top:15px}
-.homework-chat .curation-photo-consent{font-size:11px;line-height:1.8;margin-top:16px}
+.homework-chat .curation-photo-consent{font-size:11px;line-height:1.8;margin-top:16px;flex-shrink:0}
 .homework-legacy-history{margin-top:20px}
 .homework-legacy-history>.text-button{font-size:11px;min-height:42px;color:var(--muted);font-weight:400}
 .homework-legacy-history>div{border-top:1px solid var(--line);padding-top:20px;margin-top:10px}
@@ -66,7 +71,8 @@
 .homework-chat.homework-embedded .homework-sidebar-note{display:none}
 .homework-chat.homework-embedded .homework-chat-scroll{min-height:260px;max-height:560px}
 .homework-chat.homework-embedded .homework-chat-conversation>.panel-head{padding:17px 20px}
-.homework-chat.homework-embedded .homework-chat-composer{padding:18px 20px 12px}
+.homework-chat.homework-embedded .homework-chat-composer{padding:18px 20px 12px;max-height:none}
+@media(max-width:780px){.homework-chat .homework-chat-composer{max-height:none}}
 @media(max-width:1100px){.homework-chat .homework-chat-layout{grid-template-columns:205px minmax(0,1fr)}.homework-chat .homework-messages{padding:25px}.homework-chat .homework-chat-conversation>.panel-head{padding:17px 20px}.homework-chat .homework-chat-composer{padding:18px 20px 12px}}
 @media(max-width:780px){.homework-chat .homework-chat-layout{grid-template-columns:1fr;min-height:0;height:auto;max-height:none}.homework-chat .homework-chat-sidebar{min-height:0;border-right:0;border-bottom:1px solid var(--line)}.homework-chat-sidebar-heading{padding:16px 18px 10px}.homework-chat .homework-new-conversation{width:fit-content;margin-bottom:10px}.homework-chat .homework-chat-sidebar>nav{display:flex;flex:initial;max-height:115px;padding:0 9px 10px;gap:6px;overflow:auto}.homework-chat .homework-chat-sidebar>nav>button{min-width:170px;max-width:220px;width:170px;flex-shrink:0}.homework-chat .homework-history-empty{padding:0 20px 15px;margin:0;font-size:11px}.homework-chat .homework-sidebar-note{display:none}.homework-chat-scroll{max-height:60dvh;min-height:280px}.homework-chat .homework-triage-intro{padding:32px 4px}.homework-chat .homework-triage-intro h3{font-size:22px}}
 @media(max-width:520px){.homework-chat .homework-chat-conversation>.panel-head{flex-direction:row;gap:10px;padding:15px}.homework-chat .homework-chat-conversation>.panel-head h2{font-size:13px}.homework-chat .homework-chat-conversation>.panel-head>.text-button{font-size:9px}.homework-chat .homework-messages{padding:20px 16px}.homework-chat .homework-chat-composer{padding:17px 16px 12px}.homework-chat .homework-triage-intro h3{font-size:20px}.homework-chat .homework-ai-answer,.homework-chat .homework-ai-sources{padding-left:0}.homework-chat .homework-references,.homework-chat .student-feedback{margin-left:0}.homework-chat .homework-handoff strong{display:block;margin:0 0 4px}.homework-chat .homework-responder-description{display:block}.homework-character-count{font-size:9px}.homework-chat .homework-pending{padding:15px 17px}.homework-chat .homework-chat-composer-actions>.teacher-photo-picker{font-size:10px}.homework-chat-composer-actions{gap:8px}}

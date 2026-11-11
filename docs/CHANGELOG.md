@@ -1,5 +1,9 @@
 # Changelog
 
+## November 10, 2026 — Homework Help attachment controls
+
+- Keep photo confirmation and Send visible when homework previews exceed the space in a laptop chat window. The question, previews and optional course context scroll inside the composer.
+
 ## November 10, 2026 — private Homework Help
 
 - Added a school setting for students with Academy username/password accounts to get reviewed study hints from text or homework screenshots, with or without course enrollment.
