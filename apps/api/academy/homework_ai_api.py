@@ -1,5 +1,6 @@
 """Authenticated, durably marked AI Homework Help with no automatic retries."""
 import base64
+import hashlib
 from datetime import datetime, timezone
 import json
 from typing import Literal
@@ -18,7 +19,8 @@ from .homework_ai import (VERSION, BOUNDARY_VERSION, PHASES, LIMITS, SYSTEM_BOUN
     ApprovalInput, config_id, configuration_descriptor, resolve_configuration, enrolled_courses,
     optional_grounding, course_references, digest, revalidate, project_message, route_selection,
     tutoring_selection, safety_selection, visible_response, school_teacher_personas,
-    public_persona, revalidate_teacher, triage_selection, image_policy_hash)
+    public_persona, revalidate_teacher, triage_selection, image_policy_hash,
+    homework_privacy_mode, homework_student_approvals)
 from .learning_preferences import latest_preferences, preference_snapshot, student_principal
 from .lesson_api import completion_request, course_for_student
 from .permissions import bind_scope, require_school, scope_id
@@ -27,6 +29,18 @@ from .private_homework_policy import (DISABLED, ENGINE, MAX_DAILY_TURNS, MAX_INP
     PrivatePolicyInput, assistant_descriptor as private_assistant, local_student,
     policy as private_policy, save_policy)
 from .teacher_models import model_policy_context, preview_model_policy
+
+
+DEIDENTIFIED_LOCAL_RESPONSES = {
+    "question_not_readable": "I couldn't read that question clearly. Type its equation or topic and I can help.",
+    "enter_equation_or_topic": "Type the equation or name the school topic you want to understand. Your original words and photos stay in Academy.",
+    "local_reader_busy": "The private photo reader is busy. Try typing the equation or topic instead.",
+    "local_safety_support": "Please tell a trusted adult what is happening. If someone is in immediate danger, get local emergency help. Your concern is saved for school review; this chat has not contacted anyone.",
+    "student_authorship": SAFE_REFUSAL,
+    "unsupported_math": "I couldn't turn that into a clear math problem. Type the equation, or name the concept you want to understand.",
+    "teaching_variants_exhausted": "We've explored several ways to think about this. Try a different example or name the part that still feels confusing so we can choose a new approach.",
+    "choose_specific_step": "We've tried several approaches. Name the part that still feels confusing, or ask for a different example, so we can choose a new direction.",
+}
 
 
 class AIMessageInput(HomeworkMessageInput):
@@ -197,8 +211,8 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             snapshot, _ = resolve_configuration(db, identity, selected, settings, live=False)
             if body.revision_id != snapshot["revision_id"]:
                 raise HTTPException(409, "Approve only the current Homework Help configuration")
-            from .openai_student_privacy import approval_bindings, require_student_openai_approval
-            proofs = require_student_openai_approval(settings, snapshot)
+            from .openai_student_privacy import approval_bindings
+            proofs = homework_student_approvals(settings, snapshot)
             pointer = db.get(Record, config_id(identity["tenant_id"], selected))
             value = pointer.value
             if value.get("approval_id") and snapshot["approval_id"]:
@@ -237,7 +251,7 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                     except HTTPException as error:
                         descriptor.update(available=False, unavailable_reason=error.detail)
                 descriptor["photo_model_labels"] = {phase: str((db.get(Record, config[phase]["connection_id"]).value if db.get(Record, config[phase]["connection_id"]) else {}).get("name", "Unavailable connection")) + " · " + config[phase]["model"] for phase in PHASES} if config else None
-                descriptor["configuration"] = {key: config[key] for key in ("enabled", "name", "biography", "allow_images", "max_input_chars", "max_output_tokens")} if config else None
+                descriptor["configuration"] = {key: config[key] for key in ("enabled", "name", "biography", "allow_images", "max_input_chars", "max_output_tokens", "privacy_mode") if key in config} if config else None
             summaries = []
             for row in history:
                 first = db.scalar(select(Record).where(Record.tenant_id == identity["tenant_id"], Record.kind == "homework_ai_message", Record.owner_id == identity["id"], Record.parent_id == row.id).order_by(Record.created_at, Record.id).limit(1))
@@ -308,9 +322,23 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             # Local credential decryption is pre-send admission: failure here
             # has no send marker and cannot be classified as external I/O.
             key = auth.unseal(encrypted_key)["api_key"]
-            from .openai_student_privacy import student_openai_request_context
-            openai_context = student_openai_request_context(settings, accepted, connection,
-                data.get("student_openai_approvals_snapshot") or {}, model=selected_model, api_key=key)
+            public_mode = homework_privacy_mode(snapshot["configuration"]) == "deidentified"
+            if public_mode:
+                from .homework_deidentification import build_public_homework_prompt
+                if phase not in {"triage", "safety"}:
+                    raise HTTPException(403, "De-identified Homework Help does not hand off private teacher context")
+                contract = {"task": data["deidentified_task"], "action": data["deidentification"]["action"],
+                            "stage": data["deidentification"]["stage"], "phase": phase,
+                            "include_image": bool(snapshot["configuration"]["allow_images"] and snapshot["configuration"][phase + "_image_capable"])}
+                if phase == "safety":
+                    contract["candidate"] = data["deidentified_candidate"]
+                if canonical(prompt) != canonical(build_public_homework_prompt(**contract)):
+                    raise HTTPException(403, "De-identified Homework Help request failed the public-content boundary")
+                openai_context = {"public_homework_contract": contract}
+            else:
+                from .openai_student_privacy import student_openai_request_context
+                openai_context = student_openai_request_context(settings, accepted, connection,
+                    data.get("student_openai_approvals_snapshot") or {}, model=selected_model, api_key=key)
             reservation = len(canonical(prompt).encode()) + maximum + 1024
             # Reservations remain charged on uncertain outcomes. Across sessions,
             # no new student send may pass another unresolved message barrier.
@@ -323,10 +351,14 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             for entry in prompt:
                 content = entry["content"]
                 if isinstance(content, list):
-                    content = [part if part["type"] == "text" else {"type": "image_reference", "images": data["images"]} for part in content]
+                    content = [part if part["type"] == "text" else {"type": "image_reference", "images": data.get("deidentified_public_images", []) if public_mode else data["images"]} for part in content]
                 safe_prompt.append({"role": entry["role"], "content": content})
             marker = {"phase": phase, "marked_at": now(), "prompt": safe_prompt, "prompt_sha256": digest(prompt), "connection_snapshot": connection, "model": selected_model, "max_output_tokens": maximum, "reservation": reservation, "teacher_authority": teacher_authority}
             marker["processing_tier"] = processing_tier
+            if public_mode:
+                marker["privacy_mode"] = "deidentified"
+                marker["source_images_local_only"] = True
+                marker["public_content_sha256"] = data["deidentified_content_sha256"]
             if phase == "tutor" and "teacher_model_policy_snapshot" in data:
                 marker.update(teacher_model_policy_snapshot=data["teacher_model_policy_snapshot"], teacher_model_override=data["teacher_model_override"], routing_preview=data.get("teacher_model_routing"))
             data["phases"][phase] = {"send_marker": marker, "response": None, "usage": None}
@@ -497,6 +529,165 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                         {"homework_session_id": session_id, "homework_message_id": row.id, **safe_data(data)}, session_id)
             return project_message(db, accepted, row, settings, app=app)
 
+    def deidentified_ask(request, identity, message_id, message, normalized):
+        """Compile privately, then send only a closed public educational task.
+
+        No generic conversation/persona/course wire helper is used on this path.
+        Both this caller and the provider validate the canonical public contract.
+        """
+        from .homework_deidentification import (compile_homework_task,
+            build_public_homework_content, build_public_homework_prompt)
+        failure_code = None
+        try:
+            with database.factory() as db:
+                row = db.get(Record, message_id)
+                data = row.value
+                session_id = row.parent_id
+                previous = next((old for old in reversed(messages(db, identity, session_id))
+                    if old.id != row.id and old.value.get("privacy_mode") == "deidentified"
+                    and old.value.get("deidentified_task") and old.value.get("course_id") == data.get("course_id")
+                    and old.value["status"] in {"released", "clarify"}), None)
+                old = previous.value if previous else {}
+                prior_task = old.get("deidentified_task")
+                prior_stage = old.get("deidentification", {}).get("stage", 0)
+                prior_question = old.get("deidentified_question_number")
+                previous_id = previous.id if previous else None
+                recent_public_answers = [(digest(item.value["deidentified_task"]),
+                    hashlib.sha256(item.value["answer"].encode()).hexdigest())
+                    for item in reversed(messages(db, identity, session_id))
+                    if item.id != row.id and item.value.get("privacy_mode") == "deidentified"
+                    and item.value.get("deidentified_task") and item.value.get("status") == "released"
+                    and item.value.get("answer") and item.value.get("course_id") == data.get("course_id")]
+            # OCR consumes the normalized original bytes only inside Academy.
+            # They are never passed to mark_and_send or the provider builder.
+            raw_images = tuple(base64.b64decode(item["data_base64"], validate=True) for item in normalized)
+            compiled = compile_homework_task(message, raw_images, prior_task, prior_stage, prior_question)
+            fresh(request, identity)
+            with database.write() as db:
+                row = db.get(Record, message_id)
+                data = row.value
+                session(db, identity, row.parent_id)
+                if data["status"] != "pending":
+                    raise HTTPException(409, "This request was closed before private compilation completed")
+                snapshot, _ = revalidate(db, identity, settings, data)
+                metadata = {"status": compiled.status, "task_summary": compiled.summary or None,
+                    "reason": compiled.reason, "image_read": compiled.image_read, "action": compiled.action,
+                    "stage": compiled.stage, "local_only_images": True}
+                data.update(deidentification=metadata, deidentified_task=compiled.task,
+                    deidentified_question_number=compiled.question_number,
+                    deidentified_previous_message_id=previous_id)
+                if compiled.status == "ready":
+                    content = build_public_homework_content(compiled.task, compiled.action, compiled.stage)
+                    data["deidentified_content_sha256"] = digest(content)
+                    data["deidentified_previous_answer_sha256"] = [answer_hash for task_hash, answer_hash in recent_public_answers
+                        if task_hash == digest(compiled.task)][:6]
+                    data["triage"].update(method="local_deidentified_task", topic=compiled.summary,
+                        responder="school_assistant", teacher_profile_id=None, teacher_name=data["assistant_name"])
+                else:
+                    local_response = DEIDENTIFIED_LOCAL_RESPONSES.get(compiled.reason,
+                        "Type the equation or name the school topic you want to understand, and I can help you explore it.")
+                    data.update(status="clarify" if compiled.status == "clarify" else "blocked",
+                        answer=local_response if compiled.status == "clarify" else None,
+                        error=local_response if compiled.status == "blocked" else None,
+                        response_mode="clarify" if compiled.status == "clarify" else "refuse")
+                row.set(data)
+                record_automatic_risk(db, identity, row, compiled.input_risk_codes, audit_actor)
+                audit_actor(db, identity, "homework_ai.deidentified_compiled", {
+                    "school_id": data["school_id"], "student_id": row.owner_id,
+                    "homework_session_id": row.parent_id, "homework_message_id": row.id,
+                    "deidentification": metadata, "public_content_sha256": data.get("deidentified_content_sha256"),
+                    "source_images_local_only": True}, row.parent_id)
+                if compiled.status != "ready":
+                    audit_actor(db, identity, "homework_ai." + data["status"], {
+                        "school_id": data["school_id"], "homework_session_id": row.parent_id,
+                        "homework_message_id": row.id, "answer": data["answer"], "error": data["error"],
+                        "privacy_mode": "deidentified", "provider_send_count": 0}, row.parent_id)
+            if compiled.status == "ready":
+                contract = {"task": compiled.task, "action": compiled.action, "stage": compiled.stage}
+                prompt = build_public_homework_prompt(**contract, phase="triage",
+                    include_image=bool(snapshot["configuration"]["allow_images"] and snapshot["configuration"]["triage_image_capable"]))
+                # Audit the clean, newly rendered diagram separately from the
+                # private source photos. Never substitute a source image here.
+                public_images = []
+                for entry in prompt:
+                    if not isinstance(entry["content"], list):
+                        continue
+                    for part in entry["content"]:
+                        if part.get("type") == "image_url":
+                            url = part["image_url"]["url"]
+                            if not url.startswith("data:image/jpeg;base64,"):
+                                raise ValueError("Public diagram format is invalid")
+                            raw = base64.b64decode(url.split(",", 1)[1], validate=True)
+                            public_images.append({"id": "public-diagram", "name": "Generated mathematical diagram",
+                                "sha256": hashlib.sha256(raw).hexdigest(), "byte_length": len(raw)})
+                with database.write() as db:
+                    row = db.get(Record, message_id)
+                    data = row.value
+                    if data["status"] != "pending":
+                        raise HTTPException(409, "This request was closed before public tutoring")
+                    data["deidentified_public_images"] = public_images
+                    row.set(data)
+                maximum = snapshot["configuration"]["max_output_tokens"]
+                triage, selection, teacher = triage_selection(mark_and_send(request, identity,
+                    message_id, "triage", prompt, maximum), [], [], snapshot["configuration"]["triage_confidence_threshold"])
+                if teacher or triage["course_id"]:
+                    raise ValueError("A public educational task cannot introduce a private handoff")
+                if (hashlib.sha256(selection["text"].encode()).hexdigest() in data["deidentified_previous_answer_sha256"]
+                        and "repeat" not in message.casefold()):
+                    failure_code = "repeated_public_explanation"
+                    raise ValueError("The model repeated its previous public explanation")
+                with database.write() as db:
+                    row = db.get(Record, message_id)
+                    data = row.value
+                    if data["status"] != "pending":
+                        raise HTTPException(409, "This request was closed before independent review")
+                    # The candidate is generated public content, never the
+                    # student's current answer, original text or prior replies.
+                    data["deidentified_candidate"] = selection
+                    data["triage"].update(topic=compiled.summary)
+                    row.set(data)
+                prompt = build_public_homework_prompt(**contract, phase="safety", candidate=selection,
+                    include_image=bool(snapshot["configuration"]["allow_images"] and snapshot["configuration"]["safety_image_capable"]))
+                safety = safety_selection(mark_and_send(request, identity, message_id, "safety", prompt, LIMITS["safety"]))
+                if safety["verdict"] != "allow" or safety["input_risk_codes"]:
+                    failure_code = "independent_safety_withheld"
+                    raise ValueError("Independent public-content safety review withheld the candidate")
+                fresh(request, identity)
+                with database.write() as db:
+                    row = db.get(Record, message_id)
+                    data = row.value
+                    if data["status"] != "pending":
+                        raise HTTPException(409, "This request was closed before release")
+                    revalidate(db, identity, settings, data)
+                    answer = selection["text"]
+                    data.update(status="clarify" if selection["mode"] == "clarify" else "released",
+                        answer=answer, response_mode=selection["mode"], released_at=now(), uncertainty=None)
+                    row.set(data)
+                    audit_actor(db, identity, "homework_ai." + data["status"], {
+                        "school_id": data["school_id"], "homework_session_id": row.parent_id,
+                        "homework_message_id": row.id, "answer": answer, "usage": data["usage"],
+                        "privacy_mode": "deidentified", "public_content_sha256": data["deidentified_content_sha256"],
+                        "source_images_local_only": True}, row.parent_id)
+        except (provider.ProviderFailure, HTTPException, ValueError, KeyError, TypeError, IndexError, RecursionError):
+            failure_code = failure_code or "public_content_unavailable_or_authority_changed"
+            with database.write() as db:
+                row = db.get(Record, message_id)
+                data = row.value
+                if data["status"] == "pending":
+                    data.update(status="withheld", answer=None, citations=[], references=[],
+                        error="This explanation could not be safely released. Your original question stays in Academy. Ask a different question or ask a trusted adult; this request will not be repeated automatically.",
+                        withholding_code=failure_code, uncertainty="A model request may be billable; never automatically retry" if data["phases"] else "No model send was marked")
+                    row.set(data)
+                    audit_actor(db, identity, "homework_ai.withheld", {"school_id": data["school_id"],
+                        "homework_session_id": row.parent_id, "homework_message_id": row.id,
+                        "privacy_mode": "deidentified", "withholding_code": failure_code,
+                        "phase_names": list(data["phases"]), "uncertainty": data["uncertainty"]}, row.parent_id)
+        with database.factory() as db:
+            fresh(request, identity)
+            row = db.get(Record, message_id)
+            session(db, identity, row.parent_id)
+            return project_message(db, identity, row, settings, app=app)
+
     @app.post("/api/homework-help/ai/sessions/{session_id}/messages")
     def ask(session_id: str, body: AIMessageInput, request: Request, identity=Depends(actor)):
         if body.routing_mode == "general" and body.course_id:
@@ -536,11 +727,10 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                 raise HTTPException(403, "Choose only a currently enrolled course")
             snapshot, _ = resolve_configuration(db, identity, selected_school, settings, live=False)
             config = snapshot["configuration"]
-            from .openai_student_privacy import require_student_openai_approval
             # Missing provider proof must still permit a durable blocked turn.
             # No photo is sent, and no stale proof is treated as consent.
             try:
-                current_proofs = require_student_openai_approval(settings, snapshot)
+                current_proofs = homework_student_approvals(settings, snapshot)
             except HTTPException:
                 current_proofs = {}
             normalized, image_context = resolve_image_context(db, identity, settings, auth,
@@ -556,14 +746,13 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
                 raise HTTPException(429, "Daily Homework Help question or picture limit reached")
             profile = assistant_preference_id(identity, selected_school)
             learning = preference_snapshot(db, identity, profile, body.course_id)
-            data = {"activity": VERSION, "session_id": session_id, "school_id": selected_school, "teacher_profile_id": profile, "assistant_name": config["name"], "message": body.message, "created_at": created, "idempotency_key": body.idempotency_key, "request_sha256": fingerprint, "course_id": body.course_id, "configuration_snapshot": snapshot, "enrollment_snapshot": courses, "enrollment_sha256": digest(courses), "learning_preferences_snapshot": learning, "budget_day": day, "reservation": 0, "status": "pending", "error": None, "answer": None, "citations": [], "references": [], "usage": {}, "phases": {}, "images": images, "image_bytes": image_bytes, "image_use_confirmed": body.image_use_confirmed, "routing_mode": body.routing_mode, "triage": {"method": "pending", "course_id": None, "course_name": None, "confidence": None, "prompt": None, "candidates": [{"id": item["id"], "name": item["name"]} for item in courses]}}
+            data = {"activity": VERSION, "session_id": session_id, "school_id": selected_school, "teacher_profile_id": profile, "assistant_name": config["name"], "privacy_mode": homework_privacy_mode(config), "message": body.message, "created_at": created, "idempotency_key": body.idempotency_key, "request_sha256": fingerprint, "course_id": body.course_id, "configuration_snapshot": snapshot, "enrollment_snapshot": courses, "enrollment_sha256": digest(courses), "learning_preferences_snapshot": learning, "budget_day": day, "reservation": 0, "status": "pending", "error": None, "answer": None, "citations": [], "references": [], "usage": {}, "phases": {}, "images": images, "image_bytes": image_bytes, "image_use_confirmed": body.image_use_confirmed, "routing_mode": body.routing_mode, "triage": {"method": "pending", "course_id": None, "course_name": None, "confidence": None, "prompt": None, "candidates": [{"id": item["id"], "name": item["name"]} for item in courses]}}
             if image_context:
                 data["image_context"] = image_context
             blocked = None
             try:
                 resolve_configuration(db, identity, selected_school, settings)
-                from .openai_student_privacy import require_student_openai_approval
-                data["student_openai_approvals_snapshot"] = require_student_openai_approval(settings, snapshot)
+                data["student_openai_approvals_snapshot"] = homework_student_approvals(settings, snapshot)
                 if len(body.message) > config["max_input_chars"]:
                     raise HTTPException(422, "Question exceeds the approved input limit")
                 if len(day_rows) >= config["max_daily_turns"]:
@@ -585,6 +774,8 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             audit_actor(db, identity, "homework_ai." + ("blocked" if blocked else "admitted"), {"school_id": selected_school, "homework_session_id": session_id, "homework_message_id": row.id, **safe_data(data)}, session_id)
             if blocked:
                 return project_message(db, identity, row, settings, app=app)
+        if homework_privacy_mode(config) == "deidentified":
+            return deidentified_ask(request, identity, message_id, body.message, normalized)
         failure = None
         failure_code = None
         try:

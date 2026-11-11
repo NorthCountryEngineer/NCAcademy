@@ -67,6 +67,7 @@ jobs:
           docker build -f apps/archive/Dockerfile -t ncacademy-archive:ci .
           docker compose up -d --wait --wait-timeout 120
           docker compose exec -T api tesseract --list-langs | grep -Fxq eng
+          docker compose exec -T api python - < scripts/check_homework_privacy_container.py
           python scripts/smoke_local.py
       - name: Stop the disposable local services
         if: always()

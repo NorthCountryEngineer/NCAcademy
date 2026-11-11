@@ -69,6 +69,21 @@ def classify(connection, api_key, model, prompt, max_output_tokens):
     model discovery, cookies, tools, retries or streaming response to the learner.
     """
     parsed = urlsplit(endpoint(connection["endpoint"]))
+    if "public_homework_contract" in connection:
+        # An independent final wire guard: a redacted generic prompt, a raw
+        # photo, a child identifier or an extra field can never use this path.
+        from .homework_deidentification import build_public_homework_prompt
+        try:
+            contract = connection["public_homework_contract"]
+            expected_keys = {"task", "action", "stage", "phase"}
+            if type(contract) is not dict or not expected_keys <= set(contract) <= expected_keys | {"candidate", "include_image"}:
+                raise ValueError()
+            if (connection["endpoint"] != "https://api.openai.com/v1"
+                    or any(name in connection for name in ("openai_organization", "openai_project", "safety_identifier", "openai_inference_key_sha256"))
+                    or prompt != build_public_homework_prompt(**contract)):
+                raise ValueError()
+        except (ValueError, TypeError, KeyError, RecursionError):
+            raise ProviderFailure("Public Homework Help request failed its local privacy boundary; nothing was sent") from None
     started = time.monotonic()
     try:
         answers = socket.getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM)

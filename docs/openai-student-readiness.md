@@ -1,8 +1,12 @@
 # OpenAI student tutoring readiness
 
-NCAcademy integrates directly with OpenAI. Application safeguards and OpenAI's
-account approval are separate requirements. This is a technical verification
-procedure, not a claim of provider approval or complete legal compliance.
+NCAcademy integrates directly with OpenAI. The family setup uses
+[de-identified math](deidentified-homework-help.md), whose compiler excludes
+personal content before any external request. It needs no vendor request or
+Admin API credential. The procedure below concerns the separate raw-content
+path, which remains unavailable without its protected proof. Application
+safeguards and provider approval are distinct; this document does not establish
+provider approval or complete legal compliance.
 
 ## Provider approval and readback
 
@@ -11,12 +15,11 @@ requires additional safeguards for minors and ZDR before processing under-13
 personal data. Homework Help treats students conservatively as children,
 including accounts without birth dates. A course name does not establish age.
 
-Request eligibility through the sales/account-team route in
+The raw-content route requires existing approval covering its exact project,
+model, endpoint, processing tier and image handling, subject to the conditions in
 [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data).
-Identify the educational use, under-13 users, worksheet images, exact project,
-model, Chat Completions endpoint and processing tier. Use synthetic examples;
-never attach student records or keys. Confirm image-safety exceptions,
-model-specific prompt caching, retention conditions and reporting obligations.
+The current family workflow does not initiate a provider request or approval
+process. No student records or keys belong in support material.
 
 `store:false`, disabled API-call logging, a school approval and a note claiming
 ZDR cannot grant provider approval. Project `none` and Modified Abuse Monitoring
@@ -63,10 +66,11 @@ Evidence expires within 30 days. Reverify before expiry and when provider
 conditions, project, model permissions or credentials change. Same-authority
 renewal preserves its binding; changed authority requires human school
 reapproval and photo confirmation. Missing, expired or mismatched proof blocks
-student OpenAI processing. This is a trusted operator boundary, not a guarantee
+raw-content student OpenAI processing. De-identified math has its independent
+compiler, school approval and scoped model gate. This is a trusted operator boundary, not a guarantee
 against a deployment administrator forging a configuration assertion.
 
-## Application safeguards
+## Raw-content application safeguards
 
 | Control | Enforcement |
 | --- | --- |
@@ -107,5 +111,6 @@ npm run build --prefix apps/web
 Browser acceptance uses a synthetic worksheet and follow-up, student concern,
 staff review, follow-up and resolution. Unknown outcomes recover by reading
 recorded evidence. Full exact-commit CI and container checks precede release.
-Live child acceptance additionally requires verified OpenAI approval and the
-explicit activation steps above.
+Raw-content child acceptance additionally requires verified OpenAI approval and
+the explicit activation steps above. De-identified acceptance instead verifies
+[the compiler and exact egress boundary](deidentified-homework-help.md).

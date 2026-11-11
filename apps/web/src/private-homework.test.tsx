@@ -2,9 +2,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { Notice, Spinner } from './components';
 import { HomeworkAI, HomeworkAIMessageView } from './HomeworkAI';
-import { HomeworkPrivateSettings } from './HomeworkAISettings';
+import { HomeworkPrivateSettings, HomeworkLiveAISettings } from './HomeworkAISettings';
 import { prepareAssignmentImage, type CuratedImage } from './curated-api';
-import type { HomeworkAIIndex, HomeworkAIMessage } from './homework-ai-api';
+import { blankHomeworkAIPolicy, type HomeworkAIIndex, type HomeworkAIMessage, type HomeworkAIConfiguration } from './homework-ai-api';
 
 const hooks = vi.hoisted(() => ({
  values: [] as unknown[],
@@ -368,4 +368,64 @@ it.each(['unrecognized conflict','transport failure'] as const)('keeps a photo q
   ['GET','/api/homework-help/ai/sessions/session'],
   ['POST','/api/homework-help/ai/sessions/session/messages'],
  ]);
+});
+
+it('keeps a local homework upload and draft through clarification, then clears them only after a supported learning reply',async()=>{
+ const image:CuratedImage={name:'worksheet.jpg',data_url:'data:image/jpeg;base64,AAE=',sha256:'f'.repeat(64),width:320,height:240};
+ vi.mocked(prepareAssignmentImage).mockResolvedValue(image);
+ const assistant:HomeworkAIIndex['assistant']={school_id:'school',version:1,revision_id:'revision',approved_revision_id:'revision',approved:true,available:true,live_models_enabled:true,configuration_sha256:'approved',image_policy_sha256:'a'.repeat(64),approval_required:false,privacy_mode:'deidentified',local_only_images:true,photo_model_labels:null,configuration:{enabled:true,name:'School helper',biography:'',allow_images:true,max_input_chars:1500,max_output_tokens:500,privacy_mode:'deidentified'}};
+ const session={id:'session',created_at:'2026-11-11'};
+ const clarification:HomeworkAIMessage={id:'clarification',message:'Help with this worksheet.',created_at:'2026-11-11',idempotency_key:'first-question',status:'clarify',error:null,answer:'Please type an equation or topic so I can help.',privacy_mode:'deidentified',deidentification:{status:'clarify',reason:'unsupported_task',task_summary:null,image_read:true,action:'hint',stage:0,local_only_images:true},triage:{method:'local_task',course_id:null,course_name:null,prompt:null,candidates:[]},citations:[],references:[],images:[{...image,id:'photo'}],usage:{},resume_available:false};
+ const ready:HomeworkAIMessage={...clarification,id:'ready',message:'24 ÷ 4',idempotency_key:'second-question',status:'released',answer:'Draw four equal groups and think about sharing fairly.',deidentification:{...clarification.deidentification!,status:'ready',reason:'recognized',task_summary:'Equal sharing'}};
+ const posted:Record<string,unknown>[]=[];
+ const fetcher=vi.fn(async(url:string,options:RequestInit)=>{
+  if(url==='/api/homework-help/ai/sessions'&&options.method==='POST')return json(session);
+  if(url==='/api/homework-help/ai/sessions/session/messages'&&options.method==='POST'){posted.push(JSON.parse(String(options.body)));return json(posted.length===1?clarification:ready);}
+  throw new Error(`Unexpected request: ${url}`);
+ });
+ vi.stubGlobal('fetch',fetcher);vi.stubGlobal('crypto',{randomUUID:vi.fn().mockReturnValueOnce('create-question').mockReturnValueOnce('first-question').mockReturnValueOnce('second-question')});
+ const ui=view(()=>HomeworkAI({schoolId:'school',userId:'student',index:{assistant,courses:[],sessions:[]},openCourse:()=>{}}));
+ change(ui.find('textarea'),{value:'Help with this worksheet.'});change(ui.find('input',node=>node.props.type==='file'),{files:[{name:'worksheet.png'}],value:'worksheet.png'});await settle();
+ expect(ui.find('button',byText('Send')).props.disabled).toBe(true);change(ui.find('input',node=>node.props.type==='checkbox'),{checked:true});expect(ui.find('button',byText('Send')).props.disabled).toBe(false);await submit(ui.find('form'));
+ expect(ui.find('textarea').props.value).toBe('Help with this worksheet.');expect(ui.text()).toContain('worksheet.jpg');expect(ui.text()).toContain('Please type an equation or topic');expect(ui.text()).toContain('Private question check');expect(posted).toHaveLength(1);
+ change(ui.find('textarea'),{value:'24 ÷ 4'});await submit(ui.find('form'));expect(posted).toHaveLength(2);expect(posted[1]).toMatchObject({message:'24 ÷ 4',images:[{name:image.name,data_url:image.data_url}],image_use_confirmed:true});expect(ui.find('textarea').props.value).toBe('');expect(ui.text()).toContain(ready.answer);expect(ui.text()).not.toContain('named school-approved');
+});
+
+it('uses only the selected conversation’s local worksheet and keeps its draft on read-only recovery',async()=>{
+ const {source,session,index,stored}=retainedVisionConversation();
+ const other={id:'other-session',created_at:'2026-11-10',title:'Earlier worksheet'},otherSource:HomeworkAIMessage={...source,id:'other-photo-message',message:'Earlier private question.',images:[{...source.images[0],sha256:'e'.repeat(64)}]};
+ const local:HomeworkAIIndex={...index,assistant:{...index.assistant,privacy_mode:'deidentified',local_only_images:true,configuration:{...index.assistant.configuration!,privacy_mode:'deidentified'},photo_model_labels:null},sessions:[session,other]};
+ const clarification:HomeworkAIMessage={...otherSource,id:'clarified-recovery',idempotency_key:'first-question',message:'Help with question 7.',status:'clarify',answer:'Please type an equation or topic.',privacy_mode:'deidentified',deidentification:{status:'clarify',reason:'unsupported_task',task_summary:null,image_read:true,action:'hint',stage:0,local_only_images:true}};
+ let sent=0,recover=false;
+ const fetcher=vi.fn(async(url:string,options:RequestInit)=>{
+  if(url==='/api/homework-help/ai/sessions/session')return json({session,messages:[source]});
+  if(url==='/api/homework-help/ai/sessions/other-session')return json({session:other,messages:recover?[otherSource,clarification]:[otherSource]});
+  if(url==='/api/homework-help/ai?school_id=school')return json(local);
+  if(url==='/api/homework-help/ai/sessions/other-session/messages'&&options.method==='POST'){sent++;expect(JSON.parse(String(options.body))).toMatchObject({previous_image_message_id:'other-photo-message',images:[]});throw new TypeError('Synthetic lost response');}
+  throw new Error(`Unexpected request: ${url}`);
+ });
+ vi.stubGlobal('fetch',fetcher);const ui=view(()=>HomeworkAI({schoolId:'school',userId:'local-student',index:local,openCourse:()=>{}}));ui.text();await settle();
+ ui.find('button',node=>visible(node).includes('Earlier')||visible(node).includes('2026-11-10')).props.onClick!();ui.text();await settle();
+ change(ui.find('textarea'),{value:'Help with question 7.'});change(ui.find('input',node=>node.props.type==='checkbox'&&node.props.checked===false),{checked:true});await submit(ui.find('form'));expect(sent).toBe(1);expect(stored.size).toBe(1);expect(ui.find('fieldset').props.disabled).toBe(true);
+ recover=true;ui.find('button',byText('Refresh history')).props.onClick!();await settle();expect(sent).toBe(1);expect(stored.size).toBe(0);expect(ui.find('textarea').props.value).toBe('Help with question 7.');expect(ui.find('fieldset').props.disabled).toBe(false);expect(ui.text()).toContain('Please type an equation or topic.');
+});
+
+
+it('saves private homework mode with existing models while reserving ZDR and image attestations for original-data mode',async()=>{
+ const policy={...blankHomeworkAIPolicy(),enabled:true,allow_local_students:true,allow_images:true,triage:{connection_id:'models',model:'luna'},tutor:{connection_id:'models',model:'luna'},safety:{connection_id:'models',model:'luna'}};
+ const saved:HomeworkAIConfiguration={school_id:'school',version:1,revision_id:'revision',approved_revision_id:'revision',approved:true,available:true,live_models_enabled:true,configuration:policy,configuration_sha256:'a'.repeat(64),approval_required:true};
+ const fetcher=vi.fn(async(url:string,options:RequestInit)=>{
+  if(url==='/api/admin/connections?school_id=school')return json([{id:'models',name:'School model',endpoint:'https://api.openai.com/v1',models:['luna'],enabled:true}]);
+  if(url==='/api/homework-help/configuration?school_id=school'){
+   if(options.method==='GET')return json(saved);
+   const body=JSON.parse(String(options.body));expect(options.method).toBe('PUT');expect(body).toMatchObject({privacy_mode:'deidentified',allow_local_students:true,allow_images:true,local_student_privacy_confirmation:'',expected_version:1});return json({...saved,version:2,revision_id:'new-revision',approved:false,configuration:body});
+  }
+  throw new Error(`Unexpected request: ${url}`);
+ });
+ vi.stubGlobal('fetch',fetcher);const ui=view(()=>HomeworkLiveAISettings({schoolId:'school'}));ui.text();await settle();
+ const privacy=()=>ui.find('select',node=>nodes(node.props.children).some(option=>visible(option).includes('Original questions and photos')));
+ expect(privacy().props.value).toBe('deidentified');expect(ui.text()).not.toContain('Verified provider data controls and evidence reference');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(false);
+ change(privacy(),{value:'raw_zdr'});expect(ui.text()).toContain('Verified provider data controls and evidence reference');expect(ui.text()).toContain('I have verified that the selected safety reviewer supports images');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(true);
+ change(privacy(),{value:'deidentified'});expect(ui.text()).not.toContain('Verified provider data controls and evidence reference');expect(ui.find('button',byText('Save configuration for review')).props.disabled).toBe(false);
+ await submit(ui.find('form'));expect(fetcher.mock.calls.filter(([,options])=>options.method==='PUT')).toHaveLength(1);expect(fetcher.mock.calls).toHaveLength(3);
 });

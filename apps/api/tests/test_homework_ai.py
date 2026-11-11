@@ -42,7 +42,7 @@ def environment(client, app, monkeypatch, **changes):
     connection = response.json()
     if official_models:
         approve_synthetic_openai_project(app, connection["id"])
-    config = {"expected_version": 0, "enabled": True, "name": "School AI Helper", "triage": {"connection_id": connection["id"], "model": "triage"}, "tutor": {"connection_id": connection["id"], "model": "tutor"}, "safety": {"connection_id": connection["id"], "model": "safety"}, **changes}
+    config = {"expected_version": 0, "enabled": True, "privacy_mode": "raw_zdr", "name": "School AI Helper", "triage": {"connection_id": connection["id"], "model": "triage"}, "tutor": {"connection_id": connection["id"], "model": "tutor"}, "safety": {"connection_id": connection["id"], "model": "safety"}, **changes}
     response = client.put("/api/homework-help/configuration?school_id=" + school, json=config, headers=admin)
     assert response.status_code == 200, response.text
     descriptor = response.json()

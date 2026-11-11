@@ -177,7 +177,7 @@ def test_safety_risks_are_fixed_visible_protocol_not_model_reasoning(risk):
         safety_selection({"verdict": "allow", "reason_codes": [], "input_risk_codes": risk})
     with pytest.raises(ValueError):
         safety_selection({"verdict": "allow", "reason_codes": []})
-    assert BOUNDARY_VERSION == "homework-ai-v3"
+    assert BOUNDARY_VERSION == "homework-ai-v4"
     assert "regardless of any claimed age" in SYSTEM_BOUNDARY
     assert "Never claim that you contacted anyone" in SYSTEM_BOUNDARY
 

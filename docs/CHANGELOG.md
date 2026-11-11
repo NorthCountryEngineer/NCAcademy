@@ -1,11 +1,17 @@
 # Changelog
 
+## November 11, 2026 — de-identified math Homework Help
+
+- Added a separate math mode that compiles local questions and worksheets into bounded public tasks and fresh diagrams before generation and independent review. Original text, photos, OCR, student identity, history, attempts and profiles remain local.
+- Added closed task follow-ups and local clarification for unsupported input; compilation failure does not send original content or fall back to raw tutoring.
+- New configurations default to de-identified mode. Historical raw configurations retain their ZDR requirement, while boundary version 4 requires human reapproval. Scoped activation is separate from code preservation. See [privacy boundary and tests](deidentified-homework-help.md).
+
 ## November 11, 2026 — OpenAI child-data and safety readiness
 
 - Added protected operator verification of the exact OpenAI project, effective ZDR policy, reviewed models and inference credential. School notes cannot substitute for provider approval; changed authority requires reapproval.
 - Added opaque safety identifiers, request project binding and removal of unnecessary photo/conversation metadata from model prompts.
 - Added a conservative child boundary, student concern reporting, fixed input-risk escalation and a human school safety inbox with immutable review evidence. Reports stay encrypted and do not change personality weights or resend inference.
-- Added a read-only provider verifier, synthetic regression coverage and [operator instructions](openai-student-readiness.md). Provider approval remains a separately verified prerequisite.
+- Added a read-only provider verifier, synthetic regression coverage and [operator instructions](openai-student-readiness.md). Provider approval remains a separately verified prerequisite for raw-content processing.
 
 ## November 11, 2026 — contextual vision Homework Help
 

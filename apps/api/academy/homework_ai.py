@@ -26,7 +26,7 @@ from .teacher_api import _approved, _assignments, _planned_context
 from .teacher_models import require_model_policy_snapshot
 
 VERSION = "homework-ai-v1"
-BOUNDARY_VERSION = "homework-ai-v3"
+BOUNDARY_VERSION = "homework-ai-v4"
 PHASES = ("triage", "tutor", "safety")
 LIMITS = {"triage": 500, "safety": 500}
 SAFE_REFUSAL = "I can explain the ideas and help you work through a similar example, but I cannot complete your homework, write a submission, or provide an answer key. What have you tried so far?"
@@ -52,6 +52,7 @@ class Configuration(Strict):
     use_school_teacher_personas: bool = Field(default=True, strict=True)
     allow_teacher_models: bool = Field(default=False, strict=True)
     allow_local_students: bool = Field(default=False, strict=True)
+    privacy_mode: Literal["deidentified", "raw_zdr"] = "deidentified"
     local_student_privacy_confirmation: str = Field(default="", max_length=1000, strict=True)
     processing_tier: Literal["standard", "fast"] = "standard"
     triage: ModelRef
@@ -71,7 +72,7 @@ class Configuration(Strict):
     def images(self):
         if self.allow_images and not (self.triage_image_capable and self.tutor_image_capable and self.safety_image_capable):
             raise ValueError("Homework pictures require explicitly approved triage, tutor and safety image capabilities")
-        if self.allow_local_students and not self.local_student_privacy_confirmation.strip():
+        if self.allow_local_students and self.privacy_mode == "raw_zdr" and not self.local_student_privacy_confirmation.strip():
             raise ValueError("Record the verified provider child-data and image-handling controls before allowing Academy students")
         return self
 
@@ -108,7 +109,7 @@ def resolve_configuration(db, identity, school_id, settings, *, live=True):
     configuration = Configuration.model_validate(data["configuration"]).model_dump()
     # Preserve the exact projection of pre-model-policy snapshots. The new
     # privilege is opt-in and missing means false, including retained history.
-    for key in ("allow_teacher_models", "allow_local_students", "local_student_privacy_confirmation", "processing_tier"):
+    for key in ("allow_teacher_models", "allow_local_students", "local_student_privacy_confirmation", "processing_tier", "privacy_mode"):
         if key not in data["configuration"]:
             configuration.pop(key)
     approval = db.get(Record, value.get("approval_id") or "")
@@ -128,9 +129,9 @@ def resolve_configuration(db, identity, school_id, settings, *, live=True):
             connection["endpoint"] != "https://api.openai.com/v1" for connection in connections.values()):
         raise HTTPException(403, "Fast Homework Help processing requires official OpenAI model connections")
     approved = bool(approved and approval.value.get("connections_sha256") == digest(connections) and approval.value.get("boundary_version") == BOUNDARY_VERSION)
-    from .openai_student_privacy import approval_bindings, require_student_openai_approval
+    from .openai_student_privacy import approval_bindings
     try:
-        proofs = require_student_openai_approval(settings, {"configuration": configuration, "connections": connections})
+        proofs = homework_student_approvals(settings, {"configuration": configuration, "connections": connections})
         approved = bool(approved and approval.value.get("student_openai_approval_bindings", {}) == approval_bindings(proofs))
     except HTTPException:
         if live:
@@ -148,6 +149,21 @@ def homework_models_enabled(settings):
     return settings.allow_live_models or settings.allow_homework_models
 
 
+def homework_privacy_mode(configuration):
+    # Historical revisions retain their original raw-data contract. Only newly
+    # saved configurations receive the new de-identified default.
+    return configuration.get("privacy_mode", "raw_zdr")
+
+
+def homework_student_approvals(settings, snapshot):
+    if homework_privacy_mode(snapshot["configuration"]) == "deidentified":
+        if any(item["endpoint"] != "https://api.openai.com/v1" for item in snapshot["connections"].values()):
+            raise HTTPException(403, "De-identified Homework Help requires approved official OpenAI connections")
+        return {}
+    from .openai_student_privacy import require_student_openai_approval
+    return require_student_openai_approval(settings, snapshot)
+
+
 def image_policy_hash(snapshot, approvals=None):
     from .openai_student_privacy import approval_bindings
     return digest({**{key: snapshot[key] for key in ("revision_id", "approval_id", "connections")},
@@ -157,7 +173,8 @@ def image_policy_hash(snapshot, approvals=None):
 def require_local_student_models(identity, configuration):
     if identity.get("auth_provider") == "academy" and not (
             configuration.get("allow_local_students") is True
-            and configuration.get("local_student_privacy_confirmation", "").strip()):
+            and (homework_privacy_mode(configuration) == "deidentified"
+                 or configuration.get("local_student_privacy_confirmation", "").strip())):
         raise HTTPException(403, "Academy students require explicit school approval and verified provider child-data controls for model Homework Help")
 
 
@@ -178,11 +195,13 @@ def configuration_descriptor(db, identity, school_id, settings):
         result["approved"] = bool(current["approval_id"])
         result["approved_revision_id"] = revision.id if result["approved"] else None
         result["configuration"] = current["configuration"]
-        from .openai_student_privacy import require_student_openai_approval
-        required = (current["configuration"].get("allow_local_students") is True
-                    or any(item["endpoint"] == "https://api.openai.com/v1" for item in current["connections"].values()))
+        result["privacy_mode"] = homework_privacy_mode(current["configuration"])
+        result["local_only_images"] = result["privacy_mode"] == "deidentified"
+        required = (result["privacy_mode"] == "raw_zdr" and
+                    (current["configuration"].get("allow_local_students") is True
+                     or any(item["endpoint"] == "https://api.openai.com/v1" for item in current["connections"].values())))
         result["openai_student_controls"]["required"] = required
-        proofs = require_student_openai_approval(settings, current)
+        proofs = homework_student_approvals(settings, current)
         result["openai_student_controls"].update(verified=bool(proofs) if required else False,
             expires_at=min((item["expires_at"] for item in proofs.values()), key=datetime.fromisoformat) if proofs else None)
         result["image_policy_sha256"] = image_policy_hash(current, proofs)
@@ -304,6 +323,12 @@ def revalidate(db, identity, settings, data):
     if canonical(snapshot) != canonical(data["configuration_snapshot"]):
         raise HTTPException(409, "Homework Help configuration, approval or connection changed")
     validate_student_openai_approval(identity, settings, snapshot, data)
+    if homework_privacy_mode(snapshot["configuration"]) == "deidentified" and data.get("deidentified_task"):
+        from .homework_deidentification import build_public_homework_content
+        compiled = data["deidentification"]
+        content = build_public_homework_content(data["deidentified_task"], compiled["action"], compiled["stage"])
+        if digest(content) != data.get("deidentified_content_sha256"):
+            raise HTTPException(409, "The canonical public homework task changed")
     from .homework_image_context import revalidate_image_context
     revalidate_image_context(db, identity, settings, data)
     validate_course_scope(db, identity, settings, data)
@@ -319,8 +344,8 @@ def revalidate(db, identity, settings, data):
 
 
 def validate_student_openai_approval(identity, settings, snapshot, data):
-    from .openai_student_privacy import approval_bindings, require_student_openai_approval
-    current = require_student_openai_approval(settings, snapshot)
+    from .openai_student_privacy import approval_bindings
+    current = homework_student_approvals(settings, snapshot)
     if approval_bindings(current) != approval_bindings(data.get("student_openai_approvals_snapshot") or {}):
         raise HTTPException(409, "The approved OpenAI student-data controls changed")
 
@@ -362,6 +387,8 @@ def execution_receipt(data):
             "preview": {"task": routing.get("task"), "reason_code": routing.get("reason_code"),
                         "suggested_model": suggestion.get("model") if suggestion else None,
                         "suggested_label": suggestion.get("label") if suggestion else None} if routing else None,
+            "privacy_mode": homework_privacy_mode(data["configuration_snapshot"]["configuration"]),
+            "source_images_local_only": data.get("privacy_mode") == "deidentified",
             "automatic_routing_enabled": False, "estimated_cost": None, "pricing_status": "unknown"}
 
 
@@ -534,7 +561,7 @@ def project_message(db, identity, row, settings, *, app=None):
     triage = {**data.get("triage", {}), "teacher_name": data.get("assistant_name"), "teacher_profile_id": teacher_id, "responder": "teacher" if teacher_id else "school_assistant"}
     if private:
         triage.update(course_id=private_course.id if private_course else None, course_name=private_course.value["title"] if private_course else None)
-    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), **({"private_mode": True} if private else {"execution": execution_receipt(data)}), "images": images, "resume_available": False, "activity": VERSION}
+    return {"id": row.id, "message": data["message"], "created_at": data["created_at"], "idempotency_key": data["idempotency_key"], "status": status, "error": error, "answer": answer, "triage": triage, "teacher_profile_id": teacher_id, "citations": citations, "references": references, "usage": data.get("usage", {}), **({"private_mode": True} if private else {"execution": execution_receipt(data), "privacy_mode": data.get("privacy_mode", "raw_zdr")}), **({"deidentification": {key: data["deidentification"][key] for key in ("status", "task_summary", "reason", "image_read", "action", "stage", "local_only_images")}} if data.get("deidentification") else {}), "images": images, "resume_available": False, "activity": VERSION}
 
 
 def feedback_context(db, identity, row, settings, *, app=None):

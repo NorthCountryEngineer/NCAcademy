@@ -6,7 +6,7 @@ import { prepareAssignmentImage, type CuratedImage } from './curated-api';
 import { StudentFeedback } from './StudentFeedback';
 import { HomeworkSafetyDisclosure, HomeworkSafetyReportButton } from './HomeworkSafety';
 import { homeworkReferenceTarget, type HomeworkTarget } from './homework-api';
-import { createHomeworkAISession, getHomeworkAISession, homeworkAIContext, homeworkAIIndex, homeworkAIRequestProblem, mergeHomeworkAIPages, privateHomeworkAIImageUrl, retainedHomeworkAIRequest, retainHomeworkAIRequest, sendHomeworkAIMessage, type HomeworkAIConversationSummary, type HomeworkAIIndex, type HomeworkAIInput, type HomeworkAIMessage, type HomeworkAIPending, type HomeworkAISession, type HomeworkAIStudentConfiguration } from './homework-ai-api';
+import { createHomeworkAISession, getHomeworkAISession, homeworkAIContext, homeworkAIIndex, homeworkAIRequestProblem, homeworkLocalTaskProcessing, homeworkNeedsTaskClarification, mergeHomeworkAIPages, privateHomeworkAIImageUrl, retainedHomeworkAIRequest, retainHomeworkAIRequest, sendHomeworkAIMessage, type HomeworkAIConversationSummary, type HomeworkAIIndex, type HomeworkAIInput, type HomeworkAIMessage, type HomeworkAIPending, type HomeworkAISession, type HomeworkAIStudentConfiguration } from './homework-ai-api';
 import './homework-chat.css';
 
 type HomeworkAIProps = { schoolId:string; userId:string; index:HomeworkAIIndex; openCourse:(target:HomeworkTarget)=>void; initialCourseId?:string; compact?:boolean };
@@ -40,6 +40,7 @@ export function homeworkConversationWithReply(conversation:HomeworkAISession,rep
 
 export function homeworkResponder(item:HomeworkAIMessage, assistantName:string) {
  if(item.private_mode)return {name:'Private study coach',description:'Academy Homework Help'};
+ if(homeworkNeedsTaskClarification(item))return {name:'Homework Help',description:'Private question check'};
  const triage=item.triage;
  const teacher=triage.responder==='teacher' && !!triage.teacher_name && !!(triage.teacher_profile_id || item.teacher_profile_id);
  return {name:teacher?triage.teacher_name!:assistantName,description:teacher?'AI teacher':'Homework assistant'};
@@ -78,6 +79,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  const locked=busy || loading || uncertain || pending || (!!sessionId && !session);
  const limit=policy?.max_input_chars || 5000;
  const privateMode=!!assistant.private_mode;
+ const localTaskProcessing=homeworkLocalTaskProcessing(assistant);
  const title=policy?.name || (privateMode?'Private study coach':'Homework assistant');
  const photoAllowed=!!policy?.allow_images;
  const earlierPhotoMessage=!privateMode&&photoAllowed&&session
@@ -149,7 +151,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     if(saved?.kind==='message'){
      const receipt=recorded.messages.find(item=>item.idempotency_key===saved.key);
      if(!receipt || receipt.status==='pending')throw new Error('Your question is recorded or awaiting confirmation. No additional question was sent.');
-     remember(null);setMessage('');setImages([]);setConfirmed(false);
+     remember(null);if(!homeworkNeedsTaskClarification(receipt)){setMessage('');setImages([]);setConfirmed(false);}
     }
    }
    setUncertain(false);
@@ -190,7 +192,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
    setSession(previous=>previous?.session.id===id?homeworkConversationWithReply(previous,reply):previous);
    setIndex(previous=>({...previous,sessions:previous.sessions.map(item=>item.id===id?updated.session:item)}));
    if(reply.status==='pending')setUncertain(true);
-   else{remember(null);setMessage('');setImages([]);setConfirmed(!privateMode&&photoCount>0&&confirmed);}
+   else{remember(null);if(!homeworkNeedsTaskClarification(reply)){setMessage('');setImages([]);}setConfirmed(!privateMode&&photoCount>0&&confirmed);}
   }catch(e){
    if(!privateMode && sendingMessage && e instanceof ApiError && photoPreflightErrors.get(e.message)===e.status){
     remember(null);setConfirmed(false);setUncertain(false);setError(errorText(e));
@@ -227,8 +229,9 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     {!assistant.available && <div className="homework-pending" role="status"><strong>Homework Help is not ready for new questions at this school.</strong><p>{homeworkAssistantSetupMessage(assistant)} You do not need to enroll in a class. Your recorded conversations remain available while you have access.</p></div>}
     <div className="homework-chat-scroll" aria-busy={loading || busy}>
      <HomeworkSafetyDisclosure privateMode={privateMode}/>
+     {localTaskProcessing&&<HomeworkTaskPrivacyNotice/>}
      {loading?<Spinner text="Loading your conversation…"/>:<div className="homework-messages" aria-label="Your homework conversation" aria-live="polite" aria-relevant="additions">
-      {!session?.messages.length && !submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={24}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">You can ask about any subject, even if you are not enrolled in a course.</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
+      {!session?.messages.length && !submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={24}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:localTaskProcessing?<p>Type a question or add a homework photo. We prepare supported learning details privately, then the AI helps you understand the idea.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">You can ask about any subject, even if you are not enrolled in a course.</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
       {submitted && <div className="homework-message homework-submitted" role="status"><div className="homework-student-message"><small>You</small>{submitted.message && <p className="prose">{submitted.message}</p>}{submitted.photoCount>0 && <p className="help-text">{submitted.photoCount} homework photo{submitted.photoCount===1?'':'s'} attached</p>}</div><Spinner text="Working on your question…"/></div>}
       <div ref={messagesEnd}/>
      </div>}
@@ -247,14 +250,18 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
       </label>}
       {index.courses.length>0 && <details className="homework-context"><summary>Course context{courseId?' · selected':' · optional'}</summary><HomeworkAICoursePicker courses={index.courses} value={courseId} change={chooseCourse} privateMode={privateMode}/></details>}
       </div>
-      {photoCount>0 && <label className="checkbox-label curation-photo-consent"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{privateMode?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos used in this conversation by the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
+      {photoCount>0 && <label className="checkbox-label curation-photo-consent"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{privateMode||localTaskProcessing?'I agree that Academy can read these photos inside the service and save them for authorized school review.':<>I want these photos used in this conversation by the school-approved {assistant.photo_model_labels?.triage} question assistant, {assistant.photo_model_labels?.tutor} teacher if needed, and {assistant.photo_model_labels?.safety} safety reviewer. Photos are retained privately for authorized review.</>}</label>}
       <div className="homework-chat-composer-actions"><label className="teacher-photo-picker"><ImagePlus size={17}/><span>Add photos</span><input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={images.length>=2 || !photoAllowed} onChange={e=>{const files=e.target.files;void addPhotos(files);e.target.value='';}}/></label><span className="homework-character-count">{photoBusy?<span role="status">Preparing photos…</span>:`${message.length.toLocaleString()} / ${limit.toLocaleString()}`}</span><button className="button primary" disabled={!!requestProblem}><Send size={16}/>{busy?'Sending…':'Send'}</button></div>
      </fieldset>
-     <p id={`homework-question-note-${compact?'embedded':'main'}`} className="help-text homework-chat-disclosure">{privateMode?'Academy processes your questions and photos inside the service.':'AI can make mistakes. Check important claims.'} Your conversation is saved for authorized school review.{photoAllowed?' Up to two PNG, JPEG or WebP photos, 5 MB each.':' Photos are not enabled at this school yet.'}</p>
+     <p id={`homework-question-note-${compact?'embedded':'main'}`} className="help-text homework-chat-disclosure">{privateMode?'Academy processes your questions and photos inside the service.':localTaskProcessing?'Original photos and chat stay in Academy. Only supported learning details go to AI.':'AI can make mistakes. Check important claims.'} Your conversation is saved for authorized school review.{photoAllowed?' Up to two PNG, JPEG or WebP photos, 5 MB each.':' Photos are not enabled at this school yet.'}</p>
     </form>
    </section>
   </div>
  </div>;
+}
+
+export function HomeworkTaskPrivacyNotice(){
+ return <p className="help-text" aria-label="Homework privacy">Your original photos and chat stay in Academy. The AI gets only supported learning details prepared here. If a question is unclear, we will ask you to type an equation or topic. School staff can review your saved work.</p>;
 }
 
 export function releasedHomeworkAIAnswer(item:HomeworkAIMessage):string|null{return ['released','clarify'].includes(item.status) && typeof item.answer==='string' && item.answer.trim() && item.answer.length<=30000?item.answer:null;}
@@ -263,7 +270,7 @@ export function HomeworkAIMessageView({item,assistantName='Homework assistant',p
  const answer=releasedHomeworkAIAnswer(item),triage=item.triage,responder=homeworkResponder(item,assistantName);
  const answerLabel=item.private_mode
   ? item.status==='clarify'?'Study coach follow-up':'Study coach explanation'
-  : item.status==='clarify'?'AI clarification':'AI explanation';
+  : homeworkNeedsTaskClarification(item)?'Help us read your question':item.status==='clarify'?'AI clarification':'AI explanation';
  return <article className="homework-message">
   <div className="homework-student-message"><small>You · {stamp(item.created_at)}</small>{item.message && <p className="prose">{item.message}</p>}{item.images.length>0 && <HomeworkAIPhotos messageId={item.id} images={item.images}/>}</div>
   <div className="homework-handoff"><span className="homework-agent-avatar"><MessageSquareText size={18}/></span><div><strong>{responder.name}</strong><small className="homework-responder-description">{responder.description}{triage.course_name?` · ${triage.course_name}`:triage.topic?` · ${triage.topic}`:''}</small>{item.status!=='released' && <Badge tone={item.status==='pending'?'amber':''}>{item.status==='clarify'?'Follow-up question':item.status}</Badge>}{triage.prompt && triage.prompt!==answer && <p>{triage.prompt}</p>}{item.status==='clarify' && triage.candidates.length>0 && <div className="homework-course-options" aria-label="Choose context for your next question">{triage.candidates.map(course=><button className="button secondary" type="button" disabled={paused} key={course.id} onClick={()=>choose(course.id)}>{course.name}<ArrowRight size={14}/></button>)}</div>}</div></div>

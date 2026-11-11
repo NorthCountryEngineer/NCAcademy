@@ -1191,6 +1191,15 @@
             "title": "Name",
             "type": "string"
           },
+          "privacy_mode": {
+            "default": "deidentified",
+            "enum": [
+              "deidentified",
+              "raw_zdr"
+            ],
+            "title": "Privacy Mode",
+            "type": "string"
+          },
           "processing_tier": {
             "default": "standard",
             "enum": [
