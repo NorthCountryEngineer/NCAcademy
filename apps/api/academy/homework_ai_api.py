@@ -37,7 +37,7 @@ DEIDENTIFIED_LOCAL_RESPONSES = {
     "local_reader_busy": "The private photo reader is busy. Try typing the equation or topic instead.",
     "local_safety_support": "Please tell a trusted adult what is happening. If someone is in immediate danger, get local emergency help. Your concern is saved for school review; this chat has not contacted anyone.",
     "student_authorship": SAFE_REFUSAL,
-    "unsupported_math": "That full expression is outside the math this mode supports. Try one simpler arithmetic step or ask about a supported concept. Your question is still here to edit.",
+    "unsupported_math": "That full expression is outside the math this mode supports. Try one supported equation or ask about one algebra concept. Your question is still here to edit.",
     "original_problem_needed": "Please share the original problem first. I can explain how to check your work without sending your answer to AI. Your question is still here to edit.",
     "algebra_context_needed": "Is this a new problem or an answer you are checking? Start a new problem with Solve, Factor or Simplify. To check your work on the earlier problem, say I got followed by your answer. Your question is still here to edit.",
     "unsupported_topic": "I can't handle that full topic or relationship in this mode yet. Try one supported concept at a time. For a specific passage, ask about the reading skill you want to practice. Your question is still here to edit.",

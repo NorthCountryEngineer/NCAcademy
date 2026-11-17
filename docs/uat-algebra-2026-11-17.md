@@ -14,6 +14,7 @@ This record covers synthetic Grade 10-style algebra questions in Homework Help. 
 
 | Area | Representative checks | Evidence status |
 | --- | --- | --- |
+| Concept questions | Algebra basics, equations/inequalities, factoring, quadratic formula, completing the square, systems/methods, exponents, radicals, rational expressions, functions, slope/intercepts | Closed-topic compiler, privacy and synthetic Student API checks |
 | Linear equations | Variables on one or both sides, distribution, rational and decimal coefficients | Passed independent exact-arithmetic witnesses |
 | Systems | Two equations, both variable orders, dependent and inconsistent equations | Passed; both relations retained |
 | Inequalities | `<`, `>`, `<=`, `>=`, Unicode comparisons, negative multipliers, compound endpoints | Passed truth-value and endpoint checks |
@@ -38,6 +39,7 @@ A clarification is acceptable only when it preserves the user's task and clearly
 | ALG-06 | A bare new equation could be treated as an answer to an unrelated previous algebra question. | Ambiguous bare input now asks locally whether it is a new problem or an answer; it never silently reuses the old task. |
 | ALG-07 | The ordinary phrase `I think the answer is ...` did not retain the original algebra task. | Explicit answer-checking phrases retain the original task and send only a general checking strategy, never the student's expression. |
 | ALG-08 | An attempt labelled as a different question could reuse the previous question, while punctuation after a typed question label could block parsing. | Explicit question-number changes require the original problem; ordinary colon/period labels preserve the selected equation. |
+| ALG-09 | Live Grade 10 browser UAT at 12:44:17 p.m. EST on November 17 returned `unsupported_math` for “What is quadratic formula?” | Added closed public algebra concepts. Concept-only questions reach the appropriate topic without private text; failed formula parsing cannot discard an actual unsupported expression or unknown relationship. |
 
 ## Verification
 
@@ -45,22 +47,26 @@ From the repository root:
 
 ```sh
 PYTHONPATH=apps/api .venv/bin/python -m pytest \
+  apps/api/tests/test_algebra_concepts.py \
   apps/api/tests/test_algebra_independent_uat.py \
   apps/api/tests/test_homework_deidentification.py \
   apps/api/tests/test_homework_independent_uat.py -q
 ```
 
-Result: **262 passed**. The suite uses original fixtures in `algebra_uat_cases.py`, evaluates the public AST independently with exact rational arithmetic, tests its domain behavior, and preserves elementary Homework Help regressions. The only warning was the existing Starlette/AnyIO deprecation notice.
+Result: **338 passed**. The suite uses original fixtures in `algebra_uat_cases.py`, evaluates the public AST independently with exact rational arithmetic, tests its domain behavior, and preserves elementary Homework Help regressions. It includes 76 concept checks, including a synthetic Student API request for “What is quadratic formula?” through both model phases. The only warning was the existing Starlette/AnyIO deprecation notice.
 
 The transport checks replace DNS and HTTP with synthetic test doubles. They confirm that triage and safety receive the same closed algebra representation, no original private wrapper reaches the wire, storage remains disabled, and a private field inserted into the public AST is rejected before DNS. These checks do not assert that every possible model explanation will be correct; live student-flow acceptance and deployment verification are recorded separately.
 
 The API regressions also passed. A synthetic local student submits the originally reported factoring question, then an explicit proposed answer. Both model phases retain the original polynomial; the answer expression remains only in encrypted Academy history. Replay returns the recorded response without repeating model calls. Unsupported trigonometry retains the original editable question and makes no model call.
+
+For the concept request, triage and safety receive only the closed `quadratic_formula` topic. A private student-name prefix, account ID, session ID and school ID are absent from both prompts. The response is released through the real Student API path using mocked models; no live provider is called by the test.
 
 ## Deliberate limits
 
 - The admitted variable alphabet is `x` and `y`; one-variable function bodies use `x`. Function labels are `f` or `g` and are removed from the canonical representation after checking that references match.
 - Equation solving admits polynomials through degree two and two-equation linear systems. Factoring and expansion admit polynomials through degree four. Supported non-polynomial syntax includes real square roots, absolute values, rational expressions, and positive constant-base exponentials with a linear exponent.
 - Standard-form linear graph and slope questions retain their equations, including vertical lines. General implicit nonlinear graphing is outside this parser's scope.
+- Concept-only questions use a finite topic catalog, including explicitly supported substitution/elimination and slope/intercept comparisons. Actual formulas, unknown subject combinations, and private passages cannot be reduced to one familiar keyword.
 - Literal powers are bounded integers with absolute value at most 10. Noninteger powers such as `x^(1/2)` require explicit supported square-root notation. Constant radicals outside the real domain, such as `sqrt(-1)`, ask for clarification.
 - Each task has at most 64 AST nodes and depth 12. Constants have absolute value at most 10,000, and rational denominators are at most 10,000. Evaluation has additional magnitude and exponent limits; a large symbolic exponential remains symbolic rather than expanding into a huge number.
 - Unknown clauses, incomplete expressions, ambiguous `x2` notation, arbitrary named variables, and unsupported multi-function requests ask for clarification as complete requests. They do not degrade to a smaller equation or inherit unrelated earlier work.

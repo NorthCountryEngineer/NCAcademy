@@ -4,6 +4,8 @@ Homework Help supports bounded high-school algebra questions without requiring a
 
 ## Ask a complete question
 
+You can ask about an idea without supplying an equation: `What is the quadratic formula?`, `How does factoring work?`, `Explain systems of equations`, or `How do exponent rules work?` These select public algebra concepts rather than forwarding the original wording.
+
 - `Help me factor x^2 - 5x + 6 without giving me the answer.`
 - `Solve 3(x - 2) = 2x + 5.`
 - `Solve -2x + 3 > 7.`

@@ -66,6 +66,24 @@ TOPICS = {
     "civil_war": "the American Civil War",
     "civil_rights": "the civil rights movement",
     "ancient_civilizations": "ancient civilizations",
+    "algebra_basics": "basic algebra, variables and equivalent expressions",
+    "linear_equations": "solving linear equations using equivalent steps",
+    "linear_inequalities": "linear inequalities and the sign-reversal rule",
+    "polynomial_factoring": "factoring polynomials and checking factors by expansion",
+    "completing_square": "completing the square in quadratic expressions and equations",
+    "quadratic_formula": "the quadratic formula, its coefficients and discriminant",
+    "quadratics": "quadratic expressions, equations and functions",
+    "linear_systems": "systems of linear equations",
+    "system_substitution": "the substitution method for systems of linear equations",
+    "system_elimination": "the elimination method for systems of linear equations",
+    "system_methods": "comparing substitution and elimination for systems of linear equations",
+    "exponent_rules": "exponent rules, powers and their domain restrictions",
+    "radicals": "radical expressions and square roots over the real numbers",
+    "rational_expressions": "rational expressions, simplification and denominator restrictions",
+    "function_notation": "function notation, inputs and outputs",
+    "slope": "slope of a straight line, including horizontal and vertical lines",
+    "intercepts": "x-intercepts and y-intercepts of graphs",
+    "slope_intercepts": "the relationship between slope and intercepts of a straight line",
 }
 _TOPIC_PATTERNS = {
     "multiplication": r"\b(?:multipl\w*|times tables?|arrays?|equal groups|repeated addition)\b",
@@ -109,6 +127,23 @@ _TOPIC_PATTERNS = {
     "civil_war": r"\b(?:american civil war|civil war)\b",
     "civil_rights": r"\bcivil rights\b",
     "ancient_civilizations": r"\b(?:ancient (?:egypt|greece|rome|civilizations)|mesopotamia)\b",
+    "algebra_basics": r"\b(?:basic algebra|algebra basics|algebra)\b",
+    "linear_equations": r"\blinear equations?\b",
+    "linear_inequalities": r"\b(?:linear )?inequalit(?:y|ies)\b",
+    "polynomial_factoring": r"\b(?:polynomial factoring|factoring polynomials|factor polynomials|factoring|factorization|factorisation)\b",
+    "completing_square": r"\b(?:completing|complete) (?:the )?square\b",
+    "quadratic_formula": r"\b(?:quadratic formula|discriminant)\b",
+    "quadratics": r"\b(?:quadratic equations?|quadratic functions?|quadratics)\b",
+    "linear_systems": r"\b(?:systems? of (?:linear )?equations|linear systems)\b",
+    "system_substitution": r"\b(?:substitution(?: method)?(?: (?:for|in|with) (?:solving )?(?:systems? of (?:linear )?equations|linear systems))?|(?:systems? of (?:linear )?equations|linear systems) (?:by|using) substitution)\b",
+    "system_elimination": r"\b(?:elimination(?: method)?(?: (?:for|in|with) (?:solving )?(?:systems? of (?:linear )?equations|linear systems))?|(?:systems? of (?:linear )?equations|linear systems) (?:by|using) elimination)\b",
+    "exponent_rules": r"\b(?:(?:exponent|index|indices) (?:rules|laws)|(?:rules|laws) of exponents|exponents)\b",
+    "radicals": r"\b(?:radical expressions|radicals|square roots?)\b",
+    "rational_expressions": r"\brational (?:expressions?|functions?)\b",
+    "function_notation": r"\b(?:function notation|functions)\b",
+    "slope": r"\bslope\b",
+    "intercepts": r"\b(?:(?:x|y)[ -]intercepts?|intercepts?)\b",
+    "slope_intercepts": r"\bslope[- ]intercept form\b",
 }
 _WORDS = dict(zip("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety".split(), list(range(21)) + list(range(30, 100, 10))))
 _WORDS.update(hundred=100, thousand=1000)
@@ -261,8 +296,13 @@ def _math_source(text):
 
 def _extract(text):
     text = _number_text(_math_source(text))
+    # Pure concept requests use only a closed selector. Concrete or malformed
+    # math cannot become a generic lesson after the expression parser rejects it.
+    topic = _extract_topic(text) if not re.search(r"\d", text) else None
     if looks_like_algebra(text):
-        return parse_algebra_task(text)
+        return parse_algebra_task(text) or topic
+    if topic is not None:
+        return topic
     # Never extract a valid-looking fragment from an unsupported expression.
     # Only a complete, bounded task may become a public model request.
     if "unsupported_number_phrase" in text or re.search(r"\d\.\d|[()%<>^=√∛|]|(?:^|[\s(])[−-]\s*\d|\d\s*(?:\^|\*\*)|\b(?:negative|positive|double|triple|twice|halve|halved|half|squared|cubed|square root|power of|percent)\b|\bsquare(?!\s+units\b)\b|\b[a-wyz]\s*[=+−*/^]|[=+−*/^]\s*[a-wyz]\b", text):
@@ -395,16 +435,30 @@ def _extract_topic(text):
         text = text[asks.start():]
     matches = {topic: list(re.finditer(pattern, text, re.I)) for topic, pattern in _TOPIC_PATTERNS.items()}
     matches = {topic: spans for topic, spans in matches.items() if spans}
+    # Prefer the complete specific phrase to a generic phrase nested inside it:
+    # e.g. systems of linear equations must not also select linear equations.
+    matches = {topic: [span for span in spans if not any(
+        other.start() <= span.start() and other.end() >= span.end()
+        and (other.start(), other.end()) != (span.start(), span.end())
+        for other_topic, other_spans in matches.items() if other_topic != topic
+        for other in other_spans)] for topic, spans in matches.items()}
+    matches = {topic: spans for topic, spans in matches.items() if spans}
     pair = {"photosynthesis", "cellular_respiration"}
+    closed_pairs = {
+        frozenset(pair): "photosynthesis_respiration_relationship",
+        frozenset({"system_substitution", "system_elimination"}): "system_methods",
+        frozenset({"slope", "intercepts"}): "slope_intercepts",
+    }
     # "Difference between" names a comparison, not a subtraction lesson.
-    if pair <= matches.keys() and set(matches) <= pair | {"subtraction"} and all(
-            span.group().lower() == "difference" for span in matches.get("subtraction", [])):
-        matches.pop("subtraction", None)
-    if set(matches) == pair:
-        selected = "photosynthesis_respiration_relationship"
+    for known_pair in closed_pairs:
+        if known_pair <= matches.keys() and set(matches) <= known_pair | {"subtraction"} and all(
+                span.group().lower() == "difference" for span in matches.get("subtraction", [])):
+            matches.pop("subtraction", None)
+    if frozenset(matches) in closed_pairs:
+        selected = closed_pairs[frozenset(matches)]
     elif len(matches) == 1:
         selected = next(iter(matches))
-        if re.search(r"\b(?:related|relationship|between|versus|vs|contrast|different from|difference between|connected to|connection)\b", text, re.I):
+        if selected not in closed_pairs.values() and re.search(r"\b(?:related|relationship|between|versus|vs|contrast|different from|difference between|connected to|connection)\b", text, re.I):
             return None
     else:
         return None
@@ -414,8 +468,8 @@ def _extract_topic(text):
     wrapper = text
     for topic in matches:
         wrapper = re.sub(_TOPIC_PATTERNS[topic], " ", wrapper, flags=re.I)
-    allowed = set("a an the about ask asks please help me with explain explanation explanations understand understanding what why how is are does do can could would you i don't not know learn learning teach show tell mean means work works find finding identify identifying in of to for from by and it this that these those concept concepts idea ideas basic basics overview introduction example examples more".split())
-    if selected == "photosynthesis_respiration_relationship":
+    allowed = set("a an the about ask asks please help me with explain explanation explanations understand understanding what why how is are does do can could would should you i we don't not know when use using apply learn learning teach show tell mean means work works find finding identify identifying solve solving simplify simplifying evaluate evaluating in of to for from by and it this that these those concept concepts idea ideas basic basics overview introduction example examples more".split())
+    if selected in closed_pairs.values():
         allowed.update("related relationship relate compare comparison contrast different difference similarities similarity similar between connected connect connection connects each other energy transformations transformation reactants products matter".split())
     if re.search(r"[^a-z\s.,?!'’:;-]", wrapper) or not set(re.findall(r"[a-z]+(?:'[a-z]+)?", wrapper)) <= allowed:
         return None
