@@ -152,3 +152,26 @@ def test_generation_and_independent_review_explicitly_preserve_algebra_boundarie
     assert "missed extraneous radical roots" in review[0]["content"]
     assert "Treat unknown ages conservatively as children" in review[0]["content"]
     assert len(generation[1]["content"]) == 1  # No invented graph or original photo.
+
+
+def test_graph_prompts_allow_an_intermediate_equation_without_releasing_final_features():
+    task = parse_algebra_task("Graph 2x + 3y = 6")
+    candidate = {"mode": "guided_practice", "text": "Subtract 2x from both sides to get 3y = 6 - 2x. Which operation would isolate y next?", "reference_ids": []}
+    generation = build_public_homework_prompt(task)
+    review = build_public_homework_prompt(task, phase="safety", candidate=candidate)
+    teaching, safety = generation[0]["content"], review[0]["content"]
+    assert "a*x+b*y=c can become b*y=c-a*x" in teaching
+    assert "next decision rather than asking the learner to repeat work already shown" in teaching
+    assert "stop before supplying its result" in teaching
+    assert "correct intermediate equivalent equation" in safety
+    assert "not classify" in safety and "original coefficients" in safety
+    assert "Continue to withhold" in safety and "final graph, slope, intercepts" in safety
+    payload = json.loads(review[1]["content"][0]["text"])
+    assert payload["task"] == task and payload["candidate"] == candidate
+    assert "candidate" not in json.loads(generation[1]["content"][0]["text"])
+
+
+def test_graph_review_candidate_cannot_expand_the_approved_output_schema():
+    task = parse_algebra_task("Graph 2x + 3y = 6")
+    with pytest.raises(ValueError, match="candidate"):
+        build_public_homework_prompt(task, phase="safety", candidate={"mode": "guided_practice", "text": "One step.", "reference_ids": [], "bypass_safety": True})

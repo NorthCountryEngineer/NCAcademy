@@ -17,7 +17,7 @@ You can ask about an idea without supplying an equation: `What is the quadratic 
 - `Find the vertex of y = x^2 - 4x + 1.`
 - `Graph 2x + 3y = 6.`
 
-Use `^` for powers, `sqrt(...)` for square roots, parentheses to group terms, and one equation per line or a semicolon for a two-equation system. Clear Unicode powers such as `x²` are recognized; ambiguous `x2` is not guessed. `x` and `y` are supported variables; function definitions use `f(x)` or `g(x)`, with matching references.
+Use `^` for powers, `sqrt(...)` for square roots, parentheses to group terms, and one equation per line or a semicolon for a two-equation system. Clear Unicode powers such as `x²` are recognized; ambiguous `x2` is not guessed. If photo recognition cannot distinguish a power from multiplication, the app asks you to type the equation. Your complete typed equation takes priority over the photo; an unsupported typed equation is never replaced with a different problem from the image. `x` and `y` are supported variables; function definitions use `f(x)` or `g(x)`, with matching references.
 
 Start a new problem with a verb such as **Solve**, **Factor**, **Simplify** or **Graph**. For an answer attempt, say **I got ...** or **My answer is ...**. When a bare expression could mean either, the assistant asks locally which you intended. It never changes the task silently and does not tell a provider what answer you tried.
 

@@ -33,6 +33,7 @@ from .teacher_models import model_policy_context, preview_model_policy
 
 DEIDENTIFIED_LOCAL_RESPONSES = {
     "question_not_readable": "I couldn't read that question clearly. Type its equation or topic and I can help.",
+    "ambiguous_math_symbol": "A symbol in that photo could mean a power or multiplication. Please type the full expression using ^ for powers or * for multiplication. Your photo and question are still here to edit.",
     "enter_equation_or_topic": "Type the equation or name the school topic you want to understand. Your original words and photos stay in Academy.",
     "local_reader_busy": "The private photo reader is busy. Try typing the equation or topic instead.",
     "local_safety_support": "Please tell a trusted adult what is happening. If someone is in immediate danger, get local emergency help. Your concern is saved for school review; this chat has not contacted anyone.",
