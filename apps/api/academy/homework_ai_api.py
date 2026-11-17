@@ -69,8 +69,13 @@ def assistant_preference_id(identity, school_id):
 
 
 def session_descriptor(row, first_message=None):
-    title = " ".join(first_message.value.get("message", "").split())[:160] if first_message else ""
-    return {"id": row.id, "title": title or ("Homework picture" if first_message else "New conversation"), **{key: row.value[key] for key in ("school_id", "created_at", "idempotency_key")}}
+    # Accept the authorized message projection as well as a stored record.
+    # Missing/redacted text must not expose another field as a title.
+    message = first_message if isinstance(first_message, dict) else first_message.value if first_message else {}
+    text = message.get("message")
+    title = " ".join(text.split())[:160] if isinstance(text, str) else ""
+    fallback = "Homework picture" if message.get("images") else "New conversation"
+    return {"id": row.id, "title": title or fallback, **{key: row.value[key] for key in ("school_id", "created_at", "idempotency_key")}}
 
 
 def messages(db, identity, session_id):
@@ -271,7 +276,8 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
             if existing:
                 if existing.kind != "homework_ai_session" or existing.tenant_id != identity["tenant_id"] or existing.owner_id != identity["id"] or existing.parent_id != selected:
                     raise HTTPException(409, "Conversation key was used for another school")
-                return session_descriptor(existing)
+                history = messages(db, identity, existing.id)
+                return session_descriptor(existing, history[0] if history else None)
             if local_student(identity):
                 if local_models_selected(db, identity, selected):
                     resolve_configuration(db, identity, selected, settings)
@@ -294,7 +300,8 @@ def register_homework_ai_api(app, database, auth, settings, actor, audit_actor):
     def history(session_id: str, identity=Depends(actor)):
         with database.factory() as db:
             row = session(db, identity, session_id)
-            return {"session": session_descriptor(row), "messages": [project_message(db, identity, item, settings, app=app) for item in messages(db, identity, session_id)]}
+            visible = [project_message(db, identity, item, settings, app=app) for item in messages(db, identity, session_id)]
+            return {"session": session_descriptor(row, visible[0] if visible else None), "messages": visible}
 
     def mark_and_send(request, identity, message_id, phase, prompt, maximum):
         accepted = fresh(request, identity)

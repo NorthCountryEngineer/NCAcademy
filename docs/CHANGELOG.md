@@ -6,6 +6,7 @@
 - Balance distinct forms across the Grade 3 question bank, accept mathematically equivalent fractions, and remove predictable estimate-choice ordering. Existing saved assignments keep their original questions and grading snapshots.
 - Make reviewed-practice follow-ups focus on different exact approved passages, with source provenance and an honest exhausted-material response. Show accurate reviewed-practice teacher availability.
 - Recover clearly from expired sign-in and known requests rejected before admission, without automatically retrying uncertain model sends. Describe the active Homework Help mode's supported scope honestly.
+- Preserve conversation titles consistently across history, reloads, creation retries and follow-up replies without changing stored messages.
 - Record synthetic Firefox walkthroughs, defects and verification in [the UAT report](uat-2026-11-17.md).
 
 ## November 11, 2026 — conversation-focused Homework Help
