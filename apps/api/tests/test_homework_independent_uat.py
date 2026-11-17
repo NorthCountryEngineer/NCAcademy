@@ -5,14 +5,8 @@ from academy.homework_deidentification import compile_homework_task
 
 
 @pytest.mark.parametrize("question", [
-    "Explain (2+3)*x",
-    "Explain x(2+3)",
-    "Explain 2+3×x",
     "Explain 2 + 3%",
-    "Explain 2+3 < x",
-    "Explain 2+3 > x",
     "Explain negative two plus three",
-    "Explain √4 + 2",
     "Explain 2 plus 3 and then double it",
     "Explain double 2 plus 3",
     "Explain twenty - one plus two",
@@ -35,15 +29,11 @@ def test_unsupported_operator_or_modifier_is_not_dropped(question):
     "Explain cellular respiration in anaerobic bacteria",
     "Explain the causes of World War I",
     "Why does Macbeth see a dagger?",
-    "Explain 2 + (3)",
-    "Explain 2 + -3",
-    "Explain 2 + −3",
     "Explain three quarters",
     "Explain factorial 3! + 2",
     "Explain the square root of 9",
     "Explain 20% of 50",
     "Explain two thirds plus one third",
-    "Explain 4⁻² + 3",
     "Three bags hold four marbles each. How many marbles?",
     "Explain 2➕3",
     "Explain 2➖3",
@@ -129,10 +119,49 @@ def test_a_recognized_keyword_does_not_erase_unknown_topics_or_private_passage_r
     assert result.task is None
 
 
-def test_unsupported_algebra_is_distinguished_from_unreadable_input():
-    result = compile_homework_task("Help me factor x^2 - 5x + 6 without just giving me the answer.")
+def test_unsupported_trigonometry_is_distinguished_from_unreadable_input():
+    result = compile_homework_task("Help me solve sin(x) = 0 without just giving me the answer.")
     assert result.status == "clarify" and result.task is None
     assert result.reason == "unsupported_math"
+
+
+@pytest.mark.parametrize("question", [
+    "Explain (2+3)*x", "Explain x(2+3)", "Explain 2+3×x",
+    "Explain 2+3 < x", "Explain 2+3 > x", "Explain √4 + 2",
+    "Explain 2 + (3)", "Explain 2 + -3", "Explain 2 + −3", "Explain 4⁻² + 3",
+])
+def test_new_algebra_support_replaces_old_rejection_without_reusing_prior_arithmetic(question):
+    previous = compile_homework_task("21 divided by 3")
+    result = compile_homework_task(question, previous_task=previous.task)
+    assert result.status == "ready"
+    assert result.task["kind"] == "algebra" and result.task != previous.task
+
+
+def test_bare_new_equation_cannot_silently_reuse_an_unrelated_prior_algebra_problem():
+    previous = compile_homework_task("Solve 2x + 3 = 7")
+    fresh = compile_homework_task("x^2 - 5x + 6 = 0")
+    result = compile_homework_task("x^2 - 5x + 6 = 0", previous_task=previous.task)
+    assert result.task != previous.task
+    if result.status == "ready":
+        assert result.task == fresh.task
+    else:
+        assert result.status == "clarify" and result.task is None
+        assert result.reason == "algebra_context_needed"
+
+
+def test_changed_question_number_cannot_reuse_the_previous_algebra_problem_for_an_attempt():
+    previous = compile_homework_task("Solve 2x + 3 = 7")
+    result = compile_homework_task("Question 2 I got x=2", previous_task=previous.task, previous_question=1)
+    assert result.status == "clarify" and result.task is None
+    assert result.question_number == 2
+
+
+@pytest.mark.parametrize("label", ["Question 1:", "Question 1.", "Question 1"])
+def test_explicit_question_label_does_not_change_the_algebra(label):
+    plain = compile_homework_task("Solve 2x + 3 = 7")
+    result = compile_homework_task(f"{label} Solve 2x + 3 = 7")
+    assert result.status == "ready" and result.task == plain.task
+    assert result.question_number == 1
 
 
 def test_public_science_depth_does_not_depend_on_private_age_or_profile():

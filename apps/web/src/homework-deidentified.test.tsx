@@ -34,7 +34,7 @@ describe('private homework processing contracts',()=>{
 describe('child and school privacy presentation',()=>{
  it('states what stays in Academy without a redaction approval, raw forwarding switch or internal task language',()=>{
   const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);const html=renderToStaticMarkup(<HomeworkAI schoolId="school" userId="student" index={{assistant:assistant(),courses:[],sessions:[]}} openCourse={()=>{}}/>);
-  for(const text of ['Your original photos and chat stay in Academy','Only supported learning details go to AI','type an equation or topic','We prepare supported learning details privately','Get help with supported math and learning topics','one step or concept','Send'])expect(html).toContain(text);
+  for(const text of ['Your original photos and chat stay in Academy','Only supported learning details go to AI','type an equation or topic','We prepare supported learning details privately','Get help with supported math and learning topics','equations, factoring, systems or functions','How to type algebra','2x + 3 = 11','Your own answer and work stay private','Send'])expect(html).toContain(text);
   expect(html).not.toContain('any subject');expect(html).not.toContain('Ask about anything');
   for(const forbidden of ['redaction approval','Approve redacted','Forward raw','INTERNAL_DSL','Zero Data Retention','OpenAI','bring in a relevant approved AI teacher'])expect(html).not.toContain(forbidden);expect(fetcher).not.toHaveBeenCalled();expect(renderToStaticMarkup(<HomeworkTaskPrivacyNotice/>)).not.toContain('<input');
  });
@@ -44,6 +44,12 @@ describe('child and school privacy presentation',()=>{
  it('labels a known unsupported expression as a scope limitation instead of unreadable input',()=>{
   const value=clarification();value.deidentification!.reason='unsupported_math';value.answer='That full expression is outside the math this mode supports.';
   const html=renderToStaticMarkup(<HomeworkAIMessageView item={value} choose={()=>{}} openCourse={()=>{}}/>);expect(html).toContain('Try a supported learning step');expect(html).not.toContain('Help us read your question');expect(homeworkNeedsTaskClarification(value)).toBe(true);
+ });
+ it('makes an ambiguous new algebra expression distinguishable from an unreadable worksheet',()=>{
+  const value=clarification();value.deidentification!.reason='algebra_context_needed';
+  value.answer='For a new problem, begin with Solve or Factor. To check your method, begin with I got.';
+  const html=renderToStaticMarkup(<HomeworkAIMessageView item={value} choose={()=>{}} openCourse={()=>{}}/>);
+  expect(html).toContain('New problem or method check?');expect(html).toContain('begin with Solve or Factor');expect(html).not.toContain('Help us read your question');
  });
  it('makes the school learning-details policy usable without claiming provider ZDR approval',()=>{
   const state=configuration(),html=renderToStaticMarkup(<HomeworkOpenAIStudentControls state={{...state,openai_student_controls:{required:false,verified:false,reason:null,expires_at:null}}}/>);expect(html).toContain('Original homework stays in Academy');expect(html).toContain('does not require provider Zero Data Retention');expect(html).not.toContain('Operator verification required');expect(html).not.toContain('OpenAI student data controls verified');

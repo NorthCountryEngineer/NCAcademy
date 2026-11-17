@@ -1,5 +1,11 @@
 # Changelog
 
+## November 17, 2026 — high-school algebra Homework Help
+
+- Added bounded algebra tutoring for full expressions, equations and inequalities, linear systems, factoring, quadratics, rational expressions, powers, real square roots, absolute values and function questions. The compiler preserves the complete problem and mathematical domain; unsupported or ambiguous requests ask for clarification instead of teaching a different problem.
+- Retained the local student-data boundary with an independently validated expression tree, exact canonical prompt reconstruction, private answer attempts, and separate output review. Algebra guidance offers a justified next step or a different practice example without completing assessed work.
+- Added student-facing algebra entry help and explicit recovery when a bare expression could mean either a new task or an answer attempt. See [supported syntax](algebra-homework.md) and [synthetic UAT coverage](uat-algebra-2026-11-17.md).
+
 ## November 17, 2026 — Grade 3 and Grade 10 UAT repairs
 
 - Reject partial or unsupported math expressions instead of tutoring a different problem. Parse multiword whole numbers correctly, preserve only genuine follow-ups, and acknowledge unsupported questions without a repeated input loop. Original questions, photos, attempts and identities remain local.

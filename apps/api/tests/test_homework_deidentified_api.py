@@ -36,6 +36,12 @@ def setup_public(client, app, monkeypatch, **changes):
             "Move one counter into each circle in turn, keeping every circle equal. What stays the same after each round?",
             "Think of multiplication as the inverse of equal sharing. Which part of the drawing represents the divisor?",
         ]
+        if payload["task"]["kind"] == "algebra":
+            answers = [
+                "Compare the coefficient of x and the constant. What two relationships must a pair of factors satisfy?",
+                "Expand your proposed product using distribution. How do its three coefficients compare with the original polynomial?",
+                "Keep track of both signs before combining like terms. Which coefficient would you compare first?",
+            ]
         answer = answers[payload["teaching_stage"] % len(answers)]
         return result(triage_result(response={"mode": "guided_practice", "text": answer, "reference_ids": []}))
     monkeypatch.setattr(app.state, "classify", classify)
@@ -176,7 +182,7 @@ def test_recognized_unsupported_equation_acknowledges_scope_without_a_model_call
     env = setup_public(client, app, monkeypatch)
     child, headers, session_id, account = create_child(client, app, env)
     try:
-        question = "Help me factor x^2 - 5x + 6 without just giving me the answer."
+        question = "Help me solve sin(x) = 0 without just giving me the answer."
         response = send(child, headers, session_id, question, "unsupported-algebra")
         value = response.json()
         assert value["status"] == "clarify", response.text
@@ -186,6 +192,51 @@ def test_recognized_unsupported_equation_acknowledges_scope_without_a_model_call
         assert "still here to edit" in value["answer"]
         assert "Type the equation" not in value["answer"]
         assert env["public_calls"] == []
+    finally:
+        child.close()
+
+
+def test_requested_factoring_problem_and_private_attempt_use_complete_algebra_through_both_phases(client, app, monkeypatch):
+    env = setup_public(client, app, monkeypatch)
+    child, headers, session_id, account = create_child(client, app, env)
+    question = "Help me factor x^2 - 5x + 6 without just giving me the answer."
+    attempt = "Name: PRIVATE_ATTEMPT_SENTINEL\nI think the answer is (x - 2)(x - 3)"
+    try:
+        first = send(child, headers, session_id, question, "algebra-factor-original")
+        assert first.status_code == 200 and first.json()["status"] == "released", first.text
+        assert first.json()["message"] == question
+        assert first.json()["deidentification"]["task_summary"].startswith("Factor:")
+        assert [call["model"] for call in env["public_calls"]] == ["triage", "safety"]
+        task = env["public_calls"][0]["payload"]["task"]
+        assert task == {"kind": "algebra", "action": "factor", "expression": {
+            "type": "add", "left": {"type": "sub", "left": {
+                "type": "pow", "left": {"type": "variable", "name": "x"},
+                "right": {"type": "number", "value": [2, 1]}}, "right": {
+                    "type": "mul", "left": {"type": "number", "value": [5, 1]},
+                    "right": {"type": "variable", "name": "x"}}},
+            "right": {"type": "number", "value": [6, 1]}}}
+        follow = send(child, headers, session_id, attempt, "algebra-private-attempt")
+        assert follow.status_code == 200 and follow.json()["status"] == "released", follow.text
+        assert follow.json()["answer"] != first.json()["answer"]
+        assert len(env["public_calls"]) == 4
+        assert [call["model"] for call in env["public_calls"][-2:]] == ["triage", "safety"]
+        for call in env["public_calls"]:
+            assert call["payload"]["task"] == task
+            assert call["payload"]["algebra_guidance"]["do_not_supply_final_answer"] is True
+            wire = json.dumps(call["prompt"])
+            for private in (question, attempt, "PRIVATE_ATTEMPT_SENTINEL", account["id"], session_id):
+                assert private not in wire
+        for call in env["public_calls"][-2:]:
+            assert call["payload"]["guidance_action"] == "check_method"
+            assert call["payload"]["teaching_stage"] == 1
+        repeated = send(child, headers, session_id, attempt, "algebra-private-attempt")
+        assert repeated.json() == follow.json() and len(env["public_calls"]) == 4
+        history = child.get(f"{BASE}/sessions/{session_id}").json()["messages"]
+        assert history == [first.json(), follow.json()]
+        with app.state.database.factory() as db:
+            row = db.get(Record, follow.json()["id"])
+            assert row.value["message"] == attempt and row.value["deidentified_task"] == task
+            assert "__academy_pii__" in row.data and "PRIVATE_ATTEMPT_SENTINEL" not in row.data
     finally:
         child.close()
 

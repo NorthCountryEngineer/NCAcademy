@@ -39,6 +39,7 @@ Open `http://localhost:8090`. Choose an explicitly labeled local demonstration i
 - [Local student/parent accounts, PII encryption and testing](docs/family-accounts.md)
 - [Student names and grade filtering in class enrollment](docs/course-enrollment.md)
 - [Conversational Homework Help](docs/homework-help.md)
+- [High-school algebra Homework Help](docs/algebra-homework.md)
 - [Google Classroom assignment companion](docs/google-classroom.md)
 - [School and class groups with NCE Core Chat](docs/group-chat.md)
 - [Optional ElevenLabs teacher voices](docs/homework-voice.md)

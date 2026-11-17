@@ -63,10 +63,9 @@ def test_unsupported_private_or_ambiguous_content_stays_local(question):
 
 
 @pytest.mark.parametrize("question", [
-    "Explain 2 + 3 * 4", "Explain 2 + 3 + 4", "What is 8 - 3 - 2?",
+    "What is 8 - 3 - 2?",
     "Explain 2 plus 3 times 4", "Explain 2 plus 3 plus 4",
-    "Add 2 and 3 and 4", "Explain 2 + 3 = 6", "Explain -2 + 3",
-    "Explain 2.5 + 3", "Explain 2 + 3.5", "Explain 2 + 3 squared",
+    "Add 2 and 3 and 4", "Explain 2 + 3 squared",
     "Explain one and two plus three", "Explain 3 groups of 4 and 5 groups of 6",
     "Compare fractions 1/2 and 3/4 and explain 2 + 3",
 ])
@@ -77,12 +76,28 @@ def test_incomplete_or_ambiguous_expressions_are_never_silently_shortened(questi
 
 @pytest.mark.parametrize("question", [
     "Explain two plus three plus four", "Explain one and two plus three",
-    "Explain x^2 - 5x + 6", "Explain the quadratic equation x = 3",
+    "Explain sin(x) = 0", "Explain log(x) = 2",
 ])
 def test_unsupported_new_math_does_not_reuse_the_previous_problem(question):
     previous = privacy.compile_homework_task("21 divided by 3")
     result = privacy.compile_homework_task(question, previous_task=previous.task)
     assert result.status == "clarify" and result.task is None
+
+
+@pytest.mark.parametrize("question,expression", [
+    ("Explain 2 + 3 * 4", {"type": "add", "left": {"type": "number", "value": [2, 1]},
+      "right": {"type": "mul", "left": {"type": "number", "value": [3, 1]}, "right": {"type": "number", "value": [4, 1]}}}),
+    ("Explain 2 + 3 + 4", {"type": "add", "left": {"type": "add", "left": {"type": "number", "value": [2, 1]},
+      "right": {"type": "number", "value": [3, 1]}}, "right": {"type": "number", "value": [4, 1]}}),
+    ("Explain -2 + 3", {"type": "add", "left": {"type": "neg", "value": {"type": "number", "value": [2, 1]}},
+      "right": {"type": "number", "value": [3, 1]}}),
+    ("Explain 2.5 + 3", {"type": "add", "left": {"type": "number", "value": [5, 2]}, "right": {"type": "number", "value": [3, 1]}}),
+    ("Explain 2 + 3.5", {"type": "add", "left": {"type": "number", "value": [2, 1]}, "right": {"type": "number", "value": [7, 2]}}),
+])
+def test_complete_numeric_algebra_keeps_every_term_and_operator(question, expression):
+    result = privacy.compile_homework_task(question)
+    assert result.status == "ready"
+    assert result.task == {"kind": "algebra", "action": "simplify", "expression": expression}
 
 
 def test_private_wrapper_does_not_change_mathematics():
