@@ -12,7 +12,10 @@ from .db import Record, canonical, now, uid
 from .lesson_schemas import LessonInput
 from .learning_preferences import preference_snapshot, require_preference_snapshot, presentation_context
 from .permissions import bind_scope, require_school, scope_id
-from .practice_lesson import LOCAL_BUDGET, choose_reference, current_practice_references, next_question
+from .practice_lesson import (
+    EXHAUSTED_PRACTICE_TEXT, LOCAL_BUDGET, choose_reference,
+    current_practice_references, next_question, select_practice_excerpt,
+)
 from .standards import corpus_descriptor, retrieve_corpus, snapshot_material
 from .teacher_api import resolve_lesson_context
 from .teacher_schemas import TeacherTutorModel
@@ -123,11 +126,13 @@ def _selection(result, policy, reservation, allowed):
     return parsed["document_id"], {key: usage[key] for key in ("prompt_tokens", "completion_tokens", "total_tokens")}
 
 
-def _render(context, document):
+def _render(context, document, *, include_question=True):
     behavior = context.get("ai_behavior") or {}
     opening = {"warm": "Let's look at the course evidence.", "neutral": "Course evidence:", "formal": "Reviewed course evidence:"}.get(behavior.get("tone"), "Course evidence:")
     frequency = behavior.get("question_frequency", "balanced")
     question = {"low": "", "balanced": "Which part of this passage helps explain your question?", "high": "What does this passage show? What would you check next?"}.get(frequency, "Which part of this passage helps explain your question?")
+    if not include_question:
+        question = ""
     weights = context.get("student_learning_weights", {})
     passage = document["excerpt"]
     if weights.get("structure", 50) >= 65:
@@ -223,19 +228,36 @@ def reviewed_practice_chat(db, identity, course, school_id, settings, body, prev
         raise HTTPException(422, "Type a question about the math idea you are practicing.")
     policy = {**LOCAL_BUDGET, "max_turns": min(LOCAL_BUDGET["max_turns"], (context.get("tutor_model") or {}).get("max_turns", LOCAL_BUDGET["max_turns"]))}
     _, turn_limit, _ = lesson_budget(previous, policy, data["budget_day"])
-    last_id = None
-    for row in reversed(previous):
+    relevant = []
+    for row in previous:
         value = row.value
         if value.get("practice_chat") and value.get("status") == "released" and value.get("teacher_profile_id") == body.teacher_profile_id and value.get("practice_corpus_sha256") == descriptor["snapshot_sha256"]:
-            last_id = value.get("selected_document_id")
-            break
+            relevant.append(value)
+    last_id = relevant[-1].get("selected_document_id") if relevant else None
     document = choose_reference(references, body.message, body.practice_lesson_id, last_id)
     content = document["content"]
-    excerpt = content[:1600]
-    excerpt_fields = {"excerpt_start": 0, "excerpt_end": len(excerpt), "excerpt_position_unit": "unicode_code_points", "excerpt_sha256": hashlib.sha256(excerpt.encode()).hexdigest()}
+    same_lesson = [value for value in relevant if value.get("selected_document_id") == document["id"]]
+    focused_spans = [
+        (citation["excerpt_start"], citation["excerpt_end"])
+        for value in same_lesson if value.get("practice_excerpt_mode") == "focus"
+        for citation in value.get("citations", [])
+        if citation.get("document_id") == document["id"]
+        and citation.get("content_sha256") == document["content_sha256"]
+        and type(citation.get("excerpt_start")) is int and type(citation.get("excerpt_end")) is int
+    ]
+    selection = select_practice_excerpt(content, body.message, started=bool(same_lesson), previous_spans=focused_spans)
+    # A fixed exhaustion response quotes no source text. Retain the current
+    # source binding so normal replay revocation still applies to this turn.
+    start, end = (selection["start"], selection["end"]) if selection else (0, 0)
+    excerpt = content[start:end]
+    excerpt_fields = {"excerpt_start": start, "excerpt_end": end, "excerpt_position_unit": "unicode_code_points", "excerpt_sha256": hashlib.sha256(excerpt.encode()).hexdigest()}
     citation = {"document_id": document["id"], **{key: document[key] for key in ("title", "source_url", "source_page", "content_sha256", "source_content_sha256", "source_record_id", "external_review") if key in document}, **excerpt_fields, "corpus_id": descriptor["id"], "corpus_snapshot_sha256": descriptor["snapshot_sha256"]}
-    text = _render(presentation_context(context, data["learning_preferences_snapshot"]), {"excerpt": excerpt})
-    return {"status": "released", "approved_text": text + "\n\n" + next_question(body.message, last_id == document["id"]), "citations": [citation], "selected_document_id": document["id"], "practice_corpus_sha256": descriptor["snapshot_sha256"], "policy_snapshot": policy, "budget_snapshot": {**data["budget_snapshot"], "max_turns": turn_limit}, "delivery_method": "reviewed-practice-reference-v1"}
+    if selection:
+        text = _render(presentation_context(context, data["learning_preferences_snapshot"]), {"excerpt": excerpt}, include_question=False)
+        text += "\n\n" + next_question(body.message, bool(same_lesson), max(0, len(same_lesson) - 1))
+    else:
+        text = EXHAUSTED_PRACTICE_TEXT
+    return {"status": "released", "approved_text": text, "citations": [citation], "selected_document_id": document["id"], "practice_corpus_sha256": descriptor["snapshot_sha256"], "practice_excerpt_mode": selection["mode"] if selection else "exhausted", "policy_snapshot": policy, "budget_snapshot": {**data["budget_snapshot"], "max_turns": turn_limit}, "delivery_method": "reviewed-practice-reference-v2"}
 
 
 def register_lesson_api(app, database, auth, settings, actor, audit_actor):

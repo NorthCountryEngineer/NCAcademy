@@ -5,6 +5,7 @@ import { TeacherTutorPolicyFields, TeacherTutorPolicySummary } from './TeacherTu
 import { teacherProfileLabel } from './Teachers';
 import { lessonHistory, lessonIdentity, requestLesson, type LessonTurn } from './lesson-api';
 import { blankTeacher, blankTutorModel, teacherMetadata, type TeacherCard } from './teacher-api';
+import { CourseTeachingTeam } from './Curriculum';
 afterEach(()=>vi.unstubAllGlobals());
 const card=(id='River'):TeacherCard=>({id,kind:'ai',name:id,title:'Environmental science teacher',pronouns:'they/them',biography:'Learn from evidence.',picture:null,context_ready:true,available_for_tutoring:false,lesson_tutoring_available:true,lesson_mode:'managed',lesson_max_input_chars:500,lesson_max_turns:4});
 const turn=():LessonTurn=>({id:'turn-a',session_id:'session-a',teacher_profile_id:'river',teacher_name:'River',message:'How does the carbon cycle connect plants and air?',status:'released',approved_text:'From the reviewed source: Plants take up carbon dioxide during photosynthesis.',citations:[{document_id:'carbon',title:'NASA carbon cycle',source_url:'https://science.nasa.gov/earth/carbon/',source_page:12,content_sha256:'c'.repeat(64),excerpt_sha256:'e'.repeat(64),excerpt_start:40,excerpt_end:112}],error:null,usage:{prompt_tokens:30,completion_tokens:10,total_tokens:40},created_at:'2026-10-18T12:00:00Z'});
@@ -28,6 +29,22 @@ describe('lesson question request boundaries',()=>{
 });
 
 describe('student lesson presentation',()=>{
+ it('labels approved local practice consistently with the lesson teacher selector without widening generic tutoring',()=>{
+  const managed={...card('Jim'),lesson_tutoring_available:false,available_for_tutoring:false};
+  const practice=renderToStaticMarkup(<CourseTeachingTeam teachers={[managed]} reviewedPractice/>);
+  expect(practice).toContain('Reviewed practice lessons available');
+  expect(practice).not.toContain('Not available for tutoring guidance');
+  const ordinary=renderToStaticMarkup(<CourseTeachingTeam teachers={[managed]}/>);
+  expect(ordinary).toContain('Not available for tutoring guidance');
+  expect(ordinary).not.toContain('Reviewed practice lessons available');
+  for(const unavailable of [{...managed,context_ready:false},{...managed,lesson_mode:'core_agent' as const}]){
+   const html=renderToStaticMarkup(<CourseTeachingTeam teachers={[unavailable]} reviewedPractice/>);
+   expect(html).toContain('Not available for tutoring guidance');
+   expect(html).not.toContain('Reviewed practice lessons available');
+  }
+  const enabled=renderToStaticMarkup(<CourseTeachingTeam teachers={[card()]}/>);
+  expect(enabled).toContain('Available for Lesson Q&amp;A');
+ });
  it('uses server lesson availability for managed and Core-bound teachers without inferring authority',()=>{
   const cards=[card(),{...card('External'),lesson_mode:'core_agent' as const},{...card('Assignment only'),lesson_tutoring_available:false,available_for_tutoring:true},{...card('Human'),kind:'human' as const}];expect(lessonTeachers(cards).map(item=>item.name)).toEqual(['River','External']);
  });

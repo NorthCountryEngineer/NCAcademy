@@ -21,15 +21,25 @@ export type Connection = {id:string;school_id?:string;name:string;endpoint:strin
 export type AuditSession = {session_id:string;student_id:string;student_name?:string;assignment_id:string|null;assignment_title?:string;session_kind?:'assignment'|'lesson';course_title?:string;turn_count:number;last_activity?:string};
 export type Replay = {turns?:Turn[];events?:Record<string,unknown>[];session?:Record<string,unknown>;[key:string]:unknown};
 let csrf='';
+export const SESSION_EXPIRED_EVENT='ncacademy:session-expired';
 export function setCsrf(value:string){csrf=value;}
 export class ApiError extends Error {constructor(message:string,public status:number){super(message);}}
 async function authenticatedResponse(path:string,options:RequestInit={}):Promise<Response>{
+ const requestSession=csrf;
  const method=(options.method||'GET').toUpperCase();
  const headers=new Headers(options.headers);
  if(options.body)headers.set('Content-Type','application/json');
  if(!['GET','HEAD','OPTIONS'].includes(method)&&csrf)headers.set('X-CSRF-Token',csrf);
  const response=await fetch(`/api${path}`,{...options,method,headers,credentials:'same-origin',cache:'no-store'});
- if(!response.ok){let message=`Request failed (${response.status})`;try{const body=await response.json();const detail=body.detail||body.error;message=typeof detail==='string'?detail:detail?JSON.stringify(detail):message;}catch{/* Empty errors have a status fallback. */}throw new ApiError(message,response.status);}
+ if(!response.ok){
+  // A late response from an older session must not sign out a newer login.
+  // Login rejection is ordinary form feedback, not an expired workspace.
+  if(response.status===401&&requestSession&&requestSession===csrf&&!['/auth/password','/auth/local'].includes(path)){
+   csrf='';
+   if(typeof window!=='undefined')window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+  let message=`Request failed (${response.status})`;try{const body=await response.json();const detail=body.detail||body.error;message=typeof detail==='string'?detail:detail?JSON.stringify(detail):message;}catch{/* Empty errors have a status fallback. */}throw new ApiError(message,response.status);
+ }
  return response;
 }
 export async function request<T>(path:string,options:RequestInit={}):Promise<T>{const response=await authenticatedResponse(path,options);return response.status===204?undefined as T:response.json() as Promise<T>;}

@@ -1,5 +1,13 @@
 # Changelog
 
+## November 17, 2026 — Grade 3 and Grade 10 UAT repairs
+
+- Reject partial or unsupported math expressions instead of tutoring a different problem. Parse multiword whole numbers correctly, preserve only genuine follow-ups, and acknowledge unsupported questions without a repeated input loop. Original questions, photos, attempts and identities remain local.
+- Balance distinct forms across the Grade 3 question bank, accept mathematically equivalent fractions, and remove predictable estimate-choice ordering. Existing saved assignments keep their original questions and grading snapshots.
+- Make reviewed-practice follow-ups focus on different exact approved passages, with source provenance and an honest exhausted-material response. Show accurate reviewed-practice teacher availability.
+- Recover clearly from expired sign-in and known requests rejected before admission, without automatically retrying uncertain model sends. Describe the active Homework Help mode's supported scope honestly.
+- Record synthetic Firefox walkthroughs, defects and verification in [the UAT report](uat-2026-11-17.md).
+
 ## November 11, 2026 — conversation-focused Homework Help
 
 - Made the conversation fill the available workspace with a narrower history rail and a mobile history drawer. Earlier guided conversations open in a bounded overlay.

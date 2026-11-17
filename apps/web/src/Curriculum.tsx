@@ -78,7 +78,7 @@ export function CourseDetail({id,user,school,back,backLabel='All courses',initia
     {course?.course_catalog&&<CourseCatalogSelection value={course.course_catalog}/>}
     {course?.curriculum&&<p className="course-academic-context">{academicLabel(course.curriculum)}</p>}
     {user.role!=='student'&&!!course?.assigned_teacher_profiles?.length?<CourseAssignedTeachers profiles={course.assigned_teacher_profiles}/>
-     :!!course?.teachers?.length&&<CourseTeachingTeam teachers={course.teachers}/>}
+     :!!course?.teachers?.length&&<CourseTeachingTeam teachers={course.teachers} reviewedPractice={practice}/>}
    </>}
    {course&&user.role!=='student'&&activity==='coursework'&&<CourseCorpusPanel courseId={id} school={school} user={user}/>}
    {activity==='practice'&&course&&practice?
@@ -149,8 +149,9 @@ export function StudentTeacherChoices({teachers,value,change,disabled=false}:{te
  if(!choices.length)return null;
  return <label>Guidance teacher<select value={value} onChange={e=>change(e.target.value)} disabled={disabled}><option value="">Approved class guidance</option>{choices.map(teacher=><option key={teacher.id} value={teacher.id}>{teacher.name} · AI teacher</option>)}</select><small>Each teacher follows this assignment’s approved guidance and tutoring limits.</small></label>;
 }
-export function CourseTeachingTeam({teachers}:{teachers:TeacherCard[]}){
- return <section className="panel"><div className="panel-head"><h2>Your teaching team</h2></div><div className="course-teaching-team">{teachers.map(teacher=><article key={teacher.id}><TeacherPortrait teacher={teacher}/><div><h3>{teacher.name} <Badge>{teacher.kind==='ai'?'AI teacher':'Human teacher'}</Badge></h3><p>{teacher.title}{teacher.pronouns&&` · ${teacher.pronouns}`}</p>{teacher.biography&&<p className="prose">{teacher.biography}</p>}{teacher.kind==='ai'&&<small>{teacher.lesson_tutoring_available?'Available for Lesson Q&A':teacher.available_for_tutoring?'Available for assignment guidance':'Not available for tutoring guidance'}</small>}</div></article>)}</div></section>;
+export function CourseTeachingTeam({teachers,reviewedPractice=false}:{teachers:TeacherCard[];reviewedPractice?:boolean}){
+ const practiceTeachers=new Set(reviewedPractice?lessonTeachers(teachers,true).map(teacher=>teacher.id):[]);
+ return <section className="panel"><div className="panel-head"><h2>Your teaching team</h2></div><div className="course-teaching-team">{teachers.map(teacher=><article key={teacher.id}><TeacherPortrait teacher={teacher}/><div><h3>{teacher.name} <Badge>{teacher.kind==='ai'?'AI teacher':'Human teacher'}</Badge></h3><p>{teacher.title}{teacher.pronouns&&` · ${teacher.pronouns}`}</p>{teacher.biography&&<p className="prose">{teacher.biography}</p>}{teacher.kind==='ai'&&<small>{practiceTeachers.has(teacher.id)?'Reviewed practice lessons available':teacher.lesson_tutoring_available?'Available for Lesson Q&A':teacher.available_for_tutoring?'Available for assignment guidance':'Not available for tutoring guidance'}</small>}</div></article>)}</div></section>;
 }
 
 export function CourseAssignedTeachers({profiles}:{profiles:AssignedTeacherProfile[]}){

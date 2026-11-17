@@ -113,18 +113,32 @@ def test_mathematical_practices_are_explicit_ungraded_reflection():
 
 def test_products_and_rounding_match_independent_arithmetic():
     for item in _questions("multiplication-facts"):
-        a, b = map(int, re.fullmatch(r"What is (\d) × (\d)\?", item["prompt"]).groups())
-        assert grade_practice_item(item, str(sum([a] * b)))
-        assert not grade_practice_item(item, str(a * b + 1))
+        a, b = map(int, re.findall(r"\d+", item["prompt"]))
+        expected = sum([a] * b)
+        if item.get("figure"):
+            assert item["figure"].count("●") == expected
+        if item["answer_type"] == "choice":
+            assert _correct_label(item) == str(expected)
+        else:
+            assert grade_practice_item(item, str(expected))
+            assert not grade_practice_item(item, str(expected + 1))
     seen = set()
     for item in _questions("rounding"):
-        n, target = re.search(r"Round ([\d,]+) to the nearest (ten|hundred)\.", item["prompt"]).groups()
-        n = int(n.replace(",", ""))
-        k = {"ten": 10, "hundred": 100}[target]
+        prompt = item["prompt"]
+        if "neighboring multiples" in prompt:
+            lower, upper, k, n = map(int, (v.replace(",", "") for v in re.findall(r"[\d,]+", prompt)))
+            assert upper - lower == k
+        else:
+            n, target = re.search(r"(?:Round |is )([\d,]+) (?:rounded )?to the nearest (ten|hundred)", prompt).groups()
+            n = int(n.replace(",", ""))
+            k = {"ten": 10, "hundred": 100}[target]
         expected = min(range(0, 1001, k), key=lambda m: (abs(m - n), -m))
-        seen.add(target)
-        assert grade_practice_item(item, f"{expected:,}")
-    assert seen == {"ten", "hundred"}
+        seen.add(k)
+        if item["answer_type"] == "choice":
+            assert _correct_label(item) == str(expected)
+        else:
+            assert grade_practice_item(item, f"{expected:,}")
+    assert seen == {10, 100}
 
 
 def _value_of_expression(text):
@@ -172,22 +186,32 @@ def test_equal_area_or_perimeter_has_a_different_other_quantity():
 def test_equivalent_fraction_whole_has_equal_visual_width_and_unique_equivalent_option():
     denominators = {2, 3, 4, 6, 8}
     for item in _questions("equivalent-fraction-location"):
-        target, = re.findall(r"\d+/\d+", item["prompt"])
-        equivalent = [o for o in item["options"] if Fraction(o["label"]) == Fraction(target)]
-        assert len(equivalent) == 1
-        assert grade_practice_item(item, equivalent[0]["id"])
         strips = [row.split(": ", 1)[-1] for row in item["figure"].splitlines()]
         assert len(strips) == 2 and len(strips[0]) == len(strips[1])
         assert strips[0].index("·") == strips[1].index("·")
-        for option in item["options"]:
-            assert int(option["label"].split("/")[-1]) in denominators
+        if item["answer_type"] == "choice":
+            target, = re.findall(r"\d+/\d+", item["prompt"])
+            equivalent = [o for o in item["options"] if Fraction(o["label"]) == Fraction(target)]
+            assert len(equivalent) == 1
+            assert grade_practice_item(item, equivalent[0]["id"])
+            assert all(int(o["label"].split("/")[-1]) in denominators for o in item["options"])
+        elif item["answer_key"]["kind"] == "whole":
+            n, d, bottom = map(int, re.search(r"shades (\d+) of (\d+) parts.*?the (\d+) bottom", item["prompt"]).groups())
+            assert grade_practice_item(item, str(n * bottom // d))
+        else:
+            n, d, new_d = map(int, re.search(r"named (\d+)/(\d+).*?using (\d+) equal", item["prompt"]).groups())
+            assert grade_practice_item(item, f"{n * new_d // d}/{new_d}")
 
 
 def test_fraction_comparisons_and_beyond_one_are_not_floating_point():
     for item in _questions("compare-fractions"):
         left, right = map(Fraction, re.findall(r"\d+/\d+", item["prompt"]))
-        expected = "<" if left < right else ">" if left > right else "="
-        assert _correct_label(item) == expected
+        if item["answer_type"] == "choice":
+            expected = "<" if left < right else ">" if left > right else "="
+            assert _correct_label(item) == expected
+        else:
+            expected = max(left, right) if "greater" in item["prompt"] else min(left, right)
+            assert grade_practice_item(item, str(expected))
     for item in _questions("fraction-jumps"):
         if item["answer_type"] == "text" and "make" in item["prompt"]:
             jumps, unit = map(int, re.search(r"make (\d+) jumps of 1/(\d+)", item["prompt"]).groups())
@@ -223,7 +247,7 @@ def test_scaled_graph_and_fractional_line_plot_counts_match_the_described_data()
 
 @pytest.mark.parametrize("kind,value,correct,wrong", [
     ("whole", 1024, ("1024", "1,024", " 1024 "), ("1,02,4", "1024.0", "1 024")),
-    ("fraction", [1, 2], ("1/2", "2 / 4", "4/8", "3/6"), ("2/3", "1/0", "5/10", "1 / 2 / 3")),
+    ("fraction", [1, 2], ("1/2", "2 / 4", "4/8", "3/6", "5/10", "6/12", "49/98"), ("2/3", "1/0", "1 / 2 / 3")),
     ("fraction", [8, 4], ("8/4", "4/2", "2"), ("3", "1/4", "4/8")),
     ("fraction-parts", [2, 4], ("2/4", "2 / 4"), ("1/2", "4/8", "0.5")),
     ("clock", "9:05", ("9:05", "09:05", "9:5"), ("9.05", "21:05", "9:60", "9:50")),
@@ -256,3 +280,76 @@ def test_exact_course_context_required(fields):
 def test_generation_rejects_unbounded_or_unknown_inputs(topic, seed, count):
     with pytest.raises(ValueError):
         generate_practice(topic, seed, count)
+
+
+def test_narrow_topics_mix_mathematical_forms_in_one_worksheet():
+    # Count actual tasks, not different nouns or changed numeric operands.
+    classifiers = {
+        "area-meaning": lambda q: "job" if "Which job" in q["prompt"] else "surface" if "What does" in q["prompt"] else "units",
+        "multiplication-facts": lambda q: "choice" if q["answer_type"] == "choice" else "array" if q.get("figure") else "calculate",
+        "rounding": lambda q: "number-line" if "number line" in q["prompt"] else "choice" if q["answer_type"] == "choice" else "calculate",
+        "fraction-number-line": lambda q: "count-intervals" if "How many" in q["prompt"] else "choice" if q["answer_type"] == "choice" else "name-point",
+        "rectangle-area": lambda q: "missing-side" if "How wide" in q["prompt"] else "expression" if q["answer_type"] == "choice" else "calculate",
+        "compare-fractions": lambda q: "greater" if "greater" in q["prompt"] else "smaller" if "smaller" in q["prompt"] else "symbol",
+    }
+    for topic, classify in classifiers.items():
+        for seed in range(20):
+            counts = Counter(classify(item) for item in generate_practice(topic, seed, 12))
+            assert len(counts) == 3, (topic, seed, counts)
+            assert max(counts.values()) - min(counts.values()) <= 1
+            sequence = [classify(item) for item in generate_practice(topic, seed, 12)]
+            assert not any(sequence[i] == sequence[i + 1] == sequence[i + 2] for i in range(10))
+
+
+def test_area_worksheet_no_longer_repeats_one_correct_sentence():
+    for seed in range(20):
+        items = generate_practice("area-meaning", seed, 20)
+        answers = Counter(_correct_label(item) for item in items)
+        assert max(answers.values()) <= 7
+        assert len(answers) >= 3
+
+
+def test_estimate_distractors_do_not_make_smallest_answer_always_correct():
+    ranks = set()
+    for item in _questions("reasonable-estimates", seeds=20):
+        if item["answer_type"] == "choice":
+            correct = int(_correct_label(item))
+            labels = sorted(int(o["label"]) for o in item["options"])
+            assert len(set(labels)) == 4
+            assert all(value >= 0 for value in labels)
+            ranks.add(labels.index(correct))
+    assert ranks == {0, 1, 2, 3}
+
+
+def test_equivalent_fraction_grading_does_not_restrict_answer_to_teaching_denominators():
+    for item in _questions("fraction-number-line", seeds=5):
+        if item["answer_key"]["kind"] != "fraction":
+            continue
+        n, d = item["answer_key"]["value"]
+        assert grade_practice_item(item, f"{n * 7}/{d * 7}")
+        assert not grade_practice_item(item, f"{n * 7 + 1}/{d * 7}")
+        assert not grade_practice_item(item, f"{n}/0")
+
+
+def test_unit_square_and_area_models_match_independent_counts():
+    for item in _questions("counting-square-units"):
+        count = item["figure"].count("■")
+        if "Add a new row" in item["prompt"]:
+            count += int(re.search(r"row of (\d+)", item["prompt"])[1])
+        if item["answer_type"] == "choice":
+            assert _correct_label(item) == str(count)
+        else:
+            assert grade_practice_item(item, str(count))
+    for item in _questions("equal-area-shares"):
+        if "Region A" in item["prompt"]:
+            a, b = item["figure"].split("B:")
+            assert a.count("■") == b.count("■")
+            assert _correct_label(item) == "1/2"
+
+
+def test_area_missing_side_uses_saved_rectangle_dimensions():
+    for item in _questions("rectangle-area"):
+        if "How wide" in item["prompt"]:
+            area, length = map(int, re.findall(r"\d+", item["prompt"]))
+            assert area % length == 0
+            assert grade_practice_item(item, str(area // length))

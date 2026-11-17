@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy import select
 
 from academy.db import Audit, Record
+from academy.practice_lesson import EXHAUSTED_PRACTICE_TEXT, next_question, select_practice_excerpt
 from conftest import login
 from test_ny_grade3_mathematics import CURRICULUM
 from test_teacher_onboarding import approve, assign, create, school_id
@@ -58,6 +59,12 @@ def test_reviewed_chat_handoff_followup_replay_and_encrypted_audit(client, app, 
     follow = ask(client, env, key="reviewed-followup-test", message="Can you show it a different way?").json()
     assert follow["status"] == "released" and follow["citations"][0]["document_id"] == FRACTIONS
     assert "with a sketch or objects" in follow["approved_text"]
+    assert document["content"] not in follow["approved_text"]
+    citation = follow["citations"][0]
+    excerpt = document["content"][citation["excerpt_start"]:citation["excerpt_end"]]
+    assert 0 < len(excerpt) <= 420
+    assert excerpt in follow["approved_text"]
+    assert citation["excerpt_sha256"] == hashlib.sha256(excerpt.encode()).hexdigest()
     assert client.get(env["path"], headers=env["student"]).json() == [first, follow]
     with app.state.database.factory() as db:
         row = db.get(Record, first["id"])
@@ -100,3 +107,58 @@ def test_other_student_cannot_open_practice_chat_or_history(client, practice_cha
     env["student"] = login(client, "demo-student2")
     assert ask(client, env).status_code == 403
     assert client.get(env["path"], headers=env["student"]).status_code == 403
+
+
+def test_followups_progress_through_exact_sections_then_explain_the_limit(client, app, practice_chat):
+    env = practice_chat
+    first = ask(client, env, lesson_id=FRACTIONS).json()
+    document = next(item for item in env["corpus"]["documents"] if item["id"] == FRACTIONS)
+    spans, replies = set(), [first]
+    for index in range(8):
+        response = ask(client, env, key=f"section-followup-{index}", lesson_id=FRACTIONS,
+                       message="Can you show another example?").json()
+        assert response["status"] == "released", response
+        replies.append(response)
+        citation = response["citations"][0]
+        start, end = citation["excerpt_start"], citation["excerpt_end"]
+        excerpt = document["content"][start:end]
+        assert citation["excerpt_sha256"] == hashlib.sha256(excerpt.encode()).hexdigest()
+        if not excerpt:
+            assert response["approved_text"] == EXHAUSTED_PRACTICE_TEXT
+            break
+        assert (start, end) not in spans
+        spans.add((start, end))
+        assert len(excerpt) <= 420 and excerpt in response["approved_text"]
+        assert document["content"] not in response["approved_text"]
+    else:
+        pytest.fail("A finite reviewed lesson must give an honest exhaustion response")
+    assert len(spans) >= 3
+    assert client.get(env["path"], headers=env["student"]).json() == replies
+    with app.state.database.factory() as db:
+        values = [db.get(Record, reply["id"]).value for reply in replies]
+        assert values[0]["practice_excerpt_mode"] == "overview"
+        assert values[-1]["practice_excerpt_mode"] == "exhausted"
+        assert all(value["send_marker"] is None and value["usage"] == {} for value in values)
+
+
+def test_section_selection_ranks_the_question_and_keeps_exact_unicode_offsets():
+    content = "A rectangle covers an area. Count its squares. Fractions have equal parts. A shaded part can be ½."
+    overview = select_practice_excerpt(content, "Help with fractions", started=False)
+    assert content[overview["start"]:overview["end"]] == content
+    first = select_practice_excerpt(content, "Help with shaded fractions", started=True)
+    assert content[first["start"]:first["end"]] == "Fractions have equal parts. A shaded part can be ½."
+    second = select_practice_excerpt(content, "Another example", started=True,
+                                     previous_spans=[(first["start"], first["end"])])
+    assert content[second["start"]:second["end"]] == "A rectangle covers an area. Count its squares."
+    assert select_practice_excerpt(content, "Another example", started=True,
+                                   previous_spans=[(first["start"], first["end"]), (second["start"], second["end"])]) is None
+    repeat = select_practice_excerpt(content, "Repeat the shaded fractions part", started=True,
+                                     previous_spans=[(first["start"], first["end"]), (second["start"], second["end"])])
+    assert repeat == first
+
+
+def test_one_sentence_has_no_fake_alternative_and_fixed_coaching_varies():
+    assert select_practice_excerpt("This is the only approved explanation.", "Another example", started=True) is None
+    prompts = {next_question("Show it with a picture", True, index) for index in range(3)}
+    assert len(prompts) == 3
+    assert "Which part" in next_question("Help me check this", True, 1)

@@ -3,7 +3,7 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { setCsrf, type Course, type School, type User } from './api';
 import { Empty, Notice, Spinner, Tabs } from './components';
-import { CourseDetail } from './Curriculum';
+import { CourseDetail, CourseTeachingTeam } from './Curriculum';
 import { DailyPractice, PracticeQuestion, PracticeResultView } from './DailyPractice';
 import { LessonTutor } from './LessonTutor';
 import { dailyPracticeDetail, isGrade3PracticeCourse, practiceDateLabel, type PracticeDetail, type PracticeWorkspace } from './daily-practice-api';
@@ -382,6 +382,7 @@ describe('Grade 3 daily practice interactions', () => {
   expect(find(DailyPractice)?.initialAssignmentId).toBe(today.id);
   (find(Tabs)?.change as (id: string) => void)('coursework');
   expect(find(Tabs)?.value).toBe('coursework');
+  expect(find(CourseTeachingTeam)?.reviewedPractice).toBe(true);
   expect(visible(render())).toContain('No assignments yet');
  });
 
@@ -390,6 +391,7 @@ describe('Grade 3 daily practice interactions', () => {
   await vi.waitFor(() => expect(find(Tabs)?.value).toBe('coursework'));
   expect(find(Tabs)?.items).not.toContainEqual(expect.objectContaining({ id: 'practice' }));
   expect(find(DailyPractice)).toBeUndefined();
+  expect(find(CourseTeachingTeam)?.reviewedPractice).toBe(false);
   expect(visible(render())).toContain('No assignments yet');
   (find(Tabs)?.change as (id: string) => void)('lesson');
   expect(find(LessonTutor)).toMatchObject({

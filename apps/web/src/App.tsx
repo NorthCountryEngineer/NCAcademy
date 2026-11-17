@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, BookOpenCheck, GraduationCap, LayoutDashboard, Library, LogOut, Menu, MessageSquareText, Plus, School as SchoolIcon, Settings, ShieldCheck, SlidersHorizontal, Users, UserRound, KeyRound, X } from 'lucide-react';
-import { ApiError, contextualUser, errorText, request, roleLabel, schoolPath, send, setCsrf, type AuthConfig, type Course, type School, type User } from './api';
+import { ApiError, SESSION_EXPIRED_EVENT, contextualUser, errorText, request, roleLabel, schoolPath, send, setCsrf, type AuthConfig, type Course, type School, type User } from './api';
 import { Badge, Empty, Notice, PageHead, Spinner } from './components';
 import { CourseDetail, CourseEditor } from './Curriculum';
 import { isGrade3PracticeCourse } from './daily-practice-api';
@@ -36,6 +36,17 @@ export default function App(){
  const [gameStudioReturn,setGameStudioReturn]=useState<GameStudioSelection|null>(null);
  const classroomCallback=useRef(typeof window==='undefined'?null:classroomCallbackTarget(window.location.search));
  const [schools,setSchools]=useState<School[]>([]),[schoolId,setSchoolId]=useState(''),[schoolsLoading,setSchoolsLoading]=useState(false),[createSchool,setCreateSchool]=useState(false);
+ useEffect(()=>{
+  function expired(){
+   sessionEpoch.current++;setUser(null);setCsrf('');setBusy(false);
+   setSchools([]);setSchoolId('');setSchoolsLoading(false);setCreateSchool(false);
+   setCourse(null);setCourseTarget(null);setGroupCourse(null);setPage('overview');setMobile(false);
+   setGameStudioReturn(null);gameStudioCallback.current=null;clearGameStudioSelection();
+   setError('Your sign-in expired. Sign in again to continue. Your last action was not repeated.');
+  }
+  window.addEventListener(SESSION_EXPIRED_EVENT,expired);
+  return()=>window.removeEventListener(SESSION_EXPIRED_EVENT,expired);
+ },[]);
  useEffect(()=>{if(gameStudioCallback.current)stripGameStudioSelectionQuery();},[]);
  useEffect(()=>{const target=gameStudioCallback.current;if(!target||!user)return;if(user.auth_provider==='academy'||user.principal_kind==='agent'){gameStudioCallback.current=null;clearGameStudioSelection();return;}if(!schools.length||schoolsLoading)return;const current=schools.find(value=>value.id===schoolId);if(!current)return;gameStudioCallback.current=null;clearGameStudioSelection();if(user.role!=='admin'&&!(current.capabilities.manage_school&&current.capabilities.manage_connections))return;setGameStudioReturn(target);setCourse(null);setCourseTarget(null);setPage(user.role==='admin'?'administration':'school');},[user,schools,schoolId,schoolsLoading]);
  const loadSchools=useCallback(async(quiet=false)=>{const epoch=sessionEpoch.current;if(!quiet)setSchoolsLoading(true);try{const items=await request<School[]>('/schools');if(epoch!==sessionEpoch.current)return;setSchools(items);setSchoolId(current=>items.some(s=>s.id===current)?current:items[0]?.id||'');}catch(e){if(epoch===sessionEpoch.current)setError(errorText(e));}finally{if(epoch===sessionEpoch.current)setSchoolsLoading(false);}},[]);
@@ -46,7 +57,7 @@ export default function App(){
  async function login(id:string){setBusy(true);setError('');try{await send('/auth/local',{user_id:id});accept(await request<User>('/auth/me'));}catch(e){setError(errorText(e));}finally{setBusy(false);}}
  async function passwordLogin(username:string,password:string){setBusy(true);setError('');try{await send('/auth/password',{username,password});accept(await request<User>('/auth/me'));}catch(e){setError(errorText(e));}finally{setBusy(false);}}
  async function passwordChanged(){const session=await request<User>('/auth/me');setUser(session);setCsrf(session.csrf_token||'');}
- async function logout(){setBusy(true);setError('');try{await send('/auth/logout',{});sessionEpoch.current++;setCreateSchool(false);setGameStudioReturn(null);gameStudioCallback.current=null;clearGameStudioSelection();setUser(null);setCsrf('');}catch(e){setError(errorText(e));}finally{setBusy(false);}}
+ async function logout(){setBusy(true);setError('');try{await send('/auth/logout',{});sessionEpoch.current++;setCreateSchool(false);setGameStudioReturn(null);gameStudioCallback.current=null;clearGameStudioSelection();setUser(null);setCsrf('');}catch(e){if(!(e instanceof ApiError&&e.status===401))setError(errorText(e));}finally{setBusy(false);}}
  function navigate(id:string){setPage(id);setCourse(null);setCourseTarget(null);setGroupCourse(null);setMobile(false);setError('');}
  function openHomeworkCourse(target:HomeworkTarget){setCourseTarget(target);setCourse(target.courseId);}
  function openClassGroup(id:string){navigate('groups');setGroupCourse(id);}

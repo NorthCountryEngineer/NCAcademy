@@ -141,7 +141,7 @@ def test_original_worksheet_stays_local_and_question7_uses_same_source_but_clean
                     raw = base64.b64decode(part["image_url"]["url"].split(",", 1)[1])
                     assert hashlib.sha256(raw).hexdigest() != original_hash
         assert all(entry["payload"]["task"]["values"] == [21, 3] for entry in current_calls)
-        later = send(child, headers, session_id, "Why? I tried 7. STUDENT_ATTEMPT_SENTINEL", "local-check-method-only")
+        later = send(child, headers, session_id, "Name: STUDENT_ATTEMPT_SENTINEL\nWhy? I tried 7.", "local-check-method-only")
         assert later.json()["status"] == "released", later.text
         assert later.json()["answer"] != follow.json()["answer"]
         for entry in env["public_calls"][-2:]:
@@ -149,6 +149,43 @@ def test_original_worksheet_stays_local_and_question7_uses_same_source_but_clean
             assert entry["payload"]["guidance_action"] == "check_method"
             assert entry["payload"]["teaching_stage"] == 1
             assert "STUDENT_ATTEMPT_SENTINEL" not in json.dumps(entry["prompt"])
+        calls = len(env["public_calls"])
+        unknown = send(child, headers, session_id, "Why? I tried 7. STUDENT_ATTEMPT_SENTINEL", "unknown-followup-stays-local")
+        assert unknown.json()["status"] == "clarify"
+        assert len(env["public_calls"]) == calls
+    finally:
+        child.close()
+
+
+def test_related_science_concepts_remain_one_complete_public_task(client, app, monkeypatch):
+    env = setup_public(client, app, monkeypatch)
+    child, headers, session_id, account = create_child(client, app, env)
+    try:
+        response = send(child, headers, session_id,
+            "How are photosynthesis and cellular respiration related?", "science-relationship")
+        assert response.json()["status"] == "released", response.text
+        assert env["public_calls"]
+        assert all(entry["payload"]["task"] == {"kind": "topic", "topic": "photosynthesis_respiration_relationship"}
+                   for entry in env["public_calls"])
+        assert "cellular respiration" in response.json()["deidentification"]["task_summary"]
+    finally:
+        child.close()
+
+
+def test_recognized_unsupported_equation_acknowledges_scope_without_a_model_call(client, app, monkeypatch):
+    env = setup_public(client, app, monkeypatch)
+    child, headers, session_id, account = create_child(client, app, env)
+    try:
+        question = "Help me factor x^2 - 5x + 6 without just giving me the answer."
+        response = send(child, headers, session_id, question, "unsupported-algebra")
+        value = response.json()
+        assert value["status"] == "clarify", response.text
+        assert value["message"] == question
+        assert value["deidentification"]["reason"] == "unsupported_math"
+        assert "outside the math this mode supports" in value["answer"]
+        assert "still here to edit" in value["answer"]
+        assert "Type the equation" not in value["answer"]
+        assert env["public_calls"] == []
     finally:
         child.close()
 

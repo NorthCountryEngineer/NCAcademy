@@ -11,6 +11,8 @@ from academy import provider
 @pytest.mark.parametrize(("question", "task"), [
     ("Help with 21 ÷ 3", {"kind": "arithmetic", "operation": "division", "values": [21, 3]}),
     ("Explain 45 plus 18", {"kind": "arithmetic", "operation": "addition", "values": [45, 18]}),
+    ("What is one hundred twenty three plus forty five?", {"kind": "arithmetic", "operation": "addition", "values": [123, 45]}),
+    ("Explain one thousand two hundred and thirty-four minus twenty-one", {"kind": "arithmetic", "operation": "subtraction", "values": [1234, 21]}),
     ("Subtract 14 from 32", {"kind": "arithmetic", "operation": "subtraction", "values": [32, 14]}),
     ("Draw an array with 3 rows and 5 dots in each row.", {"kind": "arithmetic", "operation": "multiplication", "values": [3, 5]}),
     ("A gardener puts 24 seedlings equally into 4 trays. How many go into each tray?", {"kind": "arithmetic", "operation": "division", "values": [24, 4]}),
@@ -57,6 +59,29 @@ def test_numbered_photo_question_selection_and_followup(monkeypatch):
 ])
 def test_unsupported_private_or_ambiguous_content_stays_local(question):
     result = privacy.compile_homework_task(question)
+    assert result.status == "clarify" and result.task is None
+
+
+@pytest.mark.parametrize("question", [
+    "Explain 2 + 3 * 4", "Explain 2 + 3 + 4", "What is 8 - 3 - 2?",
+    "Explain 2 plus 3 times 4", "Explain 2 plus 3 plus 4",
+    "Add 2 and 3 and 4", "Explain 2 + 3 = 6", "Explain -2 + 3",
+    "Explain 2.5 + 3", "Explain 2 + 3.5", "Explain 2 + 3 squared",
+    "Explain one and two plus three", "Explain 3 groups of 4 and 5 groups of 6",
+    "Compare fractions 1/2 and 3/4 and explain 2 + 3",
+])
+def test_incomplete_or_ambiguous_expressions_are_never_silently_shortened(question):
+    result = privacy.compile_homework_task(question)
+    assert result.status == "clarify" and result.task is None
+
+
+@pytest.mark.parametrize("question", [
+    "Explain two plus three plus four", "Explain one and two plus three",
+    "Explain x^2 - 5x + 6", "Explain the quadratic equation x = 3",
+])
+def test_unsupported_new_math_does_not_reuse_the_previous_problem(question):
+    previous = privacy.compile_homework_task("21 divided by 3")
+    result = privacy.compile_homework_task(question, previous_task=previous.task)
     assert result.status == "clarify" and result.task is None
 
 

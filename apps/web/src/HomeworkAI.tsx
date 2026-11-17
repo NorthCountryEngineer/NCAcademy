@@ -28,6 +28,21 @@ const photoPreflightErrors=new Map([
  ['Previous homework picture context changed; confirm the picture again',409],
  ['Previous homework picture changed; confirm the picture again',409],
 ]);
+// These responses are emitted before an operation is recorded. Clear only
+// their unused request keys; an unknown error can still conceal a model send.
+const conversationPreflightErrors=new Map([
+ ['Daily Homework Help conversation creation limit reached',429],
+ ['Complete your learning preferences before starting a new tutoring session',409],
+ ['Private Homework Help is disabled for this school',403],
+]);
+const questionPreflightErrors=new Map([
+ ['This conversation has 100 questions. Start a new conversation; daily limits still apply',429],
+ ['Daily Homework Help question or picture limit reached',429],
+ ['Daily Homework Help question or picture limit reached; resets at midnight UTC',429],
+ ['Choose only a currently enrolled course',403],
+ ['Choose only a currently enrolled course at this school',403],
+ ['A previous AI question has an unresolved outcome; ask your administrator. No automatic retry is permitted',409],
+]);
 
 export function homeworkConversationTitle(session:HomeworkAIConversationSummary):string {
  return session.title?.trim().slice(0,160) || 'New conversation';
@@ -202,6 +217,9 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     if(e.status===403||e.status===404)setUseEarlierPhotos(false);
     try{setIndex(await homeworkAIIndex(schoolId));}
     catch{setIndex(previous=>({...previous,assistant:{...previous.assistant,available:false}}));setError(`${errorText(e)} Refresh history to reload the assistant settings.`);}
+   }else if(e instanceof ApiError && (sendingMessage?questionPreflightErrors:conversationPreflightErrors).get(e.message)===e.status){
+    remember(null);setUncertain(false);setError(errorText(e));
+    if(e.status===403&&sendingMessage)setCourseId('');
    }else if(privateMode && e instanceof ApiError && ([403,422,429].includes(e.status) || (e.status===409 && privatePreflightConflicts.has(e.message)))){
     remember(null);
     setError(errorText(e));
@@ -224,7 +242,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
  }
  function closeHistory(){setHistoryOpen(false);historyToggle.current?.focus();}
  return <div className={`homework-chat${compact?' homework-embedded':''}${historyOpen?' homework-history-open':''}`} onKeyDown={event=>{if(event.key==='Escape'&&historyOpen){event.preventDefault();closeHistory();}}}>
-  {compact?<div className="classroom-help-heading"><h2>Homework Help</h2></div>:<PageHead title="Homework Help" description="Ask about anything you’re learning. No course enrollment required."/>}
+  {compact?<div className="classroom-help-heading"><h2>Homework Help</h2></div>:<PageHead title="Homework Help" description={privateMode||localTaskProcessing?"Get help with supported math and learning topics. No course enrollment required.":"Ask about anything you’re learning. No course enrollment required."}/>}
   <Notice error={error}/>
   <div className="homework-layout homework-chat-layout">
    {historyOpen&&<button type="button" className="homework-history-backdrop" aria-label="Close conversation history" onClick={closeHistory}/>}
@@ -241,7 +259,7 @@ export function HomeworkAI({schoolId,userId,index:initial,openCourse,initialCour
     {!assistant.available&&<div className="homework-pending" role="status"><strong>Homework Help is not ready for new questions at this school.</strong><p>{homeworkAssistantSetupMessage(assistant)} You do not need to enroll in a class. Your recorded conversations remain available while you have access.</p></div>}
     <div className="homework-chat-scroll" aria-label="Conversation messages" aria-busy={loading||busy} tabIndex={0}>
      {loading?<Spinner text="Loading your conversation…"/>:<div className="homework-messages" aria-label="Your homework conversation" aria-live="polite" aria-relevant="additions">
-      {!session?.messages.length&&!submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={21}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:localTaskProcessing?<p>Type a question or add a homework photo. We prepare supported learning details privately, then the AI helps you understand the idea.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">You can ask about any subject, even if you are not enrolled in a course.</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
+      {!session?.messages.length&&!submitted?<div className="homework-triage-intro"><span className="homework-intro-icon"><MessageSquareText size={21}/></span><h3>What would you like to understand?</h3>{privateMode?<p>{photoAllowed?'Type a question or add a homework photo.':'Type a question.'} The coach can offer hints and practice, or ask you for more detail when it needs it.</p>:localTaskProcessing?<p>Type a question or add a homework photo. We prepare supported learning details privately, then the AI helps you understand the idea. For complex algebra or a reading passage, start with one step or concept. We may ask you to simplify an unsupported question.</p>:<p>Type a question or add a homework photo. Your assistant can help on its own and bring in a relevant approved AI teacher when one is available.</p>}<p className="help-text">{privateMode||localTaskProcessing?"Try one math step or learning topic at a time. You do not need to be enrolled in a course.":"You can ask about any subject, even if you are not enrolled in a course."}</p></div>:session?.messages.map(item=><HomeworkAIMessageView key={item.id} item={item} assistantName={title} paused={locked} choose={chooseCourse} openCourse={openCourse} sessionId={session.session.id} safetyScope={scope}/>)}
       {submitted&&<div className="homework-message homework-submitted" role="status"><div className="homework-student-message"><small>You</small>{submitted.message&&<p className="prose">{submitted.message}</p>}{submitted.photoCount>0&&<p className="help-text">{submitted.photoCount} homework photo{submitted.photoCount===1?'':'s'} attached</p>}</div><Spinner text="Working on your question…"/></div>}
       <div ref={messagesEnd}/>
      </div>}
@@ -278,9 +296,10 @@ export function releasedHomeworkAIAnswer(item:HomeworkAIMessage):string|null{ret
 
 export function HomeworkAIMessageView({item,assistantName='Homework assistant',paused=false,choose,openCourse,sessionId,safetyScope}:{item:HomeworkAIMessage;assistantName?:string;paused?:boolean;choose:(id:string)=>void;openCourse:(target:HomeworkTarget)=>void;sessionId?:string;safetyScope?:string}) {
  const answer=releasedHomeworkAIAnswer(item),triage=item.triage,responder=homeworkResponder(item,assistantName);
+ const unsupportedTask=homeworkNeedsTaskClarification(item)&&['unsupported_math','unsupported_topic'].includes(item.deidentification?.reason||'');
  const answerLabel=item.private_mode
   ? item.status==='clarify'?'Study coach follow-up':'Study coach explanation'
-  : homeworkNeedsTaskClarification(item)?'Help us read your question':item.status==='clarify'?'AI clarification':'AI explanation';
+  : unsupportedTask?'Try a supported learning step':homeworkNeedsTaskClarification(item)?'Help us read your question':item.status==='clarify'?'AI clarification':'AI explanation';
  return <article className="homework-message">
   <div className="homework-student-message"><small>You · {stamp(item.created_at)}</small>{item.message && <p className="prose">{item.message}</p>}{item.images.length>0 && <HomeworkAIPhotos messageId={item.id} images={item.images}/>}</div>
   <div className="homework-handoff"><span className="homework-agent-avatar"><MessageSquareText size={18}/></span><div><strong>{responder.name}</strong><small className="homework-responder-description">{responder.description}{triage.course_name?` · ${triage.course_name}`:triage.topic?` · ${triage.topic}`:''}</small>{item.status!=='released' && <Badge tone={item.status==='pending'?'amber':''}>{item.status==='clarify'?'Follow-up question':item.status}</Badge>}{triage.prompt && triage.prompt!==answer && <p>{triage.prompt}</p>}{item.status==='clarify' && triage.candidates.length>0 && <div className="homework-course-options" aria-label="Choose context for your next question">{triage.candidates.map(course=><button className="button secondary" type="button" disabled={paused} key={course.id} onClick={()=>choose(course.id)}>{course.name}<ArrowRight size={14}/></button>)}</div>}</div></div>

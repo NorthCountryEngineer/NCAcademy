@@ -97,7 +97,7 @@ def test_unrecognized_or_identifier_only_inputs_are_local_clarifications(text, m
 
 
 def test_closed_followup_carries_the_task_but_not_the_student_attempt_or_question_index():
-    attempts = ["I tried 12. PRIVATE_CHILD_ALDER. Why?", "I tried 999. PRIVATE_CHILD_BIRCH. Why?"]
+    attempts = ["Name: PRIVATE_CHILD_ALDER\nI tried 12. Why?", "Name: PRIVATE_CHILD_BIRCH\nI tried 999. Why?"]
     results = [compiler.compile_homework_task(attempt, previous_task=TASK, previous_stage=1, previous_question=47)
                for attempt in attempts]
     assert all(item.status == "ready" and item.question_number == 47 for item in results)
@@ -107,6 +107,11 @@ def test_closed_followup_carries_the_task_but_not_the_student_attempt_or_questio
     assert public["task"] == TASK and public["guidance_action"] == "check_method"
     assert "47" not in json.dumps(public) and "999" not in json.dumps(public)
     assert not any(sentinel in json.dumps(public) for sentinel in SENTINELS)
+    # An unrecognized trailing phrase may name a new topic, so it must not
+    # silently carry forward the old task just because it contains "Why".
+    for phrase in ["I tried 12. PRIVATE_CHILD_ALDER. Why?", "Why cellular respiration in anaerobic bacteria?"]:
+        unknown = compiler.compile_homework_task(phrase, previous_task=TASK)
+        assert unknown.status == "clarify" and unknown.task is None
 
 
 def test_personal_numeric_headers_cannot_become_math_operands_or_external_context():
