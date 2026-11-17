@@ -23,7 +23,7 @@ def test_explicit_unicode_powers_are_equivalent_but_ambiguous_ocr_is_not_guessed
     assert parse_algebra_task("Factor x2 - 5x + 6") is None
 
 
-@pytest.mark.parametrize("attempt", ["I got x=2", "I got x=3", "My answer is (x-2)(x-3)", "I think the answer is (x-2)(x-3)", "I think my answer is x=3", "Can you check my answer x=3?", "I got -5", "I got 3/2"])
+@pytest.mark.parametrize("attempt", ["I got x=2", "I got x=3", "My answer is (x-2)(x-3)", "I think the answer is (x-2)(x-3)", "I think my answer is x=3", "Can you check my answer x=3?", "I got -5", "I got 3/2", "I think the answer is (x - 2)(x - 3). Can you check my method?", "I got x=3; could you check my work?", "My answer is -5. Is that correct?"])
 def test_attempts_cannot_replace_the_known_problem_or_enter_provider_content(attempt):
     original = compile_homework_task("Factor x^2 - 5x + 6")
     reply = compile_homework_task(attempt, previous_task=original.task, previous_stage=0)

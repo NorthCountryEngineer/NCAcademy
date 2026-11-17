@@ -40,6 +40,7 @@ A clarification is acceptable only when it preserves the user's task and clearly
 | ALG-07 | The ordinary phrase `I think the answer is ...` did not retain the original algebra task. | Explicit answer-checking phrases retain the original task and send only a general checking strategy, never the student's expression. |
 | ALG-08 | An attempt labelled as a different question could reuse the previous question, while punctuation after a typed question label could block parsing. | Explicit question-number changes require the original problem; ordinary colon/period labels preserve the selected equation. |
 | ALG-09 | Live Grade 10 browser UAT at 12:44:17 p.m. EST on November 17 returned `unsupported_math` for “What is quadratic formula?” | Added closed public algebra concepts. Concept-only questions reach the appropriate topic without private text; failed formula parsing cannot discard an actual unsupported expression or unknown relationship. |
+| ALG-10 | A natural answer attempt followed by `Can you check my method?` was rejected, although the answer alone worked. | Closed trailing checking phrases now preserve the original task; both provider phases still exclude the proposed answer. |
 
 ## Verification
 

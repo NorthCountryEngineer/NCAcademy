@@ -429,7 +429,7 @@ def is_algebra_attempt(text):
     match = _ATTEMPT.match(text)
     if not match:
         return False
-    tail = re.sub(r"\s*(?:is that (?:right|correct)|can you check(?: it)?)\s*$", "", match.group(1), flags=re.I).strip()
+    tail = re.sub(r"\s*(?:[.!?,;]\s*)?(?:is that (?:right|correct)|(?:can|could|would) you (?:please )?check(?: (?:it|my (?:answer|work|method)))?)\s*$", "", match.group(1), flags=re.I).strip()
     tail = re.sub(r"\b(?:sqrt|abs)\b", "", tail, flags=re.I)
     return bool(tail and re.fullmatch(r"[xy0-9.\s+*/^()|=<>{};,-]+", tail, re.I))
 

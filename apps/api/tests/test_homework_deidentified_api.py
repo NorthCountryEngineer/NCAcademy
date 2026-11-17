@@ -200,7 +200,7 @@ def test_requested_factoring_problem_and_private_attempt_use_complete_algebra_th
     env = setup_public(client, app, monkeypatch)
     child, headers, session_id, account = create_child(client, app, env)
     question = "Help me factor x^2 - 5x + 6 without just giving me the answer."
-    attempt = "Name: PRIVATE_ATTEMPT_SENTINEL\nI think the answer is (x - 2)(x - 3)"
+    attempt = "Name: PRIVATE_ATTEMPT_SENTINEL\nI think the answer is (x - 2)(x - 3). Can you check my method?"
     try:
         first = send(child, headers, session_id, question, "algebra-factor-original")
         assert first.status_code == 200 and first.json()["status"] == "released", first.text
